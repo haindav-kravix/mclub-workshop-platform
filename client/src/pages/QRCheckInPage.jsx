@@ -80,7 +80,7 @@ export const QRCheckInPage = () => {
         {!success && !isAuthenticated ? (
           <button
             onClick={() => navigate(`/login?redirect=${encodeURIComponent(loginRedirect)}`)}
-            className="mt-6 w-full px-6 py-3 bg-slate-950 text-white rounded-lg font-bold flex items-center justify-center gap-2"
+              className="mt-6 w-full px-6 py-3 bg-secondary text-white rounded-lg font-bold flex items-center justify-center gap-2"
           >
             <FiLogIn /> Login with registered Google email
           </button>

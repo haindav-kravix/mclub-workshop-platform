@@ -138,26 +138,26 @@ export const TakeAttendancePage = () => {
             </div>
 
             {qrImageUrl && (
-              <div className="rounded-lg border border-slate-200 bg-white p-4 text-center">
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 p-4 text-center">
                 <div className={`inline-flex px-3 py-1 rounded-lg text-sm font-bold mb-3 ${
                   qrEnabled ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'
                 }`}>
                   QR Attendance {qrEnabled ? 'ON' : 'OFF'}
                 </div>
                 <p className="font-bold text-slate-950 mb-2">QR Check-in</p>
-                <div className={qrEnabled ? '' : 'opacity-35 grayscale pointer-events-none'}>
+                <div className={`rounded-lg bg-white p-3 border border-emerald-100 ${qrEnabled ? '' : 'opacity-35 grayscale pointer-events-none'}`}>
                   <img src={qrImageUrl} alt="Attendance QR code" className="mx-auto w-56 h-56" />
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
                   {qrEnabled
-                    ? 'Students must scan and login with their registered Google email.'
-                    : 'QR is off. Students who scan will see attendance is done for the day.'}
+                    ? 'Scan is open. Students must use their registered Google email.'
+                    : 'Scan is closed. Students will see attendance is done for the day.'}
                 </p>
                 <button
                   onClick={handleToggleQr}
                   disabled={qrUpdating}
                   className={`mt-3 w-full px-4 py-2 rounded-lg font-bold ${
-                    qrEnabled ? 'bg-slate-950 text-white' : 'bg-emerald-600 text-white'
+                    qrEnabled ? 'bg-secondary text-white' : 'bg-primary text-secondary'
                   } disabled:opacity-50`}
                 >
                   {qrUpdating ? 'Updating...' : qrEnabled ? 'Turn QR Off' : 'Turn QR On'}

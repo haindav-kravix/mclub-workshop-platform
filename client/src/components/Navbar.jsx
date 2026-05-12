@@ -31,7 +31,7 @@ export const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-9 h-9 bg-slate-950 rounded-lg flex items-center justify-center text-white font-bold shadow-sm">
+            <div className="w-9 h-9 bg-secondary rounded-lg flex items-center justify-center text-white font-bold shadow-sm">
               MC
             </div>
             <div className="hidden sm:block">
@@ -91,7 +91,7 @@ export const Navbar = () => {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-1 px-4 py-2 bg-slate-950 text-white rounded-lg hover:bg-slate-800 transition text-sm font-semibold"
+                  className="flex items-center space-x-1 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition text-sm font-semibold"
                 >
                   <FiLogOut /> <span>Logout</span>
                 </button>
@@ -99,7 +99,7 @@ export const Navbar = () => {
             ) : (
               <Link
                 to="/login"
-                className="px-4 py-2 bg-slate-950 text-white rounded-lg hover:bg-slate-800 transition font-semibold"
+                className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition font-semibold"
               >
                 Login
               </Link>
@@ -162,14 +162,14 @@ export const Navbar = () => {
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
-                className="w-full text-left px-4 py-3 bg-slate-950 text-white rounded-lg hover:bg-slate-800 transition font-semibold"
+                className="w-full text-left px-4 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition font-semibold"
               >
                 Logout
               </button>
             ) : (
               <Link
                 to="/login"
-                className="block px-4 py-3 bg-slate-950 text-white rounded-lg hover:bg-slate-800 transition text-center font-semibold"
+                className="block px-4 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition text-center font-semibold"
                 onClick={() => setIsOpen(false)}
               >
                 Login
