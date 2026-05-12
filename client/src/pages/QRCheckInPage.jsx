@@ -3,13 +3,13 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { attendanceAPI, workshopAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
-import { FiCheck, FiLogIn } from 'react-icons/fi';
+import { FiCheck, FiLogIn, FiRefreshCw } from 'react-icons/fi';
 
 export const QRCheckInPage = () => {
   const { workshopId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const date = searchParams.get('date');
   const [workshop, setWorkshop] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -44,6 +44,13 @@ export const QRCheckInPage = () => {
     }
   };
 
+  const loginRedirect = `/attendance/check-in/${workshopId}?date=${date}`;
+
+  const handleSwitchAccount = () => {
+    logout();
+    navigate(`/login?redirect=${encodeURIComponent(loginRedirect)}`);
+  };
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -63,7 +70,7 @@ export const QRCheckInPage = () => {
 
         {!isAuthenticated ? (
           <button
-            onClick={() => navigate(`/login?redirect=/attendance/check-in/${workshopId}?date=${date}`)}
+            onClick={() => navigate(`/login?redirect=${encodeURIComponent(loginRedirect)}`)}
             className="mt-6 w-full px-6 py-3 bg-slate-950 text-white rounded-lg font-bold flex items-center justify-center gap-2"
           >
             <FiLogIn /> Login with registered Google email
@@ -81,6 +88,14 @@ export const QRCheckInPage = () => {
             >
               {submitting ? 'Marking...' : success ? 'Attendance Marked' : 'Confirm Attendance'}
             </button>
+            {!success && (
+              <button
+                onClick={handleSwitchAccount}
+                className="mt-3 w-full px-6 py-3 bg-slate-100 text-slate-800 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-slate-200"
+              >
+                <FiRefreshCw /> Use Different Google Account
+              </button>
+            )}
           </>
         )}
       </div>
