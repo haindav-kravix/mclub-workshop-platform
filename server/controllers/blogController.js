@@ -46,6 +46,64 @@ export const getMyPosts = async (req, res) => {
   }
 };
 
+export const getBlogProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .populate('followers', 'name email profilePhoto bio')
+      .populate('following', 'name email profilePhoto bio')
+      .select('name email profilePhoto bio followers following');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      ...user.toObject(),
+      followerCount: user.followers.length,
+      followingCount: user.following.length
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error loading blog profile', error: error.message });
+  }
+};
+
+export const updateBlogProfile = async (req, res) => {
+  try {
+    const { bio = '' } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { bio: bio.slice(0, 280) },
+      { new: true }
+    ).populate('followers', 'name email profilePhoto bio')
+      .populate('following', 'name email profilePhoto bio')
+      .select('name email profilePhoto bio followers following');
+
+    res.json({
+      success: true,
+      profile: {
+        ...user.toObject(),
+        followerCount: user.followers.length,
+        followingCount: user.following.length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating blog profile', error: error.message });
+  }
+};
+
+export const uploadBlogImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Image is required' });
+    }
+    res.json({
+      success: true,
+      imageUrl: `/uploads/${req.file.filename}`
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error uploading image', error: error.message });
+  }
+};
+
 export const createPost = async (req, res) => {
   try {
     const { title, body, tags = [], status = 'draft', coverImage = '' } = req.body;
