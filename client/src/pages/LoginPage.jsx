@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { ErrorMessage } from '../components/UI';
@@ -7,12 +7,14 @@ import { ErrorMessage } from '../components/UI';
 export const LoginPage = () => {
   const { handleGoogleLoginSuccess } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [error, setError] = React.useState('');
+  const redirectTo = searchParams.get('redirect') || '/workshops';
 
   const handleSuccess = async (credentialResponse) => {
     const result = await handleGoogleLoginSuccess(credentialResponse);
     if (result.success) {
-      navigate('/workshops');
+      navigate(redirectTo);
     } else {
       setError(result.error || 'Login failed');
     }

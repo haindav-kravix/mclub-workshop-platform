@@ -18,6 +18,7 @@ import { AdminAuthPage } from './pages/AdminAuthPage';
 import { TakeAttendancePage } from './pages/TakeAttendancePage';
 import { AttendanceReportsPage } from './pages/AttendanceReportsPage';
 import { BlogsPage } from './pages/BlogsPage';
+import { QRCheckInPage } from './pages/QRCheckInPage';
 
 // Styles
 import './styles/globals.css';
@@ -50,6 +51,7 @@ const AppContent = () => {
               </PrivateRoute>
             }
           />
+          <Route path="/attendance/check-in/:workshopId" element={<QRCheckInPage />} />
 
           {/* Protected Routes */}
           <Route

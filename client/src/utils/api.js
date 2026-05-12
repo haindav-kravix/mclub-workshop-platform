@@ -69,6 +69,9 @@ export const attendanceAPI = {
   submitAttendance: (workshopId, data) => axios.post(`${API_URL}/attendance/workshop/${workshopId}`, data, {
     headers: getAuthHeaders()
   }),
+  qrCheckIn: (workshopId, data) => axios.post(`${API_URL}/attendance/workshop/${workshopId}/qr-check-in`, data, {
+    headers: getAuthHeaders()
+  }),
   getReports: (workshopId) => axios.get(`${API_URL}/attendance/workshop/${workshopId}/reports`, {
     headers: getAuthHeaders()
   })

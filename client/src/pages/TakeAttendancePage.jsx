@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { attendanceAPI, workshopAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
-import { FiArrowLeft, FiCheck, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiCheck, FiCopy, FiX } from 'react-icons/fi';
 
 const toDateInput = (value) => value ? new Date(value).toISOString().split('T')[0] : '';
 
@@ -79,6 +79,13 @@ export const TakeAttendancePage = () => {
     }
   };
 
+  const qrCheckInUrl = selectedDate
+    ? `${window.location.origin}/attendance/check-in/${workshopId}?date=${encodeURIComponent(selectedDate)}`
+    : '';
+  const qrImageUrl = qrCheckInUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(qrCheckInUrl)}`
+    : '';
+
   if (loading && !workshop) return <LoadingSpinner />;
 
   return (
@@ -91,19 +98,40 @@ export const TakeAttendancePage = () => {
         {success && <SuccessMessage message={success} onDismiss={() => setSuccess('')} />}
 
         <div className="panel rounded-lg p-5 sm:p-8 mb-6">
-          <p className="text-sm font-bold uppercase tracking-wide text-emerald-600 mb-2">Take attendance</p>
-          <h1 className="text-3xl font-bold text-slate-950">{workshop?.title}</h1>
-          <div className="mt-5 max-w-xs">
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Workshop Day</label>
-            <select
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus-ring"
-            >
-              {dateOptions.map(date => (
-                <option key={date} value={date}>{new Date(`${date}T00:00:00`).toLocaleDateString()}</option>
-              ))}
-            </select>
+          <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-wide text-emerald-600 mb-2">Take attendance</p>
+              <h1 className="text-3xl font-bold text-slate-950">{workshop?.title}</h1>
+              <div className="mt-5 max-w-xs">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Workshop Day</label>
+                <select
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus-ring"
+                >
+                  {dateOptions.map(date => (
+                    <option key={date} value={date}>{new Date(`${date}T00:00:00`).toLocaleDateString()}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {qrImageUrl && (
+              <div className="rounded-lg border border-slate-200 bg-white p-4 text-center">
+                <p className="font-bold text-slate-950 mb-2">QR Check-in</p>
+                <img src={qrImageUrl} alt="Attendance QR code" className="mx-auto w-56 h-56" />
+                <p className="text-xs text-slate-500 mt-2">Students must scan and login with their registered Google email.</p>
+                <button
+                  onClick={() => {
+                    navigator.clipboard?.writeText(qrCheckInUrl);
+                    setSuccess('QR check-in link copied');
+                  }}
+                  className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-slate-950 text-white rounded-lg font-semibold"
+                >
+                  <FiCopy /> Copy Link
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

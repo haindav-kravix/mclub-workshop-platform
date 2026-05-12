@@ -112,3 +112,74 @@ export const getAttendanceReports = async (req, res) => {
     res.status(500).json({ message: 'Error loading attendance reports', error: error.message });
   }
 };
+
+export const qrCheckIn = async (req, res) => {
+  try {
+    const { workshopId } = req.params;
+    const { date } = req.body;
+
+    if (!date) {
+      return res.status(400).json({ message: 'Attendance date is required' });
+    }
+
+    const workshop = await Workshop.findById(workshopId);
+    if (!workshop) {
+      return res.status(404).json({ message: 'Workshop not found' });
+    }
+
+    const registration = await Registration.findOne({
+      workshopId,
+      userId: req.user.id,
+      status: 'confirmed'
+    }).populate('userId', 'name email profilePhoto');
+
+    if (!registration) {
+      return res.status(403).json({
+        message: 'Attendance can only be marked with the Google account used for this workshop registration'
+      });
+    }
+
+    const attendanceDate = normalizeDate(date);
+    let attendance = await Attendance.findOne({ workshopId, date: attendanceDate });
+    const registeredUsers = await Registration.find({ workshopId, status: 'confirmed' }).select('userId');
+
+    if (!attendance) {
+      attendance = new Attendance({
+        workshopId,
+        date: attendanceDate,
+        submittedBy: req.user.id,
+        entries: registeredUsers.map(item => ({
+          userId: item.userId,
+          status: item.userId.toString() === req.user.id ? 'present' : 'absent'
+        }))
+      });
+    } else {
+      const existingIds = new Set(attendance.entries.map(entry => entry.userId.toString()));
+      registeredUsers.forEach(item => {
+        if (!existingIds.has(item.userId.toString())) {
+          attendance.entries.push({ userId: item.userId, status: 'absent' });
+        }
+      });
+
+      const entry = attendance.entries.find(item => item.userId.toString() === req.user.id);
+      if (entry) {
+        entry.status = 'present';
+      } else {
+        attendance.entries.push({ userId: req.user.id, status: 'present' });
+      }
+      attendance.updatedAt = new Date();
+    }
+
+    await attendance.save();
+
+    res.json({
+      success: true,
+      message: 'Attendance marked present',
+      workshop,
+      date: attendanceDate,
+      user: registration.userId
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error marking QR attendance', error: error.message });
+  }
+};
