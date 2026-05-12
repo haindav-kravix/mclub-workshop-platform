@@ -198,7 +198,7 @@ export const WorkshopDetailPage = () => {
                   href={workshop.telegramLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="telegram-button w-full px-6 py-4 bg-sky-500 text-white rounded-lg font-bold text-lg hover:bg-sky-400 transition flex items-center justify-center gap-3"
+                  className="telegram-button w-full px-6 py-4 bg-secondary text-white rounded-lg font-bold text-lg hover:bg-secondary/90 transition flex items-center justify-center gap-3"
                 >
                   <FiSend />
                   Join Telegram Group

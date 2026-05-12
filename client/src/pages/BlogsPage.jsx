@@ -271,7 +271,7 @@ export const BlogsPage = () => {
           </div>
           <button
             onClick={() => setEditorOpen(true)}
-            className="hidden sm:inline-flex px-4 py-2 rounded-lg border border-primary text-primary font-bold hover:bg-indigo-50"
+            className="hidden sm:inline-flex px-4 py-2 rounded-lg border border-primary text-primary font-bold hover:bg-primary/10"
           >
             Create Post
           </button>
@@ -316,11 +316,11 @@ export const BlogsPage = () => {
 
         <div className="mb-6 rounded-lg bg-slate-950 text-white p-6 sm:p-8 overflow-hidden relative">
           <div className="relative z-10 max-w-3xl">
-            <p className="text-sm font-bold uppercase tracking-wide text-cyan-300 mb-2">Community writing space</p>
+            <p className="text-sm font-bold uppercase tracking-wide text-secondary mb-2">Community writing space</p>
             <h1 className="text-3xl sm:text-5xl font-black leading-tight">Share MongoDB stories, projects, notes, and learning journeys.</h1>
             <p className="text-slate-300 mt-4">Scroll through every published blog, discover creators, follow people, and publish your own post with preview.</p>
           </div>
-          <div className="absolute -right-12 -bottom-16 w-64 h-64 bg-cyan-400/20 rounded-full blur-2xl"></div>
+          <div className="absolute -right-12 -bottom-16 w-64 h-64 bg-primary/20 rounded-full blur-2xl"></div>
         </div>
 
         <div className="grid lg:grid-cols-[1fr_320px] gap-5">

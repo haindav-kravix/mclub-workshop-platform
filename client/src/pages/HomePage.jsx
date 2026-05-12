@@ -12,7 +12,7 @@ export const HomePage = () => {
       <div className="bg-slate-950 text-white">
         <div className="max-w-7xl mx-auto px-4 py-16 sm:py-20 grid lg:grid-cols-[1.05fr_0.95fr] gap-10 items-center">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-sm font-semibold text-cyan-200 mb-6">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-sm font-semibold text-secondary mb-6">
               <FiCalendar /> Live workshops and technical sessions
             </div>
             <h1 className="text-4xl sm:text-6xl font-bold mb-6 leading-tight">
@@ -36,7 +36,7 @@ export const HomePage = () => {
             {isAuthenticated ? (
               <Link
                 to="/workshops"
-                className="inline-flex items-center justify-center space-x-2 px-8 py-3 bg-cyan-400 text-slate-950 rounded-lg font-bold hover:bg-cyan-300 transition"
+                className="inline-flex items-center justify-center space-x-2 px-8 py-3 bg-primary text-slate-950 rounded-lg font-bold hover:bg-primary/80 transition"
               >
                 <span>Browse Workshops</span>
                 <FiArrowRight />
@@ -45,7 +45,7 @@ export const HomePage = () => {
               <>
                 <Link
                   to="/login"
-                  className="inline-flex items-center justify-center space-x-2 px-8 py-3 bg-cyan-400 text-slate-950 rounded-lg font-bold hover:bg-cyan-300 transition"
+                  className="inline-flex items-center justify-center space-x-2 px-8 py-3 bg-primary text-slate-950 rounded-lg font-bold hover:bg-primary/80 transition"
                 >
                   <span>Get Started</span>
                   <FiArrowRight />
@@ -63,7 +63,7 @@ export const HomePage = () => {
 
           <div className="panel rounded-lg p-5 bg-white text-slate-950">
             <div className="rounded-lg bg-slate-950 text-white p-6 mb-4">
-              <p className="text-sm text-cyan-300 font-semibold mb-2">Community focus</p>
+              <p className="text-sm text-secondary font-semibold mb-2">Community focus</p>
               <h2 className="text-2xl font-bold">Learn, certify, and grow through hands-on workshop participation.</h2>
             </div>
             <div className="grid gap-3">
@@ -100,7 +100,7 @@ export const HomePage = () => {
           <div className="grid md:grid-cols-3 gap-8">
             {/* Feature 1 */}
             <div className="panel rounded-lg p-6">
-              <div className="w-12 h-12 bg-indigo-50 rounded-lg flex items-center justify-center mb-5">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-5">
                 <FiCalendar className="text-primary text-3xl" />
               </div>
               <h3 className="text-xl font-bold mb-2">Regular Events</h3>

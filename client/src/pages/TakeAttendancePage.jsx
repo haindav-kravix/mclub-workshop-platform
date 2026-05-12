@@ -146,7 +146,7 @@ export const TakeAttendancePage = () => {
                 </div>
                 <p className="font-bold text-slate-950 mb-2">QR Check-in</p>
                 <div className={`rounded-lg bg-white p-3 border border-emerald-100 ${qrEnabled ? '' : 'opacity-35 grayscale pointer-events-none'}`}>
-                  <img src={qrImageUrl} alt="Attendance QR code" className="mx-auto w-56 h-56" />
+                  <img src={qrImageUrl} alt="Attendance QR code" className="mx-auto w-full max-w-56 aspect-square object-contain" />
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
                   {qrEnabled

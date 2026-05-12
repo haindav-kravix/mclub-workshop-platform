@@ -201,13 +201,13 @@ export const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
             <div>
-              <p className="text-sm font-semibold text-cyan-300 uppercase tracking-wide mb-2">Shared admin portal</p>
+              <p className="text-sm font-semibold text-secondary uppercase tracking-wide mb-2">Shared admin portal</p>
               <h1 className="text-3xl sm:text-4xl font-bold">Admin Dashboard</h1>
               <p className="text-slate-300 mt-2">Every admin can manage every workshop, registration, and export.</p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-cyan-400 text-slate-950 rounded-lg hover:bg-cyan-300 transition font-bold"
+              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-primary text-slate-950 rounded-lg hover:bg-primary/80 transition font-bold"
             >
               <FiPlus /> <span>Create Workshop</span>
             </button>
@@ -223,7 +223,7 @@ export const AdminDashboard = () => {
                       <p className="text-2xl font-bold">{stat.value}</p>
                       <p className="text-sm text-slate-300">{stat.label}</p>
                     </div>
-                    <Icon className="text-cyan-300" size={22} />
+                    <Icon className="text-secondary" size={22} />
                   </div>
                 </div>
               );

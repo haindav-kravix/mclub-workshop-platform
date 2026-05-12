@@ -40,7 +40,7 @@ export const AdminWorkshopCard = ({
           {workshop.isStopped ? 'Stopped' : 'Running'}
         </div>
         <div className={`absolute left-3 bottom-3 px-3 py-1 rounded-lg text-xs font-semibold ${
-          registrationsOpen ? 'bg-sky-500 text-white' : 'bg-amber-500 text-white'
+          registrationsOpen ? 'bg-secondary text-white' : 'bg-amber-500 text-white'
         }`}>
           Registrations {registrationsOpen ? 'Open' : 'Closed'}
         </div>
@@ -86,7 +86,7 @@ export const AdminWorkshopCard = ({
 
           <button
             onClick={() => onEdit(workshop)}
-            className="px-3 py-2 bg-indigo-50 text-primary rounded-lg hover:bg-indigo-100 transition text-sm font-semibold flex items-center justify-center space-x-1"
+            className="px-3 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition text-sm font-semibold flex items-center justify-center space-x-1"
           >
             <FiEdit2 size={16} />
             <span>Edit</span>

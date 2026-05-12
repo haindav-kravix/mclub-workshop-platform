@@ -18,11 +18,11 @@ export const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const navLinkClass = (path) => `flex items-center space-x-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-    isActive(path) ? 'bg-indigo-50 text-primary' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
+    isActive(path) ? 'bg-primary/15 text-secondary' : 'text-slate-600 hover:bg-primary/10 hover:text-secondary'
   }`;
 
   const mobileLinkClass = (path) => `block px-4 py-3 rounded-lg font-semibold transition ${
-    isActive(path) ? 'bg-indigo-50 text-primary' : 'text-slate-700 hover:bg-slate-100'
+    isActive(path) ? 'bg-primary/15 text-secondary' : 'text-slate-700 hover:bg-primary/10'
   }`;
 
   return (

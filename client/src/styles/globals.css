@@ -10,7 +10,7 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f8fafc;
+  background-color: #f4fff8;
   color: #0f172a;
 }
 
@@ -18,7 +18,10 @@ body {
   --mongo-green: #00ED64;
   --mongo-dark: #001E2B;
   --mongo-forest: #00684A;
+  --mongo-leaf: #13AA52;
   --mongo-soft: #E9FFF3;
+  --mongo-mist: #F4FFF8;
+  --mongo-line: rgba(0, 104, 74, 0.16);
 }
 
 html {
@@ -27,18 +30,73 @@ html {
 
 .app-shell {
   background:
-    linear-gradient(180deg, rgba(0, 237, 100, 0.12), rgba(255, 255, 255, 0.92) 320px),
-    #f7fcf9;
+    radial-gradient(circle at top left, rgba(0, 237, 100, 0.18), transparent 340px),
+    linear-gradient(180deg, #f1fff6 0%, #ffffff 44%, #f4fff8 100%);
 }
 
 .panel {
-  border: 1px solid rgba(0, 104, 74, 0.14);
+  border: 1px solid var(--mongo-line);
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 14px 34px rgba(0, 30, 43, 0.06);
 }
 
 .soft-border {
   border: 1px solid rgba(0, 104, 74, 0.14);
+}
+
+/* Global MongoDB-light theme pass for older dark utility classes. */
+.bg-slate-950 {
+  background-color: var(--mongo-soft) !important;
+  color: var(--mongo-forest) !important;
+  border-color: var(--mongo-line) !important;
+}
+
+.bg-slate-950\/90 {
+  background-color: rgba(233, 255, 243, 0.94) !important;
+  color: var(--mongo-forest) !important;
+}
+
+.bg-slate-950.text-white,
+.bg-slate-950 .text-white {
+  color: var(--mongo-dark) !important;
+}
+
+.bg-slate-950 .text-slate-200,
+.bg-slate-950 .text-slate-300,
+.bg-slate-950 .text-slate-400 {
+  color: #407562 !important;
+}
+
+.bg-slate-950 .border-white\/10,
+.bg-slate-950 .border-white\/20 {
+  border-color: var(--mongo-line) !important;
+}
+
+.bg-slate-950 .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.bg-slate-50,
+.bg-gray-50 {
+  background-color: var(--mongo-mist) !important;
+}
+
+.bg-slate-100,
+.bg-gray-100,
+.bg-zinc-100 {
+  background-color: var(--mongo-soft) !important;
+}
+
+.hover\:bg-slate-800:hover,
+.hover\:bg-slate-200:hover,
+.hover\:bg-gray-200:hover,
+.hover\:bg-zinc-200:hover {
+  background-color: #d9fbe7 !important;
+  color: var(--mongo-forest) !important;
+}
+
+.bg-primary.text-white {
+  color: var(--mongo-dark) !important;
 }
 
 .focus-ring {

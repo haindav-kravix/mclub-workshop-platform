@@ -36,10 +36,10 @@ export const AdminAuthPage = () => {
       <div className="grid lg:grid-cols-[1.05fr_0.95fr] w-full max-w-5xl panel rounded-lg overflow-hidden">
         <div className="hidden lg:flex flex-col justify-between bg-slate-950 text-white p-10">
           <div>
-            <div className="w-12 h-12 bg-cyan-400 text-slate-950 rounded-lg flex items-center justify-center font-bold mb-8">
+            <div className="w-12 h-12 bg-primary text-slate-950 rounded-lg flex items-center justify-center font-bold mb-8">
               MC
             </div>
-            <p className="text-cyan-300 uppercase tracking-wide text-sm font-bold mb-3">Admin command center</p>
+            <p className="text-secondary uppercase tracking-wide text-sm font-bold mb-3">Admin command center</p>
             <h1 className="text-4xl font-bold leading-tight mb-4">Run every workshop from one shared dashboard.</h1>
             <p className="text-slate-300 text-lg">Create events, manage registrations, export clean spreadsheets, and collaborate with every admin.</p>
           </div>
@@ -52,7 +52,7 @@ export const AdminAuthPage = () => {
               const Icon = item.icon;
               return (
                 <div key={item.label} className="border border-white/10 bg-white/10 rounded-lg p-4">
-                  <Icon className="text-cyan-300 mb-3" />
+                  <Icon className="text-secondary mb-3" />
                   <p className="text-sm font-semibold">{item.label}</p>
                 </div>
               );

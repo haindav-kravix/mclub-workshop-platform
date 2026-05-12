@@ -98,7 +98,7 @@ export const MyRegistrationsPage = () => {
                         href={registration.workshopId.telegramLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="telegram-button w-full px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-400 transition flex items-center justify-center space-x-2 font-semibold"
+                        className="telegram-button w-full px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition flex items-center justify-center space-x-2 font-semibold"
                       >
                         <FiSend size={18} />
                         <span>Join Telegram</span>

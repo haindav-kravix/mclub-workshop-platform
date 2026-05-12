@@ -29,7 +29,7 @@ export const LoginPage = () => {
       <div className="panel rounded-lg overflow-hidden w-full max-w-4xl grid md:grid-cols-[0.9fr_1.1fr]">
         <div className="hidden md:flex bg-slate-950 text-white p-8 flex-col justify-between">
           <div>
-            <div className="w-12 h-12 bg-cyan-400 text-slate-950 rounded-lg flex items-center justify-center font-bold mb-8">MC</div>
+            <div className="w-12 h-12 bg-primary text-slate-950 rounded-lg flex items-center justify-center font-bold mb-8">MC</div>
             <h1 className="text-4xl font-bold mb-4">Welcome back.</h1>
             <p className="text-slate-300">Sign in to register for workshops and keep track of your events.</p>
           </div>
