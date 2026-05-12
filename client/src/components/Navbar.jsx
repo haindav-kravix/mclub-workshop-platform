@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiMenu, FiX, FiLogOut, FiHome, FiCalendar, FiClipboard, FiSettings } from 'react-icons/fi';
+import { FiMenu, FiX, FiLogOut, FiHome, FiCalendar, FiClipboard, FiSettings, FiEdit3 } from 'react-icons/fi';
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,6 +54,14 @@ export const Navbar = () => {
             >
               <FiCalendar /> <span>Workshops</span>
             </Link>
+            {isAuthenticated && (
+              <Link
+                to="/blogs"
+                className={navLinkClass('/blogs')}
+              >
+                <FiEdit3 /> <span>Blogs</span>
+              </Link>
+            )}
 
             {isAuthenticated && !isAdmin && (
               <Link
@@ -124,6 +132,15 @@ export const Navbar = () => {
             >
               Workshops
             </Link>
+            {isAuthenticated && (
+              <Link
+                to="/blogs"
+                className={mobileLinkClass('/blogs')}
+                onClick={() => setIsOpen(false)}
+              >
+                Blogs
+              </Link>
+            )}
             {isAuthenticated && !isAdmin && (
               <Link
                 to="/my-registrations"

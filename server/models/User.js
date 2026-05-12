@@ -18,6 +18,18 @@ const userSchema = new mongoose.Schema({
   profilePhoto: {
     type: String
   },
+  bio: {
+    type: String,
+    default: ''
+  },
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   isAdmin: {
     type: Boolean,
     default: false

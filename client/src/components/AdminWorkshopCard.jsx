@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiCalendar, FiClock, FiDownload, FiEdit2, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
+import { FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiList, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
 import { API_ORIGIN } from '../utils/api';
 
 export const AdminWorkshopCard = ({
@@ -10,7 +10,9 @@ export const AdminWorkshopCard = ({
   onExport,
   onEmail,
   onToggleRegistrations,
-  onToggleStopped
+  onToggleStopped,
+  onTakeAttendance,
+  onAttendanceReports
 }) => {
   const registrationsOpen = workshop.registrationsOpen !== false && !workshop.isStopped;
 
@@ -64,6 +66,22 @@ export const AdminWorkshopCard = ({
           >
             <FiUsers size={16} />
             <span>Registrations</span>
+          </button>
+
+          <button
+            onClick={() => onTakeAttendance(workshop._id)}
+            className="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition text-sm font-semibold flex items-center justify-center space-x-1"
+          >
+            <FiCheckSquare size={16} />
+            <span>Attendance</span>
+          </button>
+
+          <button
+            onClick={() => onAttendanceReports(workshop._id)}
+            className="px-3 py-2 bg-zinc-100 text-zinc-800 rounded-lg hover:bg-zinc-200 transition text-sm font-semibold flex items-center justify-center space-x-1"
+          >
+            <FiList size={16} />
+            <span>Absentees</span>
           </button>
 
           <button

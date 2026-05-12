@@ -12,6 +12,8 @@ dotenv.config();
 import authRoutes from './routes/auth.js';
 import workshopRoutes from './routes/workshops.js';
 import registrationRoutes from './routes/registrations.js';
+import attendanceRoutes from './routes/attendance.js';
+import blogRoutes from './routes/blogs.js';
 
 const app = express();
 
@@ -53,6 +55,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/workshops', workshopRoutes);
 app.use('/api/registrations', registrationRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/blogs', blogRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

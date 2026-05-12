@@ -259,6 +259,8 @@ export const AdminDashboard = () => {
                 onEmail={openEmailComposer}
                 onToggleRegistrations={handleToggleRegistrations}
                 onToggleStopped={handleToggleStopped}
+                onTakeAttendance={(workshopId) => navigate(`/admin/attendance/${workshopId}`)}
+                onAttendanceReports={(workshopId) => navigate(`/admin/attendance/${workshopId}/reports`)}
               />
             ))}
           </div>

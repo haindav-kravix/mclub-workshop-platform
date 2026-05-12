@@ -60,3 +60,33 @@ export const registrationAPI = {
     responseType: 'blob'
   })
 };
+
+export const attendanceAPI = {
+  getRoster: (workshopId, date) => axios.get(`${API_URL}/attendance/workshop/${workshopId}/roster`, {
+    headers: getAuthHeaders(),
+    params: { date }
+  }),
+  submitAttendance: (workshopId, data) => axios.post(`${API_URL}/attendance/workshop/${workshopId}`, data, {
+    headers: getAuthHeaders()
+  }),
+  getReports: (workshopId) => axios.get(`${API_URL}/attendance/workshop/${workshopId}/reports`, {
+    headers: getAuthHeaders()
+  })
+};
+
+export const blogAPI = {
+  getFeed: () => axios.get(`${API_URL}/blogs`, { headers: getAuthHeaders() }),
+  getAdminPosts: () => axios.get(`${API_URL}/blogs/admin/all`, { headers: getAuthHeaders() }),
+  getMyPosts: () => axios.get(`${API_URL}/blogs/me`, { headers: getAuthHeaders() }),
+  createPost: (data) => axios.post(`${API_URL}/blogs`, data, { headers: getAuthHeaders() }),
+  updatePost: (postId, data) => axios.put(`${API_URL}/blogs/${postId}`, data, { headers: getAuthHeaders() }),
+  deletePost: (postId) => axios.delete(`${API_URL}/blogs/${postId}`, { headers: getAuthHeaders() }),
+  toggleLike: (postId) => axios.patch(`${API_URL}/blogs/${postId}/like`, {}, { headers: getAuthHeaders() }),
+  recordShare: (postId) => axios.patch(`${API_URL}/blogs/${postId}/share`, {}, { headers: getAuthHeaders() }),
+  searchUsers: (query) => axios.get(`${API_URL}/blogs/users/search`, {
+    headers: getAuthHeaders(),
+    params: { q: query }
+  }),
+  toggleFollow: (userId) => axios.patch(`${API_URL}/blogs/users/${userId}/follow`, {}, { headers: getAuthHeaders() }),
+  deleteUser: (userId) => axios.delete(`${API_URL}/blogs/users/${userId}`, { headers: getAuthHeaders() })
+};
