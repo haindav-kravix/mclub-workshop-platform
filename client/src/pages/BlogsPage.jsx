@@ -48,6 +48,7 @@ export const BlogsPage = () => {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorTab, setEditorTab] = useState('write');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -61,13 +62,18 @@ export const BlogsPage = () => {
       ]);
       setPosts(feedResponse.data);
       setMyPosts(myPostsResponse.data);
-      const profileResponse = await blogAPI.getProfile();
-      setProfile(profileResponse.data);
-      setBioDraft(profileResponse.data.bio || '');
     } catch (err) {
       setError('Failed to load blogs');
     } finally {
       setLoading(false);
+    }
+
+    try {
+      const profileResponse = await blogAPI.getProfile();
+      setProfile(profileResponse.data);
+      setBioDraft(profileResponse.data.bio || '');
+    } catch (err) {
+      console.error('Failed to load blog profile', err);
     }
   };
 
@@ -91,6 +97,18 @@ export const BlogsPage = () => {
     }
     return published;
   }, [feedSection, posts, myPosts]);
+
+  const refreshAdminReview = async () => {
+    if (!isAdmin) return;
+    try {
+      const response = await blogAPI.getAdminPosts();
+      setPosts(response.data);
+      setFeedSection('admin');
+      setSuccess('Admin review refreshed');
+    } catch (err) {
+      setError('Failed to refresh admin review');
+    }
+  };
 
   const handleCreatePost = async (status) => {
     if (!postForm.title || !postForm.body) {
@@ -199,7 +217,7 @@ export const BlogsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <div className="sticky top-16 z-40 bg-white border-b border-slate-200">
+      <div className="sticky top-0 z-40 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
           <button
             onClick={() => setMenuOpen(true)}
@@ -257,6 +275,17 @@ export const BlogsPage = () => {
           >
             Create Post
           </button>
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold"
+          >
+            {profile?.profilePhoto ? (
+              <img src={profile.profilePhoto} alt={profile.name} className="w-7 h-7 rounded-full" />
+            ) : (
+              <FiUser />
+            )}
+            <span className="hidden sm:inline">Profile</span>
+          </button>
         </div>
       </div>
 
@@ -285,27 +314,29 @@ export const BlogsPage = () => {
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
         {success && <SuccessMessage message={success} onDismiss={() => setSuccess('')} />}
 
-        <div className="grid lg:grid-cols-[240px_1fr_300px] gap-5">
-          <aside className="hidden lg:block space-y-2">
-            {navLinks.map(item => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.to} to={item.to} className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white font-semibold text-slate-700">
-                  <Icon /> {item.label}
-                </Link>
-              );
-            })}
-            <button onClick={() => setEditorOpen(true)} className="mt-4 w-full px-4 py-3 rounded-lg bg-slate-950 text-white font-bold">
-              Create Post
-            </button>
-            {isAdmin && (
-              <button onClick={() => setFeedSection('admin')} className="mt-2 w-full px-4 py-3 rounded-lg bg-amber-100 text-amber-800 font-bold">
-                Admin Blog Review
-              </button>
-            )}
-          </aside>
+        <div className="mb-6 rounded-lg bg-slate-950 text-white p-6 sm:p-8 overflow-hidden relative">
+          <div className="relative z-10 max-w-3xl">
+            <p className="text-sm font-bold uppercase tracking-wide text-cyan-300 mb-2">Community writing space</p>
+            <h1 className="text-3xl sm:text-5xl font-black leading-tight">Share MongoDB stories, projects, notes, and learning journeys.</h1>
+            <p className="text-slate-300 mt-4">Scroll through every published blog, discover creators, follow people, and publish your own post with preview.</p>
+          </div>
+          <div className="absolute -right-12 -bottom-16 w-64 h-64 bg-cyan-400/20 rounded-full blur-2xl"></div>
+        </div>
 
+        <div className="grid lg:grid-cols-[1fr_320px] gap-5">
           <main>
+            {isAdmin && feedSection === 'admin' && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h2 className="font-black text-amber-950">Admin Review</h2>
+                  <p className="text-sm text-amber-800">Moderate every blog here, including drafts and published posts.</p>
+                </div>
+                <button onClick={refreshAdminReview} className="px-4 py-2 bg-amber-500 text-white rounded-lg font-bold">
+                  Refresh Review
+                </button>
+              </div>
+            )}
+
             <div className="flex items-center gap-2 overflow-x-auto mb-4">
               {[
                 ['all', 'All'],
@@ -328,7 +359,7 @@ export const BlogsPage = () => {
 
             <div className="space-y-4">
               {visiblePosts.map(post => (
-                <article key={post._id} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                <article key={post._id} className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition">
                   {post.coverImage && <img src={post.coverImage.startsWith('/uploads') ? `${API_ORIGIN}${post.coverImage}` : post.coverImage} alt={post.title} className="w-full max-h-80 object-cover" />}
                   <div className="p-5 sm:p-6">
                     <div className="flex items-center gap-3 mb-4">
@@ -347,13 +378,13 @@ export const BlogsPage = () => {
                         </span>
                       )}
                     </div>
-                    <h2 className="text-3xl font-black text-slate-950 mb-3">{post.title}</h2>
+                    <h2 className="text-3xl sm:text-4xl font-black text-slate-950 mb-3 leading-tight">{post.title}</h2>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {post.tags.map(tag => (
                         <span key={tag} className="text-sm text-slate-600 hover:text-primary">#{tag}</span>
                       ))}
                     </div>
-                    <p className="text-slate-700 whitespace-pre-wrap line-clamp-5">{post.body}</p>
+                    <p className="text-slate-700 whitespace-pre-wrap line-clamp-5 text-base leading-7">{post.body}</p>
                     <div className="flex flex-wrap gap-3 mt-5">
                       <button onClick={() => handleLike(post._id)} className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 ${post.isLiked ? 'bg-rose-50 text-rose-700' : 'bg-slate-100 text-slate-800'}`}>
                         <FiHeart /> {post.likeCount} likes
@@ -379,45 +410,8 @@ export const BlogsPage = () => {
           </main>
 
           <aside className="hidden lg:block space-y-4">
-            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-              <div className="h-16 bg-slate-950"></div>
-              <div className="p-4 -mt-9">
-                {profile?.profilePhoto ? (
-                  <img src={profile.profilePhoto} alt={profile.name} className="w-16 h-16 rounded-full border-4 border-white" />
-                ) : (
-                  <div className="w-16 h-16 rounded-full border-4 border-white bg-slate-200 flex items-center justify-center">
-                    <FiUser />
-                  </div>
-                )}
-                <h2 className="font-black text-slate-950 mt-3">{profile?.name || user?.name}</h2>
-                <p className="text-sm text-slate-500 break-all">{profile?.email || user?.email}</p>
-                <div className="grid grid-cols-2 gap-2 my-4">
-                  <button onClick={() => setFeedSection('profile-followers')} className="rounded-lg bg-slate-50 p-3 text-left">
-                    <p className="font-black">{profile?.followerCount || 0}</p>
-                    <p className="text-xs text-slate-500">Followers</p>
-                  </button>
-                  <button onClick={() => setFeedSection('profile-following')} className="rounded-lg bg-slate-50 p-3 text-left">
-                    <p className="font-black">{profile?.followingCount || 0}</p>
-                    <p className="text-xs text-slate-500">Following</p>
-                  </button>
-                </div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Bio</label>
-                <textarea
-                  value={bioDraft}
-                  onChange={(e) => setBioDraft(e.target.value)}
-                  maxLength={280}
-                  rows="4"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus-ring text-sm"
-                  placeholder="Tell the community about yourself..."
-                />
-                <button onClick={handleBioSave} className="mt-2 w-full px-4 py-2 rounded-lg bg-slate-950 text-white font-bold">
-                  Update Bio
-                </button>
-              </div>
-            </div>
-
             {(feedSection === 'profile-followers' || feedSection === 'profile-following') && (
-              <div className="bg-white rounded-lg border border-slate-200 p-4">
+              <div className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
                 <h2 className="font-black text-slate-950 mb-3">
                   {feedSection === 'profile-followers' ? 'Followers' : 'Following'}
                 </h2>
@@ -442,13 +436,13 @@ export const BlogsPage = () => {
               <div className="bg-amber-50 rounded-lg border border-amber-200 p-4">
                 <h2 className="font-black text-amber-900 mb-2">Admin Options</h2>
                 <p className="text-sm text-amber-800 mb-3">Use Admin Review to see drafts, published posts, delete blogs, and remove unwanted users from search results.</p>
-                <button onClick={() => setFeedSection('admin')} className="w-full px-4 py-2 bg-amber-500 text-white rounded-lg font-bold">
+                <button onClick={refreshAdminReview} className="w-full px-4 py-2 bg-amber-500 text-white rounded-lg font-bold">
                   Open Admin Review
                 </button>
               </div>
             )}
 
-            <div className="bg-white rounded-lg border border-slate-200 p-4">
+            <div className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
               <h2 className="font-black text-slate-950 mb-3">Your Drafts</h2>
               <div className="space-y-2">
                 {myPosts.filter(post => post.status === 'draft').map(post => (
@@ -460,7 +454,7 @@ export const BlogsPage = () => {
                 {myPosts.filter(post => post.status === 'draft').length === 0 && <p className="text-sm text-slate-500">No drafts yet</p>}
               </div>
             </div>
-            <div className="bg-white rounded-lg border border-slate-200 p-4">
+            <div className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
               <h2 className="font-black text-slate-950 mb-2">Blog Sections</h2>
               <p className="text-sm text-slate-600">Published posts are visible to every user. Follow helps you discover creators, but it does not hide the global feed.</p>
             </div>
@@ -470,7 +464,7 @@ export const BlogsPage = () => {
 
       <button
         onClick={() => setEditorOpen(true)}
-        className="fixed bottom-5 right-5 z-40 h-14 w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center sm:hidden"
+        className="fixed bottom-5 right-5 z-40 h-14 w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center"
         aria-label="Create post"
       >
         <FiEdit3 size={24} />
@@ -560,6 +554,50 @@ export const BlogsPage = () => {
               </button>
               <button onClick={() => setEditorOpen(false)} className="px-6 py-3 text-slate-700 rounded-lg font-bold">
                 Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {profileOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setProfileOpen(false)}>
+          <div className="bg-white rounded-lg max-w-xl w-full overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="h-24 bg-slate-950"></div>
+            <div className="p-5 -mt-12">
+              <div className="flex items-start justify-between gap-3">
+                {profile?.profilePhoto ? (
+                  <img src={profile.profilePhoto} alt={profile.name} className="w-20 h-20 rounded-full border-4 border-white" />
+                ) : (
+                  <div className="w-20 h-20 rounded-full border-4 border-white bg-slate-200 flex items-center justify-center">
+                    <FiUser />
+                  </div>
+                )}
+                <button onClick={() => setProfileOpen(false)} className="mt-12 p-2 rounded-lg hover:bg-slate-100"><FiX /></button>
+              </div>
+              <h2 className="font-black text-2xl text-slate-950 mt-3">{profile?.name || user?.name}</h2>
+              <p className="text-sm text-slate-500 break-all">{profile?.email || user?.email}</p>
+              <div className="grid grid-cols-2 gap-2 my-4">
+                <button onClick={() => setFeedSection('profile-followers')} className="rounded-lg bg-slate-50 p-3 text-left">
+                  <p className="font-black">{profile?.followerCount || 0}</p>
+                  <p className="text-xs text-slate-500">Followers</p>
+                </button>
+                <button onClick={() => setFeedSection('profile-following')} className="rounded-lg bg-slate-50 p-3 text-left">
+                  <p className="font-black">{profile?.followingCount || 0}</p>
+                  <p className="text-xs text-slate-500">Following</p>
+                </button>
+              </div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Bio</label>
+              <textarea
+                value={bioDraft}
+                onChange={(e) => setBioDraft(e.target.value)}
+                maxLength={280}
+                rows="4"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus-ring text-sm"
+                placeholder="Tell the community about yourself..."
+              />
+              <button onClick={handleBioSave} className="mt-3 w-full px-4 py-2 rounded-lg bg-slate-950 text-white font-bold">
+                Update Bio
               </button>
             </div>
           </div>

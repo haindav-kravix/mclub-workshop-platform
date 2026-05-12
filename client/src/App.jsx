@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
@@ -24,6 +24,8 @@ import './styles/globals.css';
 
 const AppContent = () => {
   const { loading } = useAuth();
+  const location = useLocation();
+  const hideGlobalNavbar = location.pathname.startsWith('/blogs');
 
   if (loading) {
     return <LoadingSpinner />;
@@ -31,7 +33,7 @@ const AppContent = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
+      {!hideGlobalNavbar && <Navbar />}
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
