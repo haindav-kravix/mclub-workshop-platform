@@ -1,0 +1,239 @@
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { workshopAPI, registrationAPI, API_ORIGIN } from '../utils/api';
+import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
+import { RegistrationForm } from '../components/RegistrationForm';
+import { useAuth } from '../context/AuthContext';
+import { FiCalendar, FiClock, FiMapPin, FiArrowLeft, FiSend } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+
+export const WorkshopDetailPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const [workshop, setWorkshop] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+
+  useEffect(() => {
+    const fetchWorkshop = async () => {
+      try {
+        const [workshopResponse, registrationsResponse] = await Promise.all([
+          workshopAPI.getWorkshopById(id),
+          isAuthenticated ? registrationAPI.getUserRegistrations() : Promise.resolve({ data: [] })
+        ]);
+        setWorkshop(workshopResponse.data);
+        setIsRegistered(registrationsResponse.data.some(registration => {
+          const registeredWorkshopId = registration.workshopId?._id || registration.workshopId;
+          return registeredWorkshopId === id && registration.status === 'confirmed';
+        }));
+      } catch (err) {
+        setError('Failed to load workshop details');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWorkshop();
+  }, [id, isAuthenticated]);
+
+  const handleRegistration = async (formData) => {
+    setIsRegistering(true);
+    try {
+      await registrationAPI.registerForWorkshop({
+        workshopId: id,
+        formData
+      });
+      setSuccess('Registration successful! You will receive confirmation details soon.');
+      setIsRegistered(true);
+      setShowRegistrationForm(false);
+    } catch (err) {
+      throw new Error(err.response?.data?.message || 'Registration failed');
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  if (loading) return <LoadingSpinner />;
+
+  if (!workshop) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Workshop Not Found</h2>
+        <button
+          onClick={() => navigate('/workshops')}
+          className="text-primary hover:underline"
+        >
+          Back to Workshops
+        </button>
+      </div>
+    </div>
+  );
+
+  const registrationsOpen = workshop.registrationsOpen !== false && !workshop.isStopped;
+
+  return (
+    <div className="min-h-screen app-shell">
+      {/* Back Button */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <button
+            onClick={() => navigate('/workshops')}
+            className="flex items-center space-x-2 text-primary hover:text-primary/80 transition font-medium"
+          >
+            <FiArrowLeft /> <span>Back to Workshops</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 py-10 sm:py-12">
+        {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
+        {success && <SuccessMessage message={success} onDismiss={() => setSuccess('')} />}
+
+        {/* Cover Image */}
+        <div className="mb-8 rounded-lg overflow-hidden shadow-lg h-64 sm:h-80 md:h-96 bg-slate-100 panel">
+          {workshop.coverImage ? (
+            <img
+              src={`${API_ORIGIN}${workshop.coverImage}`}
+              alt={workshop.title}
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-6xl font-bold">
+              {workshop.title.charAt(0)}
+            </div>
+          )}
+        </div>
+
+        {/* Workshop Details */}
+        <div className="panel rounded-lg p-4 sm:p-8 mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 break-words">{workshop.title}</h1>
+          <div className={`inline-flex mb-5 rounded-lg px-3 py-1 text-sm font-bold ${
+            registrationsOpen ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+          }`}>
+            Registrations {registrationsOpen ? 'Open' : 'Closed'}
+          </div>
+
+          {/* Meta Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 py-6 border-t border-b border-slate-200">
+            <div className="flex items-center space-x-3 rounded-lg bg-slate-50 p-4 soft-border">
+              <FiCalendar className="text-primary text-2xl" />
+              <div>
+                <p className="text-gray-600 text-sm">Date</p>
+                <p className="font-semibold text-gray-900">
+                  {new Date(workshop.startDate || workshop.date).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                  {workshop.endDate && workshop.endDate !== (workshop.startDate || workshop.date) ? ` - ${new Date(workshop.endDate).toLocaleDateString()}` : ''}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 rounded-lg bg-slate-50 p-4 soft-border">
+              <FiClock className="text-primary text-2xl" />
+              <div>
+                <p className="text-gray-600 text-sm">Time & Duration</p>
+                <p className="font-semibold text-gray-900">
+                  {workshop.dailyTimings?.[0] ? `${workshop.dailyTimings[0].startTime} - ${workshop.dailyTimings[0].endTime}` : workshop.time}
+                  {' '}({workshop.duration})
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 rounded-lg bg-slate-50 p-4 soft-border">
+              <FiMapPin className="text-primary text-2xl" />
+              <div>
+                <p className="text-gray-600 text-sm">Venue</p>
+                <p className="font-semibold text-gray-900">{workshop.venue}</p>
+              </div>
+            </div>
+
+            {workshop.capacity && (
+              <div className="flex items-center space-x-3 rounded-lg bg-slate-50 p-4 soft-border">
+                <FiCalendar className="text-primary text-2xl" />
+                <div>
+                  <p className="text-gray-600 text-sm">Capacity</p>
+                  <p className="font-semibold text-gray-900">{workshop.capacity} seats</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Description */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Workshop</h2>
+            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{workshop.description}</p>
+          </div>
+
+          {workshop.dailyTimings?.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Schedule</h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {workshop.dailyTimings.map((timing) => (
+                  <div key={`${timing.date}-${timing.startTime}`} className="rounded-lg bg-slate-50 p-4 soft-border">
+                    <p className="font-semibold text-slate-900">{new Date(timing.date).toLocaleDateString()}</p>
+                    <p className="text-slate-600">{timing.startTime} - {timing.endTime}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Registration Button */}
+          {isRegistered ? (
+            <div className="grid gap-3">
+              <div className="w-full px-6 py-3 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-lg text-center">
+                Registered
+              </div>
+              {workshop.telegramLink && (
+                <a
+                  href={workshop.telegramLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="telegram-button w-full px-6 py-4 bg-sky-500 text-white rounded-lg font-bold text-lg hover:bg-sky-400 transition flex items-center justify-center gap-3"
+                >
+                  <FiSend />
+                  Join Telegram Group
+                </a>
+              )}
+            </div>
+          ) : isAuthenticated && registrationsOpen ? (
+            <button
+              onClick={() => setShowRegistrationForm(true)}
+              className="w-full px-6 py-3 bg-slate-950 text-white rounded-lg font-bold text-lg hover:bg-slate-800 transition"
+            >
+              Register Now
+            </button>
+          ) : isAuthenticated ? (
+            <div className="w-full px-6 py-3 bg-amber-50 text-amber-700 rounded-lg font-bold text-lg text-center">
+              Registrations Closed
+            </div>
+          ) : (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+              <p className="text-blue-900 font-medium">
+                Please <a href="/login" className="underline hover:no-underline">sign in</a> to register for this workshop
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Registration Form Modal */}
+      {showRegistrationForm && (
+        <RegistrationForm
+          workshop={workshop}
+          onClose={() => setShowRegistrationForm(false)}
+          onSubmit={handleRegistration}
+        />
+      )}
+    </div>
+  );
+};

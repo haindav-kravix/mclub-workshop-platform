@@ -1,0 +1,330 @@
+import React, { useState } from 'react';
+import { FiX } from 'react-icons/fi';
+import { FormBuilder } from './FormBuilder';
+
+const toDateInput = (value) => value ? value.split('T')[0] : '';
+
+const getDatesBetween = (startDate, endDate) => {
+  if (!startDate) return [];
+  const dates = [];
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${(endDate || startDate)}T00:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return [];
+
+  for (const current = new Date(start); current <= end; current.setDate(current.getDate() + 1)) {
+    dates.push(current.toISOString().split('T')[0]);
+  }
+  return dates;
+};
+
+const buildInitialTimings = (initialData) => {
+  if (initialData?.dailyTimings?.length) {
+    return initialData.dailyTimings.map(item => ({
+      date: toDateInput(item.date),
+      startTime: item.startTime || initialData.time || '',
+      endTime: item.endTime || ''
+    }));
+  }
+
+  if (initialData?.date || initialData?.startDate) {
+    return [{
+      date: toDateInput(initialData.startDate || initialData.date),
+      startTime: initialData.time || '',
+      endTime: ''
+    }];
+  }
+
+  return [];
+};
+
+export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null }) => {
+  const [formData, setFormData] = useState({
+    title: initialData?.title || '',
+    description: initialData?.description || '',
+    startDate: toDateInput(initialData?.startDate || initialData?.date) || '',
+    endDate: toDateInput(initialData?.endDate || initialData?.startDate || initialData?.date) || '',
+    dailyTimings: buildInitialTimings(initialData),
+    telegramLink: initialData?.telegramLink || '',
+    venue: initialData?.venue || '',
+    duration: initialData?.duration || '',
+    capacity: initialData?.capacity || '',
+    coverImage: null,
+    registrationFormFields: initialData?.registrationFormFields || []
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => {
+      const next = {
+        ...prev,
+        [name]: value
+      };
+
+      if (name === 'startDate' || name === 'endDate') {
+        const dates = getDatesBetween(name === 'startDate' ? value : next.startDate, name === 'endDate' ? value : next.endDate);
+        const existing = new Map(prev.dailyTimings.map(item => [item.date, item]));
+        next.dailyTimings = dates.map(date => existing.get(date) || { date, startTime: '', endTime: '' });
+      }
+
+      return next;
+    });
+  };
+
+  const handleFileChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      coverImage: e.target.files[0]
+    }));
+  };
+
+  const handleFormFieldsChange = (fields) => {
+    setFormData(prev => ({
+      ...prev,
+      registrationFormFields: fields
+    }));
+  };
+
+  const handleTimingChange = (date, key, value) => {
+    setFormData(prev => ({
+      ...prev,
+      dailyTimings: prev.dailyTimings.map(item =>
+        item.date === date ? { ...item, [key]: value } : item
+      )
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!formData.title || !formData.description || !formData.startDate || !formData.endDate || !formData.venue) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    if (formData.dailyTimings.length === 0 || formData.dailyTimings.some(item => !item.startTime || !item.endTime)) {
+      setError('Please add start and end timings for every workshop date');
+      return;
+    }
+
+    if (!initialData && !formData.coverImage) {
+      setError('Please upload a cover image');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onCreate(formData);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white">
+          <h2 className="text-2xl font-bold">
+            {initialData ? 'Edit Workshop' : 'Create New Workshop'}
+          </h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <FiX size={24} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded p-3 text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Workshop Title */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Workshop Title *</label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="e.g., MongoDB Aggregation Pipeline Mastery"
+              required
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Description *</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows="4"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Describe your workshop in detail..."
+              required
+            />
+          </div>
+
+          {/* Date Range */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date *</label>
+              <input
+                type="date"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">End Date *</label>
+              <input
+                type="date"
+                name="endDate"
+                min={formData.startDate}
+                value={formData.endDate}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Daily Timings */}
+          {formData.dailyTimings.length > 0 && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Timings for all dates *</label>
+              <div className="space-y-3">
+                {formData.dailyTimings.map((timing) => (
+                  <div key={timing.date} className="grid grid-cols-1 sm:grid-cols-[1fr_140px_140px] gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div className="font-semibold text-slate-800 flex items-center">
+                      {new Date(`${timing.date}T00:00:00`).toLocaleDateString()}
+                    </div>
+                    <input
+                      type="time"
+                      value={timing.startTime}
+                      onChange={(e) => handleTimingChange(timing.date, 'startTime', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
+                    />
+                    <input
+                      type="time"
+                      value={timing.endTime}
+                      onChange={(e) => handleTimingChange(timing.date, 'endTime', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Venue */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Venue *</label>
+            <input
+              type="text"
+              name="venue"
+              value={formData.venue}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="e.g., Room 101, Tech Building"
+              required
+            />
+          </div>
+
+          {/* Telegram Link */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Telegram Group Link *</label>
+            <input
+              type="url"
+              name="telegramLink"
+              value={formData.telegramLink}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="https://t.me/your_group"
+              required
+            />
+          </div>
+
+          {/* Duration & Capacity */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Duration *</label>
+              <input
+                type="text"
+                name="duration"
+                value={formData.duration}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="e.g., 2 hours"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Capacity (optional)</label>
+              <input
+                type="number"
+                name="capacity"
+                value={formData.capacity}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="e.g., 50"
+              />
+            </div>
+          </div>
+
+          {/* Cover Image */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Cover Image {!initialData && '*'}
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              required={!initialData}
+            />
+            <p className="text-xs text-gray-500 mt-1">Max 10MB. Supported formats: JPG, PNG, GIF, WebP</p>
+          </div>
+
+          {/* Form Builder */}
+          <FormBuilder
+            initialFields={formData.registrationFormFields}
+            onFieldsChange={handleFormFieldsChange}
+          />
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium disabled:opacity-50"
+            >
+              {loading ? 'Creating...' : initialData ? 'Update Workshop' : 'Create Workshop'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
