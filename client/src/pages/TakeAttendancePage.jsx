@@ -14,6 +14,8 @@ export const TakeAttendancePage = () => {
   const [roster, setRoster] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [qrEnabled, setQrEnabled] = useState(false);
+  const [qrUpdating, setQrUpdating] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -40,6 +42,8 @@ export const TakeAttendancePage = () => {
       try {
         const response = await attendanceAPI.getRoster(workshopId, selectedDate);
         setRoster(response.data.roster);
+        const sessionResponse = await attendanceAPI.getQrSession(workshopId, selectedDate);
+        setQrEnabled(sessionResponse.data.qrEnabled);
       } catch (err) {
         setError('Failed to load registered students');
       } finally {
@@ -76,6 +80,23 @@ export const TakeAttendancePage = () => {
       setError(err.response?.data?.message || 'Failed to submit attendance');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleToggleQr = async () => {
+    setQrUpdating(true);
+    setError('');
+    try {
+      const response = await attendanceAPI.setQrSession(workshopId, {
+        date: selectedDate,
+        qrEnabled: !qrEnabled
+      });
+      setQrEnabled(response.data.session.qrEnabled);
+      setSuccess(response.data.session.qrEnabled ? 'QR attendance is ON' : 'QR attendance is OFF for the day');
+    } catch (err) {
+      setError('Failed to update QR attendance status');
+    } finally {
+      setQrUpdating(false);
     }
   };
 
@@ -118,15 +139,35 @@ export const TakeAttendancePage = () => {
 
             {qrImageUrl && (
               <div className="rounded-lg border border-slate-200 bg-white p-4 text-center">
+                <div className={`inline-flex px-3 py-1 rounded-lg text-sm font-bold mb-3 ${
+                  qrEnabled ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'
+                }`}>
+                  QR Attendance {qrEnabled ? 'ON' : 'OFF'}
+                </div>
                 <p className="font-bold text-slate-950 mb-2">QR Check-in</p>
-                <img src={qrImageUrl} alt="Attendance QR code" className="mx-auto w-56 h-56" />
-                <p className="text-xs text-slate-500 mt-2">Students must scan and login with their registered Google email.</p>
+                <div className={qrEnabled ? '' : 'opacity-35 grayscale pointer-events-none'}>
+                  <img src={qrImageUrl} alt="Attendance QR code" className="mx-auto w-56 h-56" />
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  {qrEnabled
+                    ? 'Students must scan and login with their registered Google email.'
+                    : 'QR is off. Students who scan will see attendance is done for the day.'}
+                </p>
+                <button
+                  onClick={handleToggleQr}
+                  disabled={qrUpdating}
+                  className={`mt-3 w-full px-4 py-2 rounded-lg font-bold ${
+                    qrEnabled ? 'bg-slate-950 text-white' : 'bg-emerald-600 text-white'
+                  } disabled:opacity-50`}
+                >
+                  {qrUpdating ? 'Updating...' : qrEnabled ? 'Turn QR Off' : 'Turn QR On'}
+                </button>
                 <button
                   onClick={() => {
                     navigator.clipboard?.writeText(qrCheckInUrl);
                     setSuccess('QR check-in link copied');
                   }}
-                  className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-slate-950 text-white rounded-lg font-semibold"
+                  className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-800 rounded-lg font-semibold"
                 >
                   <FiCopy /> Copy Link
                 </button>

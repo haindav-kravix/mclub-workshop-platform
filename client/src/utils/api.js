@@ -74,6 +74,13 @@ export const attendanceAPI = {
   }),
   getReports: (workshopId) => axios.get(`${API_URL}/attendance/workshop/${workshopId}/reports`, {
     headers: getAuthHeaders()
+  }),
+  getQrSession: (workshopId, date) => axios.get(`${API_URL}/attendance/workshop/${workshopId}/qr-session`, {
+    headers: getAuthHeaders(),
+    params: { date }
+  }),
+  setQrSession: (workshopId, data) => axios.patch(`${API_URL}/attendance/workshop/${workshopId}/qr-session`, data, {
+    headers: getAuthHeaders()
   })
 };
 

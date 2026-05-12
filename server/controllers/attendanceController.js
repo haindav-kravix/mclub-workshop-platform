@@ -1,4 +1,5 @@
 import Attendance from '../models/Attendance.js';
+import AttendanceSession from '../models/AttendanceSession.js';
 import Registration from '../models/Registration.js';
 import Workshop from '../models/Workshop.js';
 
@@ -113,6 +114,62 @@ export const getAttendanceReports = async (req, res) => {
   }
 };
 
+export const getQrSession = async (req, res) => {
+  try {
+    const { workshopId } = req.params;
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({ message: 'Date is required' });
+    }
+
+    const session = await AttendanceSession.findOne({
+      workshopId,
+      date: normalizeDate(date)
+    });
+
+    res.json({
+      workshopId,
+      date: normalizeDate(date),
+      qrEnabled: session?.qrEnabled || false
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error loading QR session', error: error.message });
+  }
+};
+
+export const setQrSession = async (req, res) => {
+  try {
+    const { workshopId } = req.params;
+    const { date, qrEnabled } = req.body;
+
+    if (!date) {
+      return res.status(400).json({ message: 'Date is required' });
+    }
+
+    const workshop = await Workshop.findById(workshopId);
+    if (!workshop) {
+      return res.status(404).json({ message: 'Workshop not found' });
+    }
+
+    const session = await AttendanceSession.findOneAndUpdate(
+      { workshopId, date: normalizeDate(date) },
+      {
+        workshopId,
+        date: normalizeDate(date),
+        qrEnabled: Boolean(qrEnabled),
+        updatedBy: req.user.id,
+        updatedAt: new Date()
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
+    res.json({ success: true, session });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating QR session', error: error.message });
+  }
+};
+
 export const qrCheckIn = async (req, res) => {
   try {
     const { workshopId } = req.params;
@@ -125,6 +182,15 @@ export const qrCheckIn = async (req, res) => {
     const workshop = await Workshop.findById(workshopId);
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
+    }
+
+    const session = await AttendanceSession.findOne({
+      workshopId,
+      date: normalizeDate(date)
+    });
+
+    if (!session?.qrEnabled) {
+      return res.status(403).json({ message: 'Attendance is done for the day' });
     }
 
     const registration = await Registration.findOne({

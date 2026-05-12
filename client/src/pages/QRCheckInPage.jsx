@@ -36,7 +36,7 @@ export const QRCheckInPage = () => {
     setError('');
     try {
       const response = await attendanceAPI.qrCheckIn(workshopId, { date });
-      setSuccess(`${response.data.user.name}, your attendance is marked present.`);
+      setSuccess(`Thank you, ${response.data.user.name}. Your attendance is marked present.`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to mark attendance');
     } finally {
@@ -56,7 +56,7 @@ export const QRCheckInPage = () => {
   return (
     <div className="min-h-screen app-shell flex items-center justify-center p-4">
       <div className="panel rounded-lg max-w-lg w-full p-6 sm:p-8 text-center">
-        <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-5">
+        <div className="w-16 h-16 rounded-full bg-primary/20 text-secondary flex items-center justify-center mx-auto mb-5">
           <FiCheck size={30} />
         </div>
         <p className="text-sm font-bold uppercase tracking-wide text-emerald-600 mb-2">QR Attendance Check-in</p>
@@ -66,16 +66,25 @@ export const QRCheckInPage = () => {
         </p>
 
         {error && <div className="mt-5"><ErrorMessage message={error} onDismiss={() => setError('')} /></div>}
-        {success && <div className="mt-5"><SuccessMessage message={success} onDismiss={() => setSuccess('')} /></div>}
+        {success ? (
+          <div className="mt-6 rounded-lg bg-primary/20 border border-primary p-6">
+            <h2 className="text-2xl font-black text-secondary">Thank you!</h2>
+            <p className="text-secondary mt-2">{success}</p>
+          </div>
+        ) : null}
 
-        {!isAuthenticated ? (
+        <p className="text-sm text-slate-500 mt-4">
+          Check-in works only while the admin has QR attendance turned on.
+        </p>
+
+        {!success && !isAuthenticated ? (
           <button
             onClick={() => navigate(`/login?redirect=${encodeURIComponent(loginRedirect)}`)}
             className="mt-6 w-full px-6 py-3 bg-slate-950 text-white rounded-lg font-bold flex items-center justify-center gap-2"
           >
             <FiLogIn /> Login with registered Google email
           </button>
-        ) : (
+        ) : !success ? (
           <>
             <div className="mt-5 rounded-lg bg-slate-50 p-4">
               <p className="text-sm text-slate-500">Checking in as</p>
@@ -83,21 +92,19 @@ export const QRCheckInPage = () => {
             </div>
             <button
               onClick={handleCheckIn}
-              disabled={submitting || !date || success}
-              className="mt-6 w-full px-6 py-3 bg-emerald-600 text-white rounded-lg font-bold disabled:opacity-50"
+              disabled={submitting || !date}
+              className="mt-6 w-full px-6 py-3 bg-secondary text-white rounded-lg font-bold disabled:opacity-50"
             >
-              {submitting ? 'Marking...' : success ? 'Attendance Marked' : 'Confirm Attendance'}
+              {submitting ? 'Marking...' : 'Confirm Attendance'}
             </button>
-            {!success && (
-              <button
-                onClick={handleSwitchAccount}
-                className="mt-3 w-full px-6 py-3 bg-slate-100 text-slate-800 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-slate-200"
-              >
-                <FiRefreshCw /> Use Different Google Account
-              </button>
-            )}
+            <button
+              onClick={handleSwitchAccount}
+              className="mt-3 w-full px-6 py-3 bg-slate-100 text-slate-800 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-slate-200"
+            >
+              <FiRefreshCw /> Use Different Google Account
+            </button>
           </>
-        )}
+        ) : null}
       </div>
     </div>
   );
