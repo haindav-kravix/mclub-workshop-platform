@@ -183,21 +183,37 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
                 )}
 
                 {field.type === 'radio' && (
-                  <div className="flex flex-col space-y-2">
-                    {field.options.map((option, idx) => (
-                      <label key={idx} className="flex items-center space-x-3">
-                        <input
-                          type="radio"
-                          name={field.fieldId}
-                          value={option}
-                          checked={formData[field.fieldId] === option}
-                          onChange={(e) => handleChange(field.fieldId, e.target.value)}
-                          required={field.required}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-gray-700">{option}</span>
-                      </label>
-                    ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {field.options.map((option, idx) => {
+                      const letter = String.fromCharCode(65 + idx);
+                      const selected = formData[field.fieldId] === option;
+                      return (
+                        <label
+                          key={idx}
+                          className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition ${
+                            selected
+                              ? 'border-secondary bg-emerald-50 text-slate-950'
+                              : 'border-gray-200 bg-white hover:border-secondary/60'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name={field.fieldId}
+                            value={option}
+                            checked={selected}
+                            onChange={(e) => handleChange(field.fieldId, e.target.value)}
+                            required={field.required}
+                            className="sr-only"
+                          />
+                          <span className={`flex h-7 w-7 flex-none items-center justify-center rounded-md text-sm font-bold ${
+                            selected ? 'bg-secondary text-white' : 'bg-slate-100 text-slate-700'
+                          }`}>
+                            {letter}
+                          </span>
+                          <span className="text-gray-800">{option}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -237,27 +253,40 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
                 )}
 
                 {field.type === 'checkbox' && (
-                  <div className="flex flex-col space-y-2">
-                    {field.options.map((option, idx) => (
-                      <label key={idx} className="flex items-center space-x-3">
-                        <input
-                          type="checkbox"
-                          value={option}
-                          checked={(formData[field.fieldId] || '').split(',').includes(option)}
-                          onChange={(e) => {
-                            const selected = (formData[field.fieldId] || '').split(',').filter(Boolean);
-                            if (e.target.checked) {
-                              selected.push(option);
-                            } else {
-                              selected.splice(selected.indexOf(option), 1);
-                            }
-                            handleChange(field.fieldId, selected.join(','));
-                          }}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-gray-700">{option}</span>
-                      </label>
-                    ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {field.options.map((option, idx) => {
+                      const letter = String.fromCharCode(65 + idx);
+                      const selectedOptions = (formData[field.fieldId] || '').split(',').filter(Boolean);
+                      const selected = selectedOptions.includes(option);
+                      return (
+                        <label
+                          key={idx}
+                          className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition ${
+                            selected
+                              ? 'border-secondary bg-emerald-50 text-slate-950'
+                              : 'border-gray-200 bg-white hover:border-secondary/60'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            value={option}
+                            checked={selected}
+                            onChange={(e) => {
+                              const nextSelected = selectedOptions.filter(value => value !== option);
+                              if (e.target.checked) nextSelected.push(option);
+                              handleChange(field.fieldId, nextSelected.join(','));
+                            }}
+                            className="sr-only"
+                          />
+                          <span className={`flex h-7 w-7 flex-none items-center justify-center rounded-md text-sm font-bold ${
+                            selected ? 'bg-secondary text-white' : 'bg-slate-100 text-slate-700'
+                          }`}>
+                            {letter}
+                          </span>
+                          <span className="text-gray-800">{option}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                 )}
               </div>

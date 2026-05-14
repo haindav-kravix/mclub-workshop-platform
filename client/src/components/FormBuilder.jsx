@@ -13,6 +13,7 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
 
   const needsOptions = (type) => ['select', 'radio', 'checkbox', 'question-mcq'].includes(type);
   const optionLetters = ['A', 'B', 'C', 'D'];
+  const emptyOptions = () => optionLetters.map(() => '');
 
   const fieldTypeLabel = (type) => ({
     text: 'Text',
@@ -32,9 +33,24 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
       return;
     }
 
+    const cleanedOptions = needsOptions(newField.type)
+      ? newField.options.map(option => option.trim()).filter(Boolean)
+      : [];
+
+    if (needsOptions(newField.type) && cleanedOptions.length < 2) {
+      alert('Please enter at least two options');
+      return;
+    }
+
+    if (newField.type === 'question-mcq' && !newField.correctAnswer) {
+      alert('Please select the correct answer');
+      return;
+    }
+
     const field = {
       fieldId: `field_${Date.now()}`,
       ...newField,
+      options: cleanedOptions,
       order: fields.length
     };
 
@@ -112,7 +128,7 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
                 setNewField({
                   ...newField,
                   type,
-                  options: type === 'question-mcq' ? ['A', 'B', 'C', 'D'] : needsOptions(type) ? newField.options : [],
+                  options: needsOptions(type) ? (newField.options.length ? newField.options : emptyOptions()) : [],
                   correctAnswer: ['question-text', 'question-mcq'].includes(type) ? newField.correctAnswer : ''
                 });
               }}
@@ -143,9 +159,9 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
           </div>
         </div>
 
-        {newField.type === 'question-mcq' ? (
+        {needsOptions(newField.type) && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">ABCD Options</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {optionLetters.map((letter, index) => (
                 <label key={letter} className="rounded-lg border border-gray-200 bg-white p-3">
@@ -154,32 +170,23 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
                     type="text"
                     value={newField.options[index] || ''}
                     onChange={(e) => {
-                      const options = [...(newField.options.length ? newField.options : optionLetters)];
+                      const options = [...(newField.options.length ? newField.options : emptyOptions())];
                       options[index] = e.target.value;
-                      setNewField({ ...newField, options });
+                      const currentAnswerIndex = newField.options.findIndex(option => option === newField.correctAnswer);
+                      setNewField({
+                        ...newField,
+                        options,
+                        correctAnswer: newField.type === 'question-mcq' && currentAnswerIndex === index
+                          ? e.target.value
+                          : newField.correctAnswer
+                      });
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder={`Answer ${letter}`}
+                    placeholder={`Option ${letter}`}
                   />
                 </label>
               ))}
             </div>
-          </div>
-        ) : needsOptions(newField.type) && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Options (comma-separated)</label>
-            <input
-              type="text"
-              value={newField.options.join(', ')}
-              onChange={(e) =>
-                setNewField({
-                  ...newField,
-                  options: e.target.value.split(',').map(o => o.trim()).filter(o => o)
-                })
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Option 1, Option 2, Option 3"
-            />
           </div>
         )}
 
