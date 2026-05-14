@@ -1,29 +1,34 @@
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { ErrorMessage } from '../components/UI';
 import { BrandMark } from '../components/BrandMark';
+import { GoogleAuthButton } from '../components/GoogleAuthButton';
 
 export const LoginPage = () => {
   const { handleGoogleLoginSuccess } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [error, setError] = React.useState('');
+  const [isSigningIn, setIsSigningIn] = React.useState(false);
   const redirectTo = searchParams.get('redirect') || '/workshops';
 
   const handleSuccess = async (credentialResponse) => {
+    setIsSigningIn(true);
+    setError('');
     const result = await handleGoogleLoginSuccess(credentialResponse);
     if (result.success) {
       navigate(redirectTo);
     } else {
       setError(result.error || 'Login failed');
+      setIsSigningIn(false);
     }
   };
 
   const handleError = () => {
     setError('Login failed. Please try again.');
+    setIsSigningIn(false);
   };
 
   return (
@@ -55,13 +60,16 @@ export const LoginPage = () => {
           )}
 
           <div className="mb-8">
-            <GoogleLogin
+            <GoogleAuthButton
               onSuccess={handleSuccess}
               onError={handleError}
               text="signin_with"
-              size="large"
-              width="100%"
             />
+            {isSigningIn && (
+              <p className="mt-3 text-center text-sm font-semibold text-slate-700">
+                Signing you in...
+              </p>
+            )}
           </div>
 
           <p className="text-center text-gray-700 text-sm mb-8">

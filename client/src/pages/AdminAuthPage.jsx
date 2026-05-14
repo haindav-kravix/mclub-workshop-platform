@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { GoogleLogin } from '@react-oauth/google';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiLock, FiShield, FiUsers, FiDownload } from 'react-icons/fi';
 import { ErrorMessage } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import { BrandMark } from '../components/BrandMark';
+import { GoogleAuthButton } from '../components/GoogleAuthButton';
 
 export const AdminAuthPage = () => {
   const [mode, setMode] = useState('login');
@@ -98,13 +98,16 @@ export const AdminAuthPage = () => {
           {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
 
           <div className="mb-8">
-            <GoogleLogin
+            <GoogleAuthButton
               onSuccess={(credentialResponse) => completeAdminAuth({ credential: credentialResponse.credential })}
               onError={() => setError('Google authentication failed. Please try again.')}
               text={mode === 'signup' ? 'signup_with' : 'signin_with'}
-              size="large"
-              width="100%"
             />
+            {loading && (
+              <p className="mt-3 text-center text-sm font-semibold text-slate-700">
+                Signing you in...
+              </p>
+            )}
           </div>
 
           <div className="relative mb-6">

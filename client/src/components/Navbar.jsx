@@ -28,22 +28,22 @@ export const Navbar = () => {
 
   return (
     <nav className="bg-white/95 backdrop-blur border-b border-slate-200 z-50">
-      <div className="max-w-[1680px] mx-auto px-4 sm:px-6">
-        <div className="flex justify-between items-center min-h-16 sm:min-h-20 py-2 gap-4">
+      <div className="max-w-[1680px] mx-auto px-3 sm:px-6">
+        <div className="flex justify-between items-center min-h-16 sm:min-h-20 py-2 gap-2 sm:gap-4">
           {/* Logo */}
-          <Link to="/" className="flex flex-none items-center gap-5 w-[calc(100%-3.5rem)] max-w-[520px] md:w-[560px] md:max-w-none lg:w-[610px] xl:w-[670px] 2xl:w-[720px]">
+          <Link to="/" className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4 lg:flex-none lg:gap-5 lg:w-[610px] xl:w-[670px] 2xl:w-[720px]">
             <img
               src="/brand/klh-head-banner.png"
               alt="KLH University"
-              className="h-7 w-[190px] sm:h-8 sm:w-[235px] lg:h-10 lg:w-[320px] xl:h-11 xl:w-[360px] object-contain flex-none"
+              className="h-7 w-[128px] min-[380px]:w-[150px] sm:h-8 sm:w-[235px] lg:h-10 lg:w-[320px] xl:h-11 xl:w-[360px] object-contain flex-none"
             />
-            <div className="flex items-center gap-3 flex-none">
-              <div className="w-9 h-9 rounded-lg bg-secondary text-white flex items-center justify-center font-bold shadow-sm flex-none">
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 lg:flex-none">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-secondary text-white flex items-center justify-center font-bold shadow-sm flex-none">
                 MC
               </div>
-              <div className="w-[118px] lg:w-[150px]">
-                <span className="block font-bold text-sm lg:text-lg leading-tight text-slate-950">MongoDB Club</span>
-                <p className="text-[11px] lg:text-xs text-slate-500 leading-tight">Workshop Hub</p>
+              <div className="min-w-0 max-w-[96px] min-[380px]:max-w-[116px] sm:max-w-[150px] lg:w-[150px]">
+                <span className="block truncate font-bold text-sm sm:text-base lg:text-lg leading-tight text-slate-950">MongoDB Club</span>
+                <p className="hidden min-[380px]:block truncate text-[11px] lg:text-xs text-slate-500 leading-tight">Workshop Hub</p>
               </div>
             </div>
           </Link>
@@ -125,8 +125,9 @@ export const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="lg:hidden rounded-lg border border-slate-200 p-2 text-slate-700"
+            className="lg:hidden flex-none rounded-lg border border-slate-200 p-2 text-slate-700"
             onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}
           >
             {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
