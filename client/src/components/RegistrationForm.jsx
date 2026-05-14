@@ -22,6 +22,16 @@ const isEmailField = (field) => {
   return field.type === 'email' || label.includes('email');
 };
 
+const getOptionLabel = (index) => {
+  let label = '';
+  let number = index;
+  do {
+    label = String.fromCharCode(65 + (number % 26)) + label;
+    number = Math.floor(number / 26) - 1;
+  } while (number >= 0);
+  return label;
+};
+
 export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal' }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState(() => getInitialFormData(workshop, user));
@@ -185,7 +195,7 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
                 {field.type === 'radio' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {field.options.map((option, idx) => {
-                      const letter = String.fromCharCode(65 + idx);
+                      const letter = getOptionLabel(idx);
                       const selected = formData[field.fieldId] === option;
                       return (
                         <label
@@ -220,7 +230,7 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
                 {field.type === 'question-mcq' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {field.options.map((option, idx) => {
-                      const letter = String.fromCharCode(65 + idx);
+                      const letter = getOptionLabel(idx);
                       const selected = formData[field.fieldId] === option;
                       return (
                         <label
@@ -255,7 +265,7 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
                 {field.type === 'checkbox' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {field.options.map((option, idx) => {
-                      const letter = String.fromCharCode(65 + idx);
+                      const letter = getOptionLabel(idx);
                       const selectedOptions = (formData[field.fieldId] || '').split(',').filter(Boolean);
                       const selected = selectedOptions.includes(option);
                       return (

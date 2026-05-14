@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiTrash2, FiEdit2, FiPlus } from 'react-icons/fi';
+import { FiTrash2, FiPlus } from 'react-icons/fi';
 
 export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
   const [fields, setFields] = useState(initialFields);
@@ -12,8 +12,16 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
   });
 
   const needsOptions = (type) => ['select', 'radio', 'checkbox', 'question-mcq'].includes(type);
-  const optionLetters = ['A', 'B', 'C', 'D'];
-  const emptyOptions = () => optionLetters.map(() => '');
+  const getOptionLabel = (index) => {
+    let label = '';
+    let number = index;
+    do {
+      label = String.fromCharCode(65 + (number % 26)) + label;
+      number = Math.floor(number / 26) - 1;
+    } while (number >= 0);
+    return label;
+  };
+  const emptyOptions = (count = 4) => Array.from({ length: count }, () => '');
 
   const fieldTypeLabel = (type) => ({
     text: 'Text',
@@ -163,30 +171,62 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {optionLetters.map((letter, index) => (
-                <label key={letter} className="rounded-lg border border-gray-200 bg-white p-3">
-                  <span className="block text-xs font-bold text-secondary mb-1">Option {letter}</span>
+              {(newField.options.length ? newField.options : emptyOptions()).map((option, index) => {
+                const label = getOptionLabel(index);
+                return (
+                <label key={`${label}-${index}`} className="rounded-lg border border-gray-200 bg-white p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="block text-xs font-bold text-secondary">Option {label}</span>
+                    {newField.options.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const optionToRemove = newField.options[index];
+                          const options = newField.options.filter((_, optionIndex) => optionIndex !== index);
+                          setNewField({
+                            ...newField,
+                            options,
+                            correctAnswer: newField.correctAnswer === optionToRemove ? '' : newField.correctAnswer
+                          });
+                        }}
+                        className="rounded-md bg-rose-50 px-2 py-1 text-xs font-bold text-rose-700 hover:bg-rose-100"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="text"
-                    value={newField.options[index] || ''}
+                    value={option || ''}
                     onChange={(e) => {
                       const options = [...(newField.options.length ? newField.options : emptyOptions())];
+                      const previousValue = options[index];
                       options[index] = e.target.value;
-                      const currentAnswerIndex = newField.options.findIndex(option => option === newField.correctAnswer);
                       setNewField({
                         ...newField,
                         options,
-                        correctAnswer: newField.type === 'question-mcq' && currentAnswerIndex === index
+                        correctAnswer: newField.type === 'question-mcq' && newField.correctAnswer === previousValue
                           ? e.target.value
                           : newField.correctAnswer
                       });
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder={`Option ${letter}`}
+                    placeholder={`Option ${label}`}
                   />
                 </label>
-              ))}
+              );
+              })}
             </div>
+            <button
+              type="button"
+              onClick={() => setNewField({
+                ...newField,
+                options: [...(newField.options.length ? newField.options : emptyOptions()), '']
+              })}
+              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2 text-sm font-bold text-white hover:bg-secondary/90"
+            >
+              <FiPlus /> Add Option
+            </button>
           </div>
         )}
 
@@ -194,21 +234,25 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Answer Key</label>
             {newField.type === 'question-mcq' ? (
-              <div className="grid grid-cols-4 gap-2">
-                {optionLetters.map((letter, index) => (
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                {newField.options.map((option, index) => {
+                  const label = getOptionLabel(index);
+                  return (
                   <button
-                    key={letter}
+                    key={`${label}-${index}`}
                     type="button"
-                    onClick={() => setNewField({ ...newField, correctAnswer: newField.options[index] || letter })}
+                    onClick={() => option && setNewField({ ...newField, correctAnswer: option })}
+                    disabled={!option}
                     className={`rounded-lg border px-3 py-2 text-sm font-bold transition ${
-                      newField.correctAnswer === (newField.options[index] || letter)
+                      newField.correctAnswer === option
                         ? 'border-secondary bg-secondary text-white'
-                        : 'border-gray-300 bg-white text-gray-700 hover:border-secondary'
+                        : 'border-gray-300 bg-white text-gray-700 hover:border-secondary disabled:cursor-not-allowed disabled:opacity-40'
                     }`}
                   >
-                    {letter}
+                    {label}
                   </button>
-                ))}
+                );
+                })}
               </div>
             ) : (
               <input
