@@ -1,6 +1,6 @@
 import React from 'react';
 import { FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiFileText, FiList, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
-import { API_ORIGIN } from '../utils/api';
+import { resolveMediaUrl } from '../utils/api';
 import { formatWorkshopTime } from '../utils/formatters';
 
 export const AdminWorkshopCard = ({
@@ -24,9 +24,13 @@ export const AdminWorkshopCard = ({
       <div className="h-44 sm:h-48 overflow-hidden bg-slate-100 relative">
         {workshop.coverImage ? (
           <img
-            src={`${API_ORIGIN}${workshop.coverImage}`}
+            src={resolveMediaUrl(workshop.coverImage)}
             alt={workshop.title}
             className="w-full h-full object-contain"
+            onError={(event) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = '/brand/klh-head-banner.png';
+            }}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-3xl font-bold">

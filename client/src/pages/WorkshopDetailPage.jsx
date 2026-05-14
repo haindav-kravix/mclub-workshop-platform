@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { workshopAPI, registrationAPI, API_ORIGIN } from '../utils/api';
+import { workshopAPI, registrationAPI, resolveMediaUrl } from '../utils/api';
 import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import { FiCalendar, FiClock, FiMapPin, FiArrowLeft, FiSend } from 'react-icons/fi';
@@ -81,9 +81,13 @@ export const WorkshopDetailPage = () => {
         <div className="mb-8 rounded-lg overflow-hidden shadow-lg h-64 sm:h-80 md:h-96 bg-slate-100 panel">
           {workshop.coverImage ? (
             <img
-              src={`${API_ORIGIN}${workshop.coverImage}`}
+              src={resolveMediaUrl(workshop.coverImage)}
               alt={workshop.title}
               className="w-full h-full object-contain"
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = '/brand/klh-head-banner.png';
+              }}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-6xl font-bold">

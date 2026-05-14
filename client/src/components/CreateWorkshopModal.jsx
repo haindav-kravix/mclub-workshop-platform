@@ -4,15 +4,26 @@ import { FormBuilder } from './FormBuilder';
 
 const toDateInput = (value) => value ? value.split('T')[0] : '';
 
+const addDaysToDateInput = (dateString, days) => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  date.setDate(date.getDate() + days);
+  const nextYear = date.getFullYear();
+  const nextMonth = String(date.getMonth() + 1).padStart(2, '0');
+  const nextDay = String(date.getDate()).padStart(2, '0');
+  return `${nextYear}-${nextMonth}-${nextDay}`;
+};
+
 const getDatesBetween = (startDate, endDate) => {
   if (!startDate) return [];
   const dates = [];
-  const start = new Date(`${startDate}T00:00:00`);
-  const end = new Date(`${(endDate || startDate)}T00:00:00`);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) return [];
+  const finalDate = endDate || startDate;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(finalDate) || finalDate < startDate) {
+    return [];
+  }
 
-  for (const current = new Date(start); current <= end; current.setDate(current.getDate() + 1)) {
-    dates.push(current.toISOString().split('T')[0]);
+  for (let current = startDate; current <= finalDate; current = addDaysToDateInput(current, 1)) {
+    dates.push(current);
   }
   return dates;
 };

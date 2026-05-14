@@ -35,6 +35,29 @@ const parseDailyTimings = (timings) => {
   }
 };
 
+const uploadedFileToDataUrl = (file) => {
+  const fileBuffer = fs.readFileSync(file.path);
+  fs.unlink(file.path, (err) => {
+    if (err) console.error('Error deleting temporary upload:', err);
+  });
+  return `data:${file.mimetype};base64,${fileBuffer.toString('base64')}`;
+};
+
+const cleanupUploadedFile = (file) => {
+  if (!file?.path) return;
+  fs.unlink(file.path, (err) => {
+    if (err) console.error('Error deleting file:', err);
+  });
+};
+
+const deleteLegacyUpload = (coverImage) => {
+  if (!coverImage?.startsWith('/uploads/')) return;
+  const imagePath = path.join(__dirname, '..', coverImage);
+  fs.unlink(imagePath, (err) => {
+    if (err) console.error('Error deleting file:', err);
+  });
+};
+
 const escapeXml = (value = '') => String(value)
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
@@ -469,7 +492,7 @@ export const createWorkshop = async (req, res) => {
       return res.status(400).json({ message: 'Cover image is required' });
     }
 
-    const coverImage = `/uploads/${req.file.filename}`;
+    const coverImage = uploadedFileToDataUrl(req.file);
 
     const workshop = new Workshop({
       title,
@@ -492,12 +515,7 @@ export const createWorkshop = async (req, res) => {
     res.status(201).json({ success: true, workshop });
   } catch (error) {
     // Clean up uploaded file if there's an error
-    if (req.file) {
-      const filePath = path.join(__dirname, '../uploads', req.file.filename);
-      fs.unlink(filePath, (err) => {
-        if (err) console.error('Error deleting file:', err);
-      });
-    }
+    cleanupUploadedFile(req.file);
     res.status(500).json({ message: 'Error creating workshop', error: error.message });
   }
 };
@@ -565,15 +583,9 @@ export const updateWorkshop = async (req, res) => {
     };
 
     if (req.file) {
-      // Delete old image
       const workshop = await Workshop.findById(id);
-      if (workshop && workshop.coverImage) {
-        const oldPath = path.join(__dirname, '..', workshop.coverImage);
-        fs.unlink(oldPath, (err) => {
-          if (err) console.error('Error deleting old file:', err);
-        });
-      }
-      updateData.coverImage = `/uploads/${req.file.filename}`;
+      if (workshop?.coverImage) deleteLegacyUpload(workshop.coverImage);
+      updateData.coverImage = uploadedFileToDataUrl(req.file);
     }
 
     const workshop = await Workshop.findByIdAndUpdate(id, updateData, { new: true })
@@ -581,12 +593,7 @@ export const updateWorkshop = async (req, res) => {
 
     res.json({ success: true, workshop });
   } catch (error) {
-    if (req.file) {
-      const filePath = path.join(__dirname, '../uploads', req.file.filename);
-      fs.unlink(filePath, (err) => {
-        if (err) console.error('Error deleting file:', err);
-      });
-    }
+    cleanupUploadedFile(req.file);
     res.status(500).json({ message: 'Error updating workshop', error: error.message });
   }
 };
@@ -599,13 +606,7 @@ export const deleteWorkshop = async (req, res) => {
       return res.status(404).json({ message: 'Workshop not found' });
     }
 
-    // Delete cover image
-    if (workshop.coverImage) {
-      const imagePath = path.join(__dirname, '..', workshop.coverImage);
-      fs.unlink(imagePath, (err) => {
-        if (err) console.error('Error deleting file:', err);
-      });
-    }
+    deleteLegacyUpload(workshop.coverImage);
 
     // Delete registrations
     await Registration.deleteMany({ workshopId: workshop._id });

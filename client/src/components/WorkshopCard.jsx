@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { workshopAPI } from '../utils/api';
-import { API_ORIGIN } from '../utils/api';
+import { workshopAPI, resolveMediaUrl } from '../utils/api';
 import { LoadingSpinner, ErrorMessage } from './UI';
 import { FiCalendar, FiMapPin, FiClock } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
@@ -21,9 +20,13 @@ export const WorkshopCard = ({ workshop, onClick }) => {
       <div className="h-48 overflow-hidden bg-slate-100 relative">
         {workshop.coverImage ? (
           <img
-            src={`${API_ORIGIN}${workshop.coverImage}`}
+            src={resolveMediaUrl(workshop.coverImage)}
             alt={workshop.title}
             className="w-full h-full object-contain group-hover:scale-105 transition"
+            onError={(event) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = '/brand/klh-head-banner.png';
+            }}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-4xl font-bold">
