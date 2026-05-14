@@ -6,6 +6,10 @@ import { useAuth } from '../context/AuthContext';
 import { BrandMark } from '../components/BrandMark';
 import { GoogleAuthButton } from '../components/GoogleAuthButton';
 
+const getPublicOrigin = () => (
+  import.meta.env.VITE_PUBLIC_ORIGIN || window.location.origin
+);
+
 export const AdminAuthPage = () => {
   const [mode, setMode] = useState('login');
   const [error, setError] = useState('');
@@ -66,7 +70,7 @@ export const AdminAuthPage = () => {
 
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
     authUrl.searchParams.set('client_id', googleClientId);
-    authUrl.searchParams.set('redirect_uri', `${window.location.origin}/MC-ADMIN`);
+    authUrl.searchParams.set('redirect_uri', `${getPublicOrigin()}/MC-ADMIN`);
     authUrl.searchParams.set('response_type', 'id_token');
     authUrl.searchParams.set('scope', 'openid email profile');
     authUrl.searchParams.set('nonce', state);
