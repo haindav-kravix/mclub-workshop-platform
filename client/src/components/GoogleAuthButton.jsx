@@ -36,6 +36,7 @@ export const GoogleAuthButton = ({
         text={text}
         size="large"
         shape="rectangular"
+        ux_mode="redirect"
         width={`${buttonWidth}`}
       />
     </div>

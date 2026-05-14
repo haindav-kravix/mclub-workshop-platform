@@ -13,7 +13,6 @@ export const LoginPage = () => {
   const [error, setError] = React.useState('');
   const [isSigningIn, setIsSigningIn] = React.useState(false);
   const redirectTo = searchParams.get('redirect') || '/workshops';
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
   const completeLogin = async (credential) => {
     setIsSigningIn(true);
@@ -57,27 +56,6 @@ export const LoginPage = () => {
     setIsSigningIn(false);
   };
 
-  const startRedirectLogin = () => {
-    if (!googleClientId) {
-      setError('Google login is not configured.');
-      return;
-    }
-
-    const state = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    sessionStorage.setItem('googleLoginState', state);
-    sessionStorage.setItem('googleLoginRedirect', redirectTo);
-
-    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-    authUrl.searchParams.set('client_id', googleClientId);
-    authUrl.searchParams.set('redirect_uri', `${window.location.origin}/login`);
-    authUrl.searchParams.set('response_type', 'id_token');
-    authUrl.searchParams.set('scope', 'openid email profile');
-    authUrl.searchParams.set('nonce', state);
-    authUrl.searchParams.set('state', state);
-    authUrl.searchParams.set('prompt', 'select_account');
-    window.location.assign(authUrl.toString());
-  };
-
   return (
     <div className="min-h-screen app-shell flex items-center justify-center px-3 py-4 sm:p-4">
       <div className="w-full max-w-2xl">
@@ -117,13 +95,6 @@ export const LoginPage = () => {
                 Signing you in...
               </p>
             )}
-            <button
-              type="button"
-              onClick={startRedirectLogin}
-              className="mt-4 w-full rounded-lg border border-emerald-400 bg-white px-4 py-3 text-sm font-black text-emerald-800 shadow-sm transition hover:bg-emerald-50"
-            >
-              Continue with Google in Safari
-            </button>
           </div>
 
           <p className="text-center text-gray-700 text-sm mb-8">

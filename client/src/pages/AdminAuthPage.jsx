@@ -12,7 +12,6 @@ export const AdminAuthPage = () => {
   const [loading, setLoading] = useState(false);
   const { handleAdminAuth } = useAuth();
   const navigate = useNavigate();
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
   const completeAdminAuth = async ({ credential, selectedMode = mode }) => {
     setError('');
@@ -53,27 +52,6 @@ export const AdminAuthPage = () => {
     sessionStorage.removeItem('googleAdminLoginMode');
     completeAdminAuth({ credential: idToken, selectedMode });
   }, []);
-
-  const startRedirectLogin = () => {
-    if (!googleClientId) {
-      setError('Google login is not configured.');
-      return;
-    }
-
-    const state = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    sessionStorage.setItem('googleAdminLoginState', state);
-    sessionStorage.setItem('googleAdminLoginMode', mode);
-
-    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-    authUrl.searchParams.set('client_id', googleClientId);
-    authUrl.searchParams.set('redirect_uri', `${window.location.origin}/MC-ADMIN`);
-    authUrl.searchParams.set('response_type', 'id_token');
-    authUrl.searchParams.set('scope', 'openid email profile');
-    authUrl.searchParams.set('nonce', state);
-    authUrl.searchParams.set('state', state);
-    authUrl.searchParams.set('prompt', 'select_account');
-    window.location.assign(authUrl.toString());
-  };
 
   return (
     <div className="min-h-screen app-shell flex items-center justify-center px-3 py-4 sm:p-4">
@@ -151,13 +129,6 @@ export const AdminAuthPage = () => {
                 Signing you in...
               </p>
             )}
-            <button
-              type="button"
-              onClick={startRedirectLogin}
-              className="mt-4 w-full rounded-lg border border-emerald-400 bg-white px-4 py-3 text-sm font-black text-emerald-800 shadow-sm transition hover:bg-emerald-50"
-            >
-              Continue with Google in Safari
-            </button>
           </div>
 
           <div className="relative mb-6">
