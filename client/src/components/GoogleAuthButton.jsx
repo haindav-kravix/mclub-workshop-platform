@@ -12,7 +12,7 @@ export const GoogleAuthButton = ({
   React.useLayoutEffect(() => {
     const updateWidth = () => {
       const containerWidth = containerRef.current?.clientWidth || window.innerWidth - 48;
-      setButtonWidth(Math.max(220, Math.min(360, Math.floor(containerWidth))));
+      setButtonWidth(Math.max(240, Math.min(420, Math.floor(containerWidth))));
     };
 
     updateWidth();

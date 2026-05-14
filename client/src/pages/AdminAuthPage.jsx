@@ -12,6 +12,7 @@ export const AdminAuthPage = () => {
   const [loading, setLoading] = useState(false);
   const { handleAdminAuth } = useAuth();
   const navigate = useNavigate();
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
   const completeAdminAuth = async ({ credential, selectedMode = mode }) => {
     setError('');
@@ -32,22 +33,64 @@ export const AdminAuthPage = () => {
     setError(result.error || 'Admin authentication failed');
   };
 
+  React.useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const idToken = hashParams.get('id_token');
+    const state = hashParams.get('state');
+    const expectedState = sessionStorage.getItem('googleAdminLoginState');
+    const selectedMode = sessionStorage.getItem('googleAdminLoginMode') || mode;
+
+    if (!idToken) return;
+
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+
+    if (expectedState && state !== expectedState) {
+      setError('Google login verification failed. Please try again.');
+      return;
+    }
+
+    sessionStorage.removeItem('googleAdminLoginState');
+    sessionStorage.removeItem('googleAdminLoginMode');
+    completeAdminAuth({ credential: idToken, selectedMode });
+  }, []);
+
+  const startRedirectLogin = () => {
+    if (!googleClientId) {
+      setError('Google login is not configured.');
+      return;
+    }
+
+    const state = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    sessionStorage.setItem('googleAdminLoginState', state);
+    sessionStorage.setItem('googleAdminLoginMode', mode);
+
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    authUrl.searchParams.set('client_id', googleClientId);
+    authUrl.searchParams.set('redirect_uri', `${window.location.origin}/MC-ADMIN`);
+    authUrl.searchParams.set('response_type', 'id_token');
+    authUrl.searchParams.set('scope', 'openid email profile');
+    authUrl.searchParams.set('nonce', state);
+    authUrl.searchParams.set('state', state);
+    authUrl.searchParams.set('prompt', 'select_account');
+    window.location.assign(authUrl.toString());
+  };
+
   return (
-    <div className="min-h-screen app-shell flex items-center justify-center p-4">
+    <div className="min-h-screen app-shell flex items-center justify-center px-3 py-4 sm:p-4">
       <div className="w-full max-w-2xl">
         {/* Logo & Header */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-6 sm:mb-10">
           <Link to="/" className="flex justify-center mb-6">
             <div className="rounded-2xl bg-white/80 border border-slate-200 px-3 py-3 sm:px-4 shadow-xl max-w-full overflow-hidden">
               <BrandMark />
             </div>
           </Link>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">MC Admin</h1>
-          <p className="text-gray-700 text-lg">Manage workshops and community at scale</p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">MC Admin</h1>
+          <p className="text-gray-700 text-base sm:text-lg">Manage workshops and community at scale</p>
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6 sm:mb-8">
           <div className="panel rounded-xl p-4 text-center">
             <FiShield className="text-3xl text-green-600 mx-auto mb-3" />
             <p className="text-sm font-semibold text-gray-900">Secure Access</p>
@@ -63,7 +106,7 @@ export const AdminAuthPage = () => {
         </div>
 
         {/* Main Card */}
-        <div className="panel rounded-2xl p-8 sm:p-10">
+        <div className="login-auth-card rounded-2xl p-5 sm:p-10">
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Admin Portal</h2>
             <p className="text-gray-700">Sign in or create an admin account</p>
@@ -108,6 +151,13 @@ export const AdminAuthPage = () => {
                 Signing you in...
               </p>
             )}
+            <button
+              type="button"
+              onClick={startRedirectLogin}
+              className="mt-4 w-full rounded-lg border border-emerald-400 bg-white px-4 py-3 text-sm font-black text-emerald-800 shadow-sm transition hover:bg-emerald-50"
+            >
+              Continue with Google in Safari
+            </button>
           </div>
 
           <div className="relative mb-6">
