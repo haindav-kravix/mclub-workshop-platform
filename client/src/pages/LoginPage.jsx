@@ -13,6 +13,7 @@ export const LoginPage = () => {
   const [error, setError] = React.useState('');
   const [isSigningIn, setIsSigningIn] = React.useState(false);
   const redirectTo = searchParams.get('redirect') || '/workshops';
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
   const completeLogin = async (credential) => {
     setIsSigningIn(true);
@@ -47,13 +48,25 @@ export const LoginPage = () => {
     completeLogin(idToken);
   }, []);
 
-  const handleSuccess = async (credentialResponse) => {
-    completeLogin(credentialResponse.credential);
-  };
+  const startGoogleLogin = () => {
+    if (!googleClientId) {
+      setError('Google login is not configured.');
+      return;
+    }
 
-  const handleError = () => {
-    setError('Login failed. Please try again.');
-    setIsSigningIn(false);
+    const state = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    sessionStorage.setItem('googleLoginState', state);
+    sessionStorage.setItem('googleLoginRedirect', redirectTo);
+
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    authUrl.searchParams.set('client_id', googleClientId);
+    authUrl.searchParams.set('redirect_uri', `${window.location.origin}/login`);
+    authUrl.searchParams.set('response_type', 'id_token');
+    authUrl.searchParams.set('scope', 'openid email profile');
+    authUrl.searchParams.set('nonce', state);
+    authUrl.searchParams.set('state', state);
+    authUrl.searchParams.set('prompt', 'select_account');
+    window.location.assign(authUrl.toString());
   };
 
   return (
@@ -86,9 +99,8 @@ export const LoginPage = () => {
 
           <div className="mb-8">
             <GoogleAuthButton
-              onSuccess={handleSuccess}
-              onError={handleError}
-              text="signin_with"
+              onClick={startGoogleLogin}
+              disabled={isSigningIn}
             />
             {isSigningIn && (
               <p className="mt-3 text-center text-sm font-semibold text-slate-700">

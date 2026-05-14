@@ -59,15 +59,20 @@ html {
   -webkit-backdrop-filter: none !important;
 }
 
-.google-auth-button-wrap {
+.google-auth-button {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 12px;
   width: 100%;
-  min-height: 46px;
+  min-height: 52px;
   overflow: visible;
   background: #ffffff;
+  color: #111827 !important;
+  border: 1.5px solid #d1d5db !important;
   border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 800;
   transform: none !important;
   filter: none !important;
   backdrop-filter: none !important;
@@ -75,14 +80,14 @@ html {
   isolation: isolate;
 }
 
-.google-auth-button-wrap iframe,
-.google-auth-button-wrap div {
-  min-width: min(100%, 240px) !important;
-  max-width: 100% !important;
-  transform: none !important;
-  filter: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+.google-auth-button:hover {
+  background: #f8fafc !important;
+  border-color: #10b981 !important;
+}
+
+.google-auth-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .soft-border {

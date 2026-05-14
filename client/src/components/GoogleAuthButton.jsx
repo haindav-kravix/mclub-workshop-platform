@@ -1,44 +1,18 @@
 import React from 'react';
-import { GoogleLogin } from '@react-oauth/google';
+import { FcGoogle } from 'react-icons/fc';
 
 export const GoogleAuthButton = ({
-  onSuccess,
-  onError,
-  text = 'signin_with',
-}) => {
-  const containerRef = React.useRef(null);
-  const [buttonWidth, setButtonWidth] = React.useState(320);
-
-  React.useLayoutEffect(() => {
-    const updateWidth = () => {
-      const containerWidth = containerRef.current?.clientWidth || window.innerWidth - 48;
-      setButtonWidth(Math.max(240, Math.min(420, Math.floor(containerWidth))));
-    };
-
-    updateWidth();
-
-    const observer = new ResizeObserver(updateWidth);
-    if (containerRef.current) observer.observe(containerRef.current);
-    window.addEventListener('resize', updateWidth);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', updateWidth);
-    };
-  }, []);
-
-  return (
-    <div ref={containerRef} className="google-auth-button-wrap">
-      <GoogleLogin
-        key={buttonWidth}
-        onSuccess={onSuccess}
-        onError={onError}
-        text={text}
-        size="large"
-        shape="rectangular"
-        ux_mode="redirect"
-        width={`${buttonWidth}`}
-      />
-    </div>
-  );
-};
+  onClick,
+  label = 'Continue with Google',
+  disabled = false,
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    className="google-auth-button"
+  >
+    <FcGoogle className="text-2xl flex-none" />
+    <span>{label}</span>
+  </button>
+);

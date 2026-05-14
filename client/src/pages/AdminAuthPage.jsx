@@ -12,6 +12,7 @@ export const AdminAuthPage = () => {
   const [loading, setLoading] = useState(false);
   const { handleAdminAuth } = useAuth();
   const navigate = useNavigate();
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
   const completeAdminAuth = async ({ credential, selectedMode = mode }) => {
     setError('');
@@ -52,6 +53,27 @@ export const AdminAuthPage = () => {
     sessionStorage.removeItem('googleAdminLoginMode');
     completeAdminAuth({ credential: idToken, selectedMode });
   }, []);
+
+  const startGoogleLogin = () => {
+    if (!googleClientId) {
+      setError('Google login is not configured.');
+      return;
+    }
+
+    const state = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    sessionStorage.setItem('googleAdminLoginState', state);
+    sessionStorage.setItem('googleAdminLoginMode', mode);
+
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    authUrl.searchParams.set('client_id', googleClientId);
+    authUrl.searchParams.set('redirect_uri', `${window.location.origin}/MC-ADMIN`);
+    authUrl.searchParams.set('response_type', 'id_token');
+    authUrl.searchParams.set('scope', 'openid email profile');
+    authUrl.searchParams.set('nonce', state);
+    authUrl.searchParams.set('state', state);
+    authUrl.searchParams.set('prompt', 'select_account');
+    window.location.assign(authUrl.toString());
+  };
 
   return (
     <div className="min-h-screen app-shell flex items-center justify-center px-3 py-4 sm:p-4">
@@ -120,9 +142,9 @@ export const AdminAuthPage = () => {
 
           <div className="mb-8">
             <GoogleAuthButton
-              onSuccess={(credentialResponse) => completeAdminAuth({ credential: credentialResponse.credential })}
-              onError={() => setError('Google authentication failed. Please try again.')}
-              text={mode === 'signup' ? 'signup_with' : 'signin_with'}
+              onClick={startGoogleLogin}
+              label={mode === 'signup' ? 'Sign up with Google' : 'Continue with Google'}
+              disabled={loading}
             />
             {loading && (
               <p className="mt-3 text-center text-sm font-semibold text-slate-700">
