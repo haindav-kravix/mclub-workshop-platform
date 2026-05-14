@@ -4,6 +4,7 @@ import { API_ORIGIN } from '../utils/api';
 import { LoadingSpinner, ErrorMessage } from './UI';
 import { FiCalendar, FiMapPin, FiClock } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
+import { formatWorkshopTime } from '../utils/formatters';
 
 export const WorkshopCard = ({ workshop, onClick }) => {
   const isRegistered = Boolean(workshop.isRegistered);
@@ -52,7 +53,7 @@ export const WorkshopCard = ({ workshop, onClick }) => {
           </div>
           <div className="flex items-center space-x-2">
             <FiClock size={16} />
-            <span>{workshop.dailyTimings?.[0] ? `${workshop.dailyTimings[0].startTime} - ${workshop.dailyTimings[0].endTime}` : workshop.time}</span>
+            <span>{formatWorkshopTime(workshop)}</span>
           </div>
           <div className="flex items-center space-x-2">
             <FiMapPin size={16} />

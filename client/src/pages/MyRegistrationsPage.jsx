@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { registrationAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage } from '../components/UI';
 import { FiCalendar, FiMapPin, FiClock, FiSend } from 'react-icons/fi';
+import { formatWorkshopTime } from '../utils/formatters';
 
 export const MyRegistrationsPage = () => {
   const [registrations, setRegistrations] = useState([]);
@@ -68,7 +69,7 @@ export const MyRegistrationsPage = () => {
                       </div>
                       <div className="flex items-center space-x-2">
                         <FiClock size={16} />
-                        <span>{registration.workshopId.time}</span>
+                        <span>{formatWorkshopTime(registration.workshopId)}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <FiMapPin size={16} />

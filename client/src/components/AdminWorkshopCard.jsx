@@ -1,6 +1,7 @@
 import React from 'react';
 import { FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiFileText, FiList, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
 import { API_ORIGIN } from '../utils/api';
+import { formatWorkshopTime } from '../utils/formatters';
 
 export const AdminWorkshopCard = ({
   workshop,
@@ -53,7 +54,7 @@ export const AdminWorkshopCard = ({
         <p className="text-slate-600 text-sm mb-4 line-clamp-2">{workshop.description}</p>
 
         <div className="text-sm text-slate-600 mb-5 grid gap-2">
-          <p className="flex items-center gap-2"><FiCalendar className="text-primary" /> {new Date(workshop.date).toLocaleDateString()} at {workshop.time}</p>
+          <p className="flex items-center gap-2"><FiCalendar className="text-primary" /> {new Date(workshop.date).toLocaleDateString()} at {formatWorkshopTime(workshop)}</p>
           <p className="flex items-center gap-2"><FiMapPin className="text-primary" /> {workshop.venue}</p>
           <p className="flex items-center gap-2"><FiClock className="text-primary" /> {workshop.duration}</p>
           {workshop.capacity && <p className="flex items-center gap-2"><FiUsers className="text-primary" /> Capacity: {workshop.capacity}</p>}

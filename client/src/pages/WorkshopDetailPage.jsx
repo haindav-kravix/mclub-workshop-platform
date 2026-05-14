@@ -5,6 +5,7 @@ import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import { FiCalendar, FiClock, FiMapPin, FiArrowLeft, FiSend } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { formatTimeRange12Hour, formatWorkshopTime } from '../utils/formatters';
 
 export const WorkshopDetailPage = () => {
   const { id } = useParams();
@@ -123,7 +124,7 @@ export const WorkshopDetailPage = () => {
               <div>
                 <p className="text-gray-600 text-sm">Time & Duration</p>
                 <p className="font-semibold text-gray-900">
-                  {workshop.dailyTimings?.[0] ? `${workshop.dailyTimings[0].startTime} - ${workshop.dailyTimings[0].endTime}` : workshop.time}
+                  {formatWorkshopTime(workshop)}
                   {' '}({workshop.duration})
                 </p>
               </div>
@@ -161,7 +162,7 @@ export const WorkshopDetailPage = () => {
                 {workshop.dailyTimings.map((timing) => (
                   <div key={`${timing.date}-${timing.startTime}`} className="rounded-lg bg-slate-50 p-4 soft-border">
                     <p className="font-semibold text-slate-900">{new Date(timing.date).toLocaleDateString()}</p>
-                    <p className="text-slate-600">{timing.startTime} - {timing.endTime}</p>
+                    <p className="text-slate-600">{formatTimeRange12Hour(timing.startTime, timing.endTime)}</p>
                   </div>
                 ))}
               </div>
