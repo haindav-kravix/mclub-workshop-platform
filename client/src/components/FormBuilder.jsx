@@ -223,9 +223,9 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
                 ...newField,
                 options: [...(newField.options.length ? newField.options : emptyOptions()), '']
               })}
-              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2 text-sm font-bold text-white hover:bg-secondary/90"
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-emerald-500 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-800 shadow-sm transition hover:bg-emerald-100"
             >
-              <FiPlus /> Add Option
+              <FiPlus /> Add Another Option
             </button>
           </div>
         )}
