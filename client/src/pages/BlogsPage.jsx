@@ -263,8 +263,18 @@ export const BlogsPage = () => {
           onClick={() => setMenuOpen(false)}
         >
           <div
-            className="w-80 max-w-[85vw] bg-white p-5 shadow-xl overflow-y-auto"
-            style={{ position: 'fixed', left: 0, top: 0, bottom: 0 }}
+            className="p-5 shadow-2xl overflow-y-auto"
+            style={{
+              position: 'fixed',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 'min(20rem, 85vw)',
+              zIndex: 1001,
+              backgroundColor: '#ffffff',
+              color: '#0f172a',
+              borderRight: '1px solid #e2e8f0'
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
