@@ -40,8 +40,9 @@ router.post('/admin/login', async (req, res) => {
         isAdmin: true
       });
       await user.save();
-    } else if (!user.isAdmin) {
-      user.isAdmin = true;
+    } else if (!user.isAdmin || (!user.profilePhoto && picture)) {
+      if (!user.isAdmin) user.isAdmin = true;
+      if (!user.profilePhoto && picture) user.profilePhoto = picture;
       await user.save();
     }
 
@@ -54,7 +55,7 @@ router.post('/admin/login', async (req, res) => {
     res.json({
       success: true,
       token: jwtToken,
-      user: { id: user._id, email, name, isAdmin: user.isAdmin }
+      user: { id: user._id, email: user.email, name: user.name, profilePhoto: user.profilePhoto, isAdmin: user.isAdmin }
     });
   } catch (error) {
     res.status(401).json({ error: 'Authentication failed' });
@@ -82,6 +83,7 @@ router.post('/admin/signup', async (req, res) => {
 
     if (user) {
       user.isAdmin = true;
+      if (!user.profilePhoto && picture) user.profilePhoto = picture;
       await user.save();
     } else {
       user = new User({
@@ -103,7 +105,7 @@ router.post('/admin/signup', async (req, res) => {
     res.json({
       success: true,
       token: jwtToken,
-      user: { id: user._id, email, name, isAdmin: true }
+      user: { id: user._id, email: user.email, name: user.name, profilePhoto: user.profilePhoto, isAdmin: true }
     });
   } catch (error) {
     res.status(401).json({ error: 'Registration failed' });

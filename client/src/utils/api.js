@@ -3,6 +3,11 @@ import axios from 'axios';
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 export const API_ORIGIN = API_URL.replace(/\/api\/?$/, '');
 
+export const resolveMediaUrl = (url) => {
+  if (!url || !url.startsWith('/uploads')) return url;
+  return `${API_ORIGIN}${url}`;
+};
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem('authToken');
   return {
@@ -25,6 +30,10 @@ export const workshopAPI = {
   }),
   getAdminWorkshops: () => axios.get(`${API_URL}/workshops/admin/my-workshops`, {
     headers: getAuthHeaders()
+  }),
+  downloadReport: (id) => axios.get(`${API_URL}/workshops/${id}/report`, {
+    headers: getAuthHeaders(),
+    responseType: 'blob'
   }),
   toggleWorkshopStatus: (id) => axios.patch(`${API_URL}/workshops/${id}/toggle`, {}, {
     headers: getAuthHeaders()
@@ -54,6 +63,9 @@ export const registrationAPI = {
   deleteRegistration: (registrationId, workshopId) => axios.delete(`${API_URL}/registrations/admin/${registrationId}`, {
     headers: getAuthHeaders(),
     data: { workshopId }
+  }),
+  updateRegistrationStatus: (registrationId, status) => axios.patch(`${API_URL}/registrations/admin/${registrationId}/status`, { status }, {
+    headers: getAuthHeaders()
   }),
   exportRegistrations: (workshopId) => axios.get(`${API_URL}/registrations/workshop/${workshopId}/export`, {
     headers: getAuthHeaders(),
@@ -94,6 +106,7 @@ export const blogAPI = {
   createPost: (data) => axios.post(`${API_URL}/blogs`, data, { headers: getAuthHeaders() }),
   updatePost: (postId, data) => axios.put(`${API_URL}/blogs/${postId}`, data, { headers: getAuthHeaders() }),
   deletePost: (postId) => axios.delete(`${API_URL}/blogs/${postId}`, { headers: getAuthHeaders() }),
+  likePost: (postId) => axios.patch(`${API_URL}/blogs/${postId}/like`, {}, { headers: getAuthHeaders() }),
   toggleLike: (postId) => axios.patch(`${API_URL}/blogs/${postId}/like`, {}, { headers: getAuthHeaders() }),
   recordShare: (postId) => axios.patch(`${API_URL}/blogs/${postId}/share`, {}, { headers: getAuthHeaders() }),
   searchUsers: (query) => axios.get(`${API_URL}/blogs/users/search`, {
@@ -101,5 +114,7 @@ export const blogAPI = {
     params: { q: query }
   }),
   toggleFollow: (userId) => axios.patch(`${API_URL}/blogs/users/${userId}/follow`, {}, { headers: getAuthHeaders() }),
-  deleteUser: (userId) => axios.delete(`${API_URL}/blogs/users/${userId}`, { headers: getAuthHeaders() })
+  deleteUser: (userId) => axios.delete(`${API_URL}/blogs/users/${userId}`, { headers: getAuthHeaders() }),
+  getUserProfile: (userId) => axios.get(`${API_URL}/blogs/users/${userId}/profile`, { headers: getAuthHeaders() }),
+  getUserPosts: (userId) => axios.get(`${API_URL}/blogs/users/${userId}/posts`, { headers: getAuthHeaders() })
 };

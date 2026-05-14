@@ -10,6 +10,11 @@ const attendanceEntrySchema = new mongoose.Schema({
     type: String,
     enum: ['present', 'absent'],
     required: true
+  },
+  source: {
+    type: String,
+    enum: ['manual', 'qr'],
+    default: 'manual'
   }
 }, { _id: false });
 

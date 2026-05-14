@@ -93,7 +93,7 @@ export const MyRegistrationsPage = () => {
 
                   {/* Telegram */}
                   <div className="flex items-end">
-                    {registration.workshopId.telegramLink ? (
+                    {registration.status === 'confirmed' && registration.workshopId.telegramLink ? (
                       <a
                         href={registration.workshopId.telegramLink}
                         target="_blank"
@@ -103,9 +103,17 @@ export const MyRegistrationsPage = () => {
                         <FiSend size={18} />
                         <span>Join Telegram</span>
                       </a>
+                    ) : registration.status === 'pending' ? (
+                      <div className="w-full px-4 py-2 bg-amber-50 text-amber-800 rounded-lg text-center font-semibold">
+                        Reviewing your registration
+                      </div>
+                    ) : registration.status === 'rejected' ? (
+                      <div className="w-full px-4 py-2 bg-rose-50 text-rose-700 rounded-lg text-center font-semibold">
+                        Rejected
+                      </div>
                     ) : (
                       <div className="w-full px-4 py-2 bg-slate-100 text-slate-500 rounded-lg text-center font-semibold">
-                        Registered
+                        {registration.status === 'confirmed' ? 'Confirmed' : 'Not confirmed'}
                       </div>
                     )}
                   </div>

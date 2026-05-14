@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { attendanceAPI, workshopAPI } from '../utils/api';
-import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
+import { FeedbackPopup, LoadingSpinner } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import { FiCheck, FiLogIn, FiRefreshCw } from 'react-icons/fi';
 
@@ -16,6 +16,7 @@ export const QRCheckInPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
     const loadWorkshop = async () => {
@@ -34,11 +35,32 @@ export const QRCheckInPage = () => {
   const handleCheckIn = async () => {
     setSubmitting(true);
     setError('');
+    setFeedback(null);
     try {
       const response = await attendanceAPI.qrCheckIn(workshopId, { date });
-      setSuccess(`Thank you, ${response.data.user.name}. Your attendance is marked present.`);
+      const message = `Thank you, ${response.data.user.name}. Your attendance is marked present.`;
+      setSuccess(message);
+      setFeedback({
+        type: 'success',
+        title: 'Attendance confirmed',
+        message
+      });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to mark attendance');
+      const message = err.response?.data?.message || 'Failed to mark attendance';
+      setError(message);
+      const isClosed = message.toLowerCase().includes('attendance is done');
+      const isWrongAccount = message.toLowerCase().includes('google account');
+      setFeedback({
+        type: isClosed ? 'warning' : 'error',
+        title: isClosed
+          ? 'Attendance is done for the day'
+          : isWrongAccount
+          ? 'Wrong Google account'
+          : 'Check-in failed',
+        message: isClosed
+          ? 'QR check-in is closed now. Please contact the workshop admin if this is a mistake.'
+          : message
+      });
     } finally {
       setSubmitting(false);
     }
@@ -65,10 +87,12 @@ export const QRCheckInPage = () => {
           {date ? new Date(`${date}T00:00:00`).toLocaleDateString() : 'Attendance date missing'}
         </p>
 
-        {error && <div className="mt-5"><ErrorMessage message={error} onDismiss={() => setError('')} /></div>}
         {success ? (
-          <div className="mt-6 rounded-lg bg-primary/20 border border-primary p-6">
-            <h2 className="text-2xl font-black text-secondary">Thank you!</h2>
+          <div className="mt-6 rounded-2xl bg-emerald-50 border border-emerald-200 p-6">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+              <FiCheck size={28} />
+            </div>
+            <h2 className="text-2xl font-black text-emerald-800">Confirmed</h2>
             <p className="text-secondary mt-2">{success}</p>
           </div>
         ) : null}
@@ -106,6 +130,13 @@ export const QRCheckInPage = () => {
           </>
         ) : null}
       </div>
+      <FeedbackPopup
+        open={Boolean(feedback)}
+        type={feedback?.type}
+        title={feedback?.title}
+        message={feedback?.message}
+        onClose={() => setFeedback(null)}
+      />
     </div>
   );
 };

@@ -4,6 +4,10 @@ import { API_URL } from '../utils/api';
 
 const AuthContext = createContext();
 
+const normalizeUser = (user) => (
+  user && !user.id && user._id ? { ...user, id: user._id } : user
+);
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -33,7 +37,7 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.get(`${API_URL}/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUser(response.data);
+      setUser(normalizeUser(response.data));
     } catch (error) {
       console.error('Error fetching profile:', error);
       localStorage.removeItem('authToken');
@@ -41,6 +45,18 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const refreshProfile = async () => {
+    const activeToken = token || localStorage.getItem('authToken');
+    if (!activeToken) return null;
+
+    const response = await axios.get(`${API_URL}/auth/profile`, {
+      headers: { Authorization: `Bearer ${activeToken}` }
+    });
+    const nextUser = normalizeUser(response.data);
+    setUser(nextUser);
+    return nextUser;
   };
 
   const handleGoogleLoginSuccess = async (credentialResponse) => {
@@ -52,7 +68,7 @@ export const AuthProvider = ({ children }) => {
       if (response.data.success) {
         const { token, user } = response.data;
         setToken(token);
-        setUser(user);
+        setUser(normalizeUser(user));
         localStorage.setItem('authToken', token);
         return { success: true, user };
       }
@@ -64,7 +80,7 @@ export const AuthProvider = ({ children }) => {
 
   const applyAuthSession = ({ token, user }) => {
     setToken(token);
-    setUser(user);
+    setUser(normalizeUser(user));
     localStorage.setItem('authToken', token);
   };
 
@@ -103,6 +119,7 @@ export const AuthProvider = ({ children }) => {
     handleGoogleLoginSuccess,
     handleAdminAuth,
     logout,
+    refreshProfile,
     isAuthenticated: !!token,
     isAdmin: user?.isAdmin || false
   };

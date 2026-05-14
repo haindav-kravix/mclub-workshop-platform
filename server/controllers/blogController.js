@@ -10,6 +10,16 @@ const serializePost = (post, viewerId = null) => {
   };
 };
 
+const serializeProfile = (user) => {
+  const profile = user.toObject();
+  return {
+    ...profile,
+    id: profile._id.toString(),
+    followerCount: user.followers.length,
+    followingCount: user.following.length
+  };
+};
+
 export const getFeed = async (req, res) => {
   try {
     const posts = await BlogPost.find({ status: 'published' })
@@ -56,11 +66,7 @@ export const getBlogProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json({
-      ...user.toObject(),
-      followerCount: user.followers.length,
-      followingCount: user.following.length
-    });
+    res.json(serializeProfile(user));
   } catch (error) {
     res.status(500).json({ message: 'Error loading blog profile', error: error.message });
   }
@@ -68,10 +74,17 @@ export const getBlogProfile = async (req, res) => {
 
 export const updateBlogProfile = async (req, res) => {
   try {
-    const { bio = '' } = req.body;
+    const updates = {};
+    if (req.body.bio !== undefined) {
+      updates.bio = String(req.body.bio).slice(0, 280);
+    }
+    if (req.body.profilePhoto !== undefined) {
+      updates.profilePhoto = String(req.body.profilePhoto);
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { bio: bio.slice(0, 280) },
+      updates,
       { new: true }
     ).populate('followers', 'name email profilePhoto bio')
       .populate('following', 'name email profilePhoto bio')
@@ -79,11 +92,7 @@ export const updateBlogProfile = async (req, res) => {
 
     res.json({
       success: true,
-      profile: {
-        ...user.toObject(),
-        followerCount: user.followers.length,
-        followingCount: user.following.length
-      }
+      profile: serializeProfile(user)
     });
   } catch (error) {
     res.status(500).json({ message: 'Error updating blog profile', error: error.message });
@@ -215,15 +224,67 @@ export const searchUsers = async (req, res) => {
         { name: new RegExp(query, 'i') },
         { email: new RegExp(query, 'i') }
       ]
-    }).select('name email profilePhoto bio followers following').limit(20);
+    }).select('_id name email profilePhoto bio followers following').limit(20);
 
-    res.json(users.map(user => ({
-      ...user.toObject(),
-      isFollowing: user.followers.some(id => id.toString() === req.user.id),
-      followerCount: user.followers.length
-    })));
+    res.json(users.map(user => {
+      const isFollowing = user.followers && user.followers.some(id => id.toString() === req.user.id);
+      return {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        profilePhoto: user.profilePhoto,
+        bio: user.bio,
+        isFollowing: isFollowing || false,
+        followerCount: user.followers ? user.followers.length : 0
+      };
+    }));
   } catch (error) {
     res.status(500).json({ message: 'Error searching users', error: error.message });
+  }
+};
+
+export const getUserProfile = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId)
+      .populate('followers', 'name email profilePhoto bio')
+      .populate('following', 'name email profilePhoto bio')
+      .select('name email profilePhoto bio followers following');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if current user is following this user
+    const isFollowing = user.followers.some(follower => follower._id.toString() === req.user.id);
+    
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      profilePhoto: user.profilePhoto,
+      bio: user.bio,
+      followers: user.followers,
+      following: user.following,
+      isFollowing,
+      followerCount: user.followers.length,
+      followingCount: user.following.length
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error loading user profile', error: error.message });
+  }
+};
+
+export const getUserPosts = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const posts = await BlogPost.find({ author: userId, status: 'published' })
+      .populate('author', 'name email profilePhoto bio followers')
+      .sort({ publishedAt: -1, createdAt: -1 });
+
+    res.json(posts.map(post => serializePost(post, req.user?.id)));
+  } catch (error) {
+    res.status(500).json({ message: 'Error loading user posts', error: error.message });
   }
 };
 

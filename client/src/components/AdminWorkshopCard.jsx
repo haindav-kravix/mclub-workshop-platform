@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiList, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
+import { FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiFileText, FiList, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
 import { API_ORIGIN } from '../utils/api';
 
 export const AdminWorkshopCard = ({
@@ -8,6 +8,7 @@ export const AdminWorkshopCard = ({
   onDelete,
   onViewRegistrations,
   onExport,
+  onReport,
   onEmail,
   onToggleRegistrations,
   onToggleStopped,
@@ -98,6 +99,14 @@ export const AdminWorkshopCard = ({
           >
             <FiDownload size={16} />
             <span>Export</span>
+          </button>
+
+          <button
+            onClick={() => onReport(workshop._id)}
+            className="col-span-2 px-3 py-2 bg-primary text-slate-950 rounded-lg hover:bg-primary/80 transition text-sm font-semibold flex items-center justify-center space-x-1"
+          >
+            <FiFileText size={16} />
+            <span>Generate Report</span>
           </button>
 
           {workshop.isActive && (

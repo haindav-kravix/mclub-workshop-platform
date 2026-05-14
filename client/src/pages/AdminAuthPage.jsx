@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FiLock, FiShield, FiUsers, FiDownload } from 'react-icons/fi';
 import { ErrorMessage } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
+import { BrandMark } from '../components/BrandMark';
 
 export const AdminAuthPage = () => {
   const [mode, setMode] = useState('login');
@@ -32,75 +33,94 @@ export const AdminAuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="grid lg:grid-cols-[1.05fr_0.95fr] w-full max-w-5xl panel rounded-lg overflow-hidden">
-        <div className="hidden lg:flex flex-col justify-between bg-slate-950 text-white p-10">
-          <div>
-            <div className="w-12 h-12 bg-primary text-slate-950 rounded-lg flex items-center justify-center font-bold mb-8">
-              MC
+    <div className="min-h-screen app-shell flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl">
+        {/* Logo & Header */}
+        <div className="text-center mb-10">
+          <Link to="/" className="flex justify-center mb-6">
+            <div className="rounded-2xl bg-white/80 border border-slate-200 px-3 py-3 sm:px-4 shadow-xl max-w-full overflow-hidden">
+              <BrandMark />
             </div>
-            <p className="text-secondary uppercase tracking-wide text-sm font-bold mb-3">Admin command center</p>
-            <h1 className="text-4xl font-bold leading-tight mb-4">Run every workshop from one shared dashboard.</h1>
-            <p className="text-slate-300 text-lg">Create events, manage registrations, export clean spreadsheets, and collaborate with every admin.</p>
+          </Link>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">MC Admin</h1>
+          <p className="text-gray-700 text-lg">Manage workshops and community at scale</p>
+        </div>
+
+        {/* Features Grid */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          <div className="panel rounded-xl p-4 text-center">
+            <FiShield className="text-3xl text-green-600 mx-auto mb-3" />
+            <p className="text-sm font-semibold text-gray-900">Secure Access</p>
           </div>
-          <div className="grid grid-cols-3 gap-3 mt-10">
-            {[
-              { icon: FiShield, label: 'Admin Access' },
-              { icon: FiUsers, label: 'Shared Data' },
-              { icon: FiDownload, label: 'Clean Export' }
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.label} className="border border-white/10 bg-white/10 rounded-lg p-4">
-                  <Icon className="text-secondary mb-3" />
-                  <p className="text-sm font-semibold">{item.label}</p>
-                </div>
-              );
-            })}
+          <div className="panel rounded-xl p-4 text-center">
+            <FiUsers className="text-3xl text-green-600 mx-auto mb-3" />
+            <p className="text-sm font-semibold text-gray-900">Manage Users</p>
+          </div>
+          <div className="panel rounded-xl p-4 text-center">
+            <FiDownload className="text-3xl text-green-600 mx-auto mb-3" />
+            <p className="text-sm font-semibold text-gray-900">Export Data</p>
           </div>
         </div>
 
-        <div className="bg-white p-6 sm:p-8">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-slate-950 rounded-lg flex items-center justify-center mx-auto mb-4 text-white">
-            <FiLock size={28} />
+        {/* Main Card */}
+        <div className="panel rounded-2xl p-8 sm:p-10">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Admin Portal</h2>
+            <p className="text-gray-700">Sign in or create an admin account</p>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">MC Admin</h1>
-          <p className="text-gray-600 mt-2">Sign up or log in as an administrator</p>
-        </div>
 
-        <div className="grid grid-cols-2 gap-2 mb-6">
-          <button
-            type="button"
-            onClick={() => setMode('login')}
-            className={`px-4 py-2 rounded-lg font-semibold transition ${
-              mode === 'login' ? 'bg-slate-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Login
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('signup')}
-            className={`px-4 py-2 rounded-lg font-semibold transition ${
-              mode === 'signup' ? 'bg-slate-950 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
+          {/* Mode Toggle */}
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            <button
+              type="button"
+              onClick={() => setMode('login')}
+              className={`px-6 py-3 rounded-lg font-bold transition transform ${
+                mode === 'login' 
+                  ? 'bg-green-600 text-white shadow-lg scale-105' 
+                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-green-500'
+              }`}
+            >
+              Login
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('signup')}
+              className={`px-6 py-3 rounded-lg font-bold transition transform ${
+                mode === 'signup' 
+                  ? 'bg-green-600 text-white shadow-lg scale-105' 
+                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-green-500'
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
 
-        {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
+          {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
 
-        <div className="mb-6">
-          <GoogleLogin
-            onSuccess={(credentialResponse) => completeAdminAuth({ credential: credentialResponse.credential })}
-            onError={() => setError('Google authentication failed. Please try again.')}
-            text={mode === 'signup' ? 'signup_with' : 'signin_with'}
-            size="large"
-            width="100%"
-          />
-        </div>
+          <div className="mb-8">
+            <GoogleLogin
+              onSuccess={(credentialResponse) => completeAdminAuth({ credential: credentialResponse.credential })}
+              onError={() => setError('Google authentication failed. Please try again.')}
+              text={mode === 'signup' ? 'signup_with' : 'signin_with'}
+              size="large"
+              width="100%"
+            />
+          </div>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t-2 border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-3 bg-white text-gray-600">Admin Only</span>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-900">
+              <span className="font-bold">⚠️ Notice:</span> Only authorized administrators can access this panel. Use your authorized Google account.
+            </p>
+          </div>
         </div>
       </div>
     </div>

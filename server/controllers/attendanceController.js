@@ -30,6 +30,10 @@ export const getAttendanceRoster = async (req, res) => {
       entry.userId.toString(),
       entry.status
     ]));
+    const sourceByUser = new Map((attendance?.entries || []).map(entry => [
+      entry.userId.toString(),
+      entry.source || 'manual'
+    ]));
 
     res.json({
       workshop,
@@ -37,7 +41,8 @@ export const getAttendanceRoster = async (req, res) => {
       roster: registrations.map(registration => ({
         user: registration.userId,
         registrationId: registration._id,
-        status: statusByUser.get(registration.userId._id.toString()) || 'absent'
+        status: statusByUser.get(registration.userId._id.toString()) || 'absent',
+        source: sourceByUser.get(registration.userId._id.toString()) || 'manual'
       }))
     });
   } catch (error) {
@@ -61,12 +66,29 @@ export const submitAttendance = async (req, res) => {
 
     const registeredUsers = await Registration.find({ workshopId, status: 'confirmed' }).select('userId');
     const registeredUserIds = new Set(registeredUsers.map(registration => registration.userId.toString()));
-    const cleanEntries = entries
-      .filter(entry => registeredUserIds.has(entry.userId))
-      .map(entry => ({
-        userId: entry.userId,
-        status: entry.status === 'present' ? 'present' : 'absent'
-      }));
+    const incomingStatusByUser = new Map(
+      entries
+        .filter(entry => registeredUserIds.has(entry.userId))
+        .map(entry => [entry.userId, entry.status === 'present' ? 'present' : 'absent'])
+    );
+    const currentAttendance = await Attendance.findOne({ workshopId, date: normalizeDate(date) });
+    const qrPresentUsers = new Set(
+      (currentAttendance?.entries || [])
+        .filter(entry => entry.source === 'qr' && entry.status === 'present')
+        .map(entry => entry.userId.toString())
+    );
+    const cleanEntries = registeredUsers.map(registration => {
+      const userId = registration.userId.toString();
+      if (qrPresentUsers.has(userId)) {
+        return { userId, status: 'present', source: 'qr' };
+      }
+
+      return {
+        userId,
+        status: incomingStatusByUser.get(userId) || 'absent',
+        source: 'manual'
+      };
+    });
 
     const attendance = await Attendance.findOneAndUpdate(
       { workshopId, date: normalizeDate(date) },
@@ -131,7 +153,8 @@ export const getQrSession = async (req, res) => {
     res.json({
       workshopId,
       date: normalizeDate(date),
-      qrEnabled: session?.qrEnabled || false
+      qrEnabled: session?.qrEnabled || false,
+      manualEnabled: session?.manualEnabled || false
     });
   } catch (error) {
     res.status(500).json({ message: 'Error loading QR session', error: error.message });
@@ -141,7 +164,7 @@ export const getQrSession = async (req, res) => {
 export const setQrSession = async (req, res) => {
   try {
     const { workshopId } = req.params;
-    const { date, qrEnabled } = req.body;
+    const { date, qrEnabled, manualEnabled } = req.body;
 
     if (!date) {
       return res.status(400).json({ message: 'Date is required' });
@@ -157,7 +180,8 @@ export const setQrSession = async (req, res) => {
       {
         workshopId,
         date: normalizeDate(date),
-        qrEnabled: Boolean(qrEnabled),
+        ...(typeof qrEnabled === 'boolean' ? { qrEnabled } : {}),
+        ...(typeof manualEnabled === 'boolean' ? { manualEnabled } : {}),
         updatedBy: req.user.id,
         updatedAt: new Date()
       },
@@ -216,22 +240,24 @@ export const qrCheckIn = async (req, res) => {
         submittedBy: req.user.id,
         entries: registeredUsers.map(item => ({
           userId: item.userId,
-          status: item.userId.toString() === req.user.id ? 'present' : 'absent'
+          status: item.userId.toString() === req.user.id ? 'present' : 'absent',
+          source: item.userId.toString() === req.user.id ? 'qr' : 'manual'
         }))
       });
     } else {
       const existingIds = new Set(attendance.entries.map(entry => entry.userId.toString()));
       registeredUsers.forEach(item => {
         if (!existingIds.has(item.userId.toString())) {
-          attendance.entries.push({ userId: item.userId, status: 'absent' });
+          attendance.entries.push({ userId: item.userId, status: 'absent', source: 'manual' });
         }
       });
 
       const entry = attendance.entries.find(item => item.userId.toString() === req.user.id);
       if (entry) {
         entry.status = 'present';
+        entry.source = 'qr';
       } else {
-        attendance.entries.push({ userId: req.user.id, status: 'present' });
+        attendance.entries.push({ userId: req.user.id, status: 'present', source: 'qr' });
       }
       attendance.updatedAt = new Date();
     }

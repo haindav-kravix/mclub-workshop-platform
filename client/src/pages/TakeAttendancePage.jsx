@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { attendanceAPI, workshopAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { FiArrowLeft, FiCheck, FiCopy, FiX } from 'react-icons/fi';
@@ -8,14 +8,19 @@ const toDateInput = (value) => value ? new Date(value).toISOString().split('T')[
 
 export const TakeAttendancePage = () => {
   const { workshopId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const requestedDate = searchParams.get('date');
+  const freshRetake = searchParams.get('fresh') === '1';
   const [workshop, setWorkshop] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [roster, setRoster] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [qrEnabled, setQrEnabled] = useState(false);
+  const [manualEnabled, setManualEnabled] = useState(false);
   const [qrUpdating, setQrUpdating] = useState(false);
+  const [manualUpdating, setManualUpdating] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -25,7 +30,7 @@ export const TakeAttendancePage = () => {
         const response = await workshopAPI.getWorkshopById(workshopId);
         setWorkshop(response.data);
         const firstDate = response.data.dailyTimings?.[0]?.date || response.data.startDate || response.data.date;
-        setSelectedDate(toDateInput(firstDate));
+        setSelectedDate(requestedDate || toDateInput(firstDate));
       } catch (err) {
         setError('Failed to load workshop');
       } finally {
@@ -33,7 +38,7 @@ export const TakeAttendancePage = () => {
       }
     };
     loadWorkshop();
-  }, [workshopId]);
+  }, [workshopId, requestedDate]);
 
   useEffect(() => {
     if (!selectedDate) return;
@@ -41,9 +46,13 @@ export const TakeAttendancePage = () => {
       setLoading(true);
       try {
         const response = await attendanceAPI.getRoster(workshopId, selectedDate);
-        setRoster(response.data.roster);
+        setRoster(freshRetake
+          ? response.data.roster.map(item => ({ ...item, status: 'absent', source: 'manual' }))
+          : response.data.roster
+        );
         const sessionResponse = await attendanceAPI.getQrSession(workshopId, selectedDate);
         setQrEnabled(sessionResponse.data.qrEnabled);
+        setManualEnabled(sessionResponse.data.manualEnabled);
       } catch (err) {
         setError('Failed to load registered students');
       } finally {
@@ -51,7 +60,7 @@ export const TakeAttendancePage = () => {
       }
     };
     loadRoster();
-  }, [workshopId, selectedDate]);
+  }, [workshopId, selectedDate, freshRetake]);
 
   const dateOptions = useMemo(() => {
     if (workshop?.dailyTimings?.length) {
@@ -62,7 +71,7 @@ export const TakeAttendancePage = () => {
 
   const setStatus = (userId, status) => {
     setRoster(prev => prev.map(item =>
-      item.user._id === userId ? { ...item, status } : item
+      item.user._id === userId && item.source !== 'qr' ? { ...item, status, source: 'manual' } : item
     ));
   };
 
@@ -70,11 +79,18 @@ export const TakeAttendancePage = () => {
     setSaving(true);
     setError('');
     try {
+      const rosterForSubmit = manualEnabled
+        ? roster
+        : (await attendanceAPI.getRoster(workshopId, selectedDate)).data.roster;
+      if (!manualEnabled) {
+        setRoster(rosterForSubmit);
+      }
+
       await attendanceAPI.submitAttendance(workshopId, {
         date: selectedDate,
-        entries: roster.map(item => ({ userId: item.user._id, status: item.status }))
+        entries: rosterForSubmit.map(item => ({ userId: item.user._id, status: item.status }))
       });
-      setSuccess('Attendance submitted successfully');
+      setSuccess(manualEnabled ? 'Attendance submitted successfully' : 'QR attendance submitted successfully');
       setTimeout(() => navigate(`/admin/attendance/${workshopId}/reports`), 700);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to submit attendance');
@@ -97,6 +113,23 @@ export const TakeAttendancePage = () => {
       setError('Failed to update QR attendance status');
     } finally {
       setQrUpdating(false);
+    }
+  };
+
+  const handleToggleManual = async () => {
+    setManualUpdating(true);
+    setError('');
+    try {
+      const response = await attendanceAPI.setQrSession(workshopId, {
+        date: selectedDate,
+        manualEnabled: !manualEnabled
+      });
+      setManualEnabled(response.data.session.manualEnabled);
+      setSuccess(response.data.session.manualEnabled ? 'Manual attendance is ON' : 'Manual attendance is OFF');
+    } catch (err) {
+      setError('Failed to update manual attendance status');
+    } finally {
+      setManualUpdating(false);
     }
   };
 
@@ -123,6 +156,11 @@ export const TakeAttendancePage = () => {
             <div>
               <p className="text-sm font-bold uppercase tracking-wide text-emerald-600 mb-2">Take attendance</p>
               <h1 className="text-3xl font-bold text-slate-950">{workshop?.title}</h1>
+              {freshRetake && (
+                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+                  Retake mode starts fresh. Previous attendance stays unchanged until you submit again.
+                </div>
+              )}
               <div className="mt-5 max-w-xs">
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Workshop Day</label>
                 <select
@@ -134,6 +172,27 @@ export const TakeAttendancePage = () => {
                     <option key={date} value={date}>{new Date(`${date}T00:00:00`).toLocaleDateString()}</option>
                   ))}
                 </select>
+              </div>
+              <div className="mt-5 rounded-lg border border-slate-200 bg-white/70 p-4 max-w-md">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="font-bold text-slate-950">Manual Attendance</p>
+                    <p className="text-sm text-slate-600">
+                      {manualEnabled
+                        ? 'Manual marking is enabled for absentees.'
+                        : 'Manual marking is hidden until you turn it on.'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleToggleManual}
+                    disabled={manualUpdating || !selectedDate}
+                    className={`px-4 py-2 rounded-lg font-bold ${
+                      manualEnabled ? 'bg-secondary text-white' : 'bg-slate-100 text-slate-800'
+                    } disabled:opacity-50`}
+                  >
+                    {manualUpdating ? 'Updating...' : manualEnabled ? 'Turn Manual Off' : 'Turn Manual On'}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -176,44 +235,64 @@ export const TakeAttendancePage = () => {
           </div>
         </div>
 
-        <div className="grid gap-3">
-          {roster.map(item => (
+        {!manualEnabled ? (
+          <div className="panel rounded-lg p-8 text-center">
+            <p className="text-lg font-bold text-slate-950">Manual attendance is off</p>
+            <p className="mt-2 text-slate-600">QR scans will still mark students present. Submit QR attendance when scanning is complete, or turn manual on to update remaining absentees.</p>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+          {roster.map(item => {
+            const isQrPresent = item.status === 'present' && item.source === 'qr';
+            return (
             <div key={item.user._id} className="panel rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
                 {item.user.profilePhoto && <img src={item.user.profilePhoto} alt={item.user.name} className="w-11 h-11 rounded-full" />}
                 <div className="min-w-0">
                   <p className="font-bold text-slate-950 truncate">{item.user.name}</p>
                   <p className="text-sm text-slate-600 break-all">{item.user.email}</p>
+                  {isQrPresent && (
+                    <p className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">
+                      QR scanned - present
+                    </p>
+                  )}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:w-72">
-                <button
-                  onClick={() => setStatus(item.user._id, 'present')}
-                  className={`px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 ${
-                    item.status === 'present' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700'
-                  }`}
-                >
-                  <FiCheck /> Present
-                </button>
-                <button
-                  onClick={() => setStatus(item.user._id, 'absent')}
-                  className={`px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 ${
-                    item.status === 'absent' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-800'
-                  }`}
-                >
-                  <FiX /> Absent
-                </button>
-              </div>
+              {isQrPresent ? (
+                <div className="sm:w-72 rounded-lg bg-emerald-50 px-4 py-2 text-center font-bold text-emerald-700">
+                  Present by QR
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 sm:w-72">
+                  <button
+                    onClick={() => setStatus(item.user._id, 'present')}
+                    className={`px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 ${
+                      item.status === 'present' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700'
+                    }`}
+                  >
+                    <FiCheck /> Present
+                  </button>
+                  <button
+                    onClick={() => setStatus(item.user._id, 'absent')}
+                    className={`px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 ${
+                      item.status === 'absent' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-800'
+                    }`}
+                  >
+                    <FiX /> Absent
+                  </button>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+          )})}
+          </div>
+        )}
 
         <button
           onClick={handleSubmit}
           disabled={saving || roster.length === 0}
           className="mt-6 w-full px-6 py-3 bg-slate-950 text-white rounded-lg font-bold hover:bg-slate-800 transition disabled:opacity-50"
         >
-          {saving ? 'Submitting...' : 'Submit Attendance'}
+          {saving ? 'Submitting...' : manualEnabled ? 'Submit Attendance' : 'Submit QR Attendance'}
         </button>
       </div>
     </div>

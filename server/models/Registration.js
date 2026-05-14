@@ -18,8 +18,8 @@ const registrationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['confirmed', 'pending', 'cancelled'],
-    default: 'confirmed'
+    enum: ['confirmed', 'pending', 'cancelled', 'rejected'],
+    default: 'pending'
   },
   createdAt: {
     type: Date,

@@ -57,7 +57,7 @@ export const AttendanceReportsPage = () => {
                     <p className="text-sm text-slate-600">Present: {report.presentCount} | Absent: {report.absentCount}</p>
                   </div>
                   <button
-                    onClick={() => navigate(`/admin/attendance/${workshopId}`)}
+                    onClick={() => navigate(`/admin/attendance/${workshopId}?date=${new Date(report.date).toISOString().split('T')[0]}&fresh=1`)}
                     className="px-4 py-2 bg-slate-950 text-white rounded-lg font-semibold"
                   >
                     Retake Attendance

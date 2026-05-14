@@ -51,6 +51,23 @@ export const RegistrationsPage = () => {
     }
   };
 
+  const handleUpdateRegistrationStatus = async (registrationId, status) => {
+    setDeleting(true);
+    setError('');
+    try {
+      const response = await registrationAPI.updateRegistrationStatus(registrationId, status);
+      setRegistrations(prev => prev.map(registration =>
+        registration._id === registrationId ? response.data.registration : registration
+      ));
+      setSuccess(status === 'confirmed' ? 'Registration approved' : 'Registration rejected');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update registration status');
+      console.error(err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleExportToExcel = async () => {
     try {
       const response = await registrationAPI.exportRegistrations(workshopId);
@@ -84,7 +101,10 @@ export const RegistrationsPage = () => {
           {workshop && (
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{workshop.title}</h1>
-              <p className="text-gray-600 mt-2">{registrations.length} registrations</p>
+              <p className="text-gray-600 mt-2">
+                {registrations.filter(registration => registration.status === 'confirmed').length} confirmed,{' '}
+                {registrations.filter(registration => registration.status === 'pending').length} pending review
+              </p>
             </div>
           )}
         </div>
@@ -111,6 +131,7 @@ export const RegistrationsPage = () => {
           registrations={registrations}
           formFields={workshop?.registrationFormFields || []}
           onDeleteRegistration={handleDeleteRegistration}
+          onUpdateRegistrationStatus={handleUpdateRegistrationStatus}
           loading={deleting}
         />
       </div>

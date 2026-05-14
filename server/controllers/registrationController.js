@@ -24,7 +24,13 @@ export const registerForWorkshop = async (req, res) => {
     });
 
     if (existingRegistration) {
-      return res.status(400).json({ message: 'You are already registered for this workshop' });
+      const statusMessages = {
+        pending: 'Your registration is already under review',
+        confirmed: 'You are already confirmed for this workshop',
+        rejected: 'Your registration was rejected. Please contact support for help.',
+        cancelled: 'This registration was cancelled. Please contact support if you need help.'
+      };
+      return res.status(400).json({ message: statusMessages[existingRegistration.status] || 'You are already registered for this workshop' });
     }
 
     // Check capacity
@@ -43,18 +49,14 @@ export const registerForWorkshop = async (req, res) => {
       workshopId,
       userId: req.user.id,
       formData,
-      status: 'confirmed'
+      status: 'pending'
     });
 
     await registration.save();
 
-    // Update registration count
-    workshop.registrationCount = (workshop.registrationCount || 0) + 1;
-    await workshop.save();
-
     res.status(201).json({
       success: true,
-      message: 'Registration successful',
+      message: 'Registration submitted for review',
       registration
     });
   } catch (error) {
@@ -107,12 +109,13 @@ export const cancelRegistration = async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized' });
     }
 
+    const wasConfirmed = registration.status === 'confirmed';
     registration.status = 'cancelled';
     await registration.save();
 
     // Update registration count
     const workshop = await Workshop.findById(registration.workshopId);
-    if (workshop && workshop.registrationCount > 0) {
+    if (wasConfirmed && workshop && workshop.registrationCount > 0) {
       workshop.registrationCount -= 1;
       await workshop.save();
     }
@@ -132,7 +135,7 @@ export const exportRegistrationsToExcel = async (req, res) => {
       return res.status(404).json({ message: 'Workshop not found' });
     }
 
-    const registrations = await Registration.find({ workshopId })
+    const registrations = await Registration.find({ workshopId, status: 'confirmed' })
       .populate('userId', 'name email');
 
     const workbook = await generateExcelReport(registrations, workshop.title, workshop.registrationFormFields);
@@ -143,6 +146,66 @@ export const exportRegistrationsToExcel = async (req, res) => {
     await workbook.xlsx.write(res);
   } catch (error) {
     res.status(500).json({ message: 'Error exporting registrations', error: error.message });
+  }
+};
+
+export const updateRegistrationStatus = async (req, res) => {
+  try {
+    const { registrationId } = req.params;
+    const { status } = req.body;
+
+    if (!['confirmed', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid registration status' });
+    }
+
+    const registration = await Registration.findById(registrationId);
+    if (!registration) {
+      return res.status(404).json({ message: 'Registration not found' });
+    }
+
+    const workshop = await Workshop.findById(registration.workshopId);
+    if (!workshop) {
+      return res.status(404).json({ message: 'Workshop not found' });
+    }
+
+    const previousStatus = registration.status;
+
+    if (status === 'confirmed' && previousStatus !== 'confirmed' && workshop.capacity) {
+      const confirmedCount = await Registration.countDocuments({
+        workshopId: registration.workshopId,
+        status: 'confirmed'
+      });
+
+      if (confirmedCount >= workshop.capacity) {
+        return res.status(400).json({ message: 'Workshop is full' });
+      }
+    }
+
+    registration.status = status;
+    registration.updatedAt = new Date();
+    await registration.save();
+
+    if (previousStatus !== status) {
+      if (status === 'confirmed' && previousStatus !== 'confirmed') {
+        workshop.registrationCount = (workshop.registrationCount || 0) + 1;
+        await workshop.save();
+      }
+
+      if (previousStatus === 'confirmed' && status !== 'confirmed' && workshop.registrationCount > 0) {
+        workshop.registrationCount -= 1;
+        await workshop.save();
+      }
+    }
+
+    await registration.populate('userId', 'name email profilePhoto');
+
+    res.json({
+      success: true,
+      message: status === 'confirmed' ? 'Registration approved' : 'Registration rejected',
+      registration
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating registration status', error: error.message });
   }
 };
 
@@ -162,7 +225,7 @@ export const deleteRegistration = async (req, res) => {
     }
 
     // Update registration count
-    if (workshop.registrationCount > 0) {
+    if (registration.status === 'confirmed' && workshop.registrationCount > 0) {
       workshop.registrationCount -= 1;
       await workshop.save();
     }

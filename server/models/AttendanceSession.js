@@ -14,6 +14,10 @@ const attendanceSessionSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  manualEnabled: {
+    type: Boolean,
+    default: false
+  },
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

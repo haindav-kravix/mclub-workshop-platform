@@ -3,13 +3,13 @@ services:
     name: mclub-backend
     runtime: node
     rootDir: server
-    buildCommand: npm install
+    plan: free
+    buildCommand: npm ci
     startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
       - key: MONGODB_URI
         sync: false
       - key: GOOGLE_CLIENT_ID
@@ -20,3 +20,11 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: google/gemini-2.5-flash

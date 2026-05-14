@@ -1,8 +1,10 @@
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { ErrorMessage } from '../components/UI';
+import { BrandMark } from '../components/BrandMark';
 
 export const LoginPage = () => {
   const { handleGoogleLoginSuccess } = useAuth();
@@ -25,47 +27,51 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="panel rounded-lg overflow-hidden w-full max-w-4xl grid md:grid-cols-[0.9fr_1.1fr]">
-        <div className="hidden md:flex bg-slate-950 text-white p-8 flex-col justify-between">
-          <div>
-            <div className="w-12 h-12 bg-primary text-slate-950 rounded-lg flex items-center justify-center font-bold mb-8">MC</div>
-            <h1 className="text-4xl font-bold mb-4">Welcome back.</h1>
-            <p className="text-slate-300">Sign in to register for workshops and keep track of your events.</p>
+    <div className="min-h-screen app-shell flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl">
+        {/* Logo & Header */}
+        <div className="text-center mb-10">
+          <Link to="/" className="flex justify-center mb-6">
+            <div className="rounded-2xl bg-white/80 border border-slate-200 px-3 py-3 sm:px-4 shadow-xl max-w-full overflow-hidden">
+              <BrandMark />
+            </div>
+          </Link>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">MongoDB Club</h1>
+          <p className="text-gray-700 text-lg">Discover workshops and build expertise</p>
+        </div>
+
+        {/* Main Card */}
+        <div className="panel rounded-2xl p-8 sm:p-10 mb-6">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back</h2>
+            <p className="text-gray-700">Sign in to register for workshops and manage your events.</p>
           </div>
-          <p className="text-sm text-slate-400">MongoDB Club Workshop Hub</p>
-        </div>
 
-      <div className="bg-white p-6 sm:p-8">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-slate-950 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl font-bold text-white">MC</span>
+          {error && (
+            <ErrorMessage 
+              message={error} 
+              onDismiss={() => setError('')}
+            />
+          )}
+
+          <div className="mb-8">
+            <GoogleLogin
+              onSuccess={handleSuccess}
+              onError={handleError}
+              text="signin_with"
+              size="large"
+              width="100%"
+            />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">MongoDB Club</h1>
-          <p className="text-gray-600 mt-2">Sign in to your account</p>
+
+          <p className="text-center text-gray-700 text-sm mb-8">
+            Sign in with your Google account to get started instantly.
+          </p>
+
+          <p className="text-center text-gray-600 text-xs">
+            By signing in, you agree to our <span className="text-green-600 font-semibold">terms and conditions</span>
+          </p>
         </div>
-
-        {error && (
-          <ErrorMessage 
-            message={error} 
-            onDismiss={() => setError('')}
-          />
-        )}
-
-        <div className="mb-6">
-          <GoogleLogin
-            onSuccess={handleSuccess}
-            onError={handleError}
-            text="signin_with"
-            size="large"
-            width="100%"
-          />
-        </div>
-
-        <p className="text-center text-gray-600 text-sm mt-6">
-          By signing in, you agree to our terms and conditions
-        </p>
-      </div>
       </div>
     </div>
   );

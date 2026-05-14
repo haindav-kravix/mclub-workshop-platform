@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { workshopAPI, registrationAPI, API_ORIGIN } from '../utils/api';
 import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
-import { RegistrationForm } from '../components/RegistrationForm';
 import { useAuth } from '../context/AuthContext';
 import { FiCalendar, FiClock, FiMapPin, FiArrowLeft, FiSend } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
@@ -15,9 +14,7 @@ export const WorkshopDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [isRegistered, setIsRegistered] = useState(false);
+  const [registrationStatus, setRegistrationStatus] = useState('');
 
   useEffect(() => {
     const fetchWorkshop = async () => {
@@ -27,10 +24,11 @@ export const WorkshopDetailPage = () => {
           isAuthenticated ? registrationAPI.getUserRegistrations() : Promise.resolve({ data: [] })
         ]);
         setWorkshop(workshopResponse.data);
-        setIsRegistered(registrationsResponse.data.some(registration => {
+        const currentRegistration = registrationsResponse.data.find(registration => {
           const registeredWorkshopId = registration.workshopId?._id || registration.workshopId;
-          return registeredWorkshopId === id && registration.status === 'confirmed';
-        }));
+          return registeredWorkshopId === id;
+        });
+        setRegistrationStatus(currentRegistration?.status || '');
       } catch (err) {
         setError('Failed to load workshop details');
         console.error(err);
@@ -41,23 +39,6 @@ export const WorkshopDetailPage = () => {
 
     fetchWorkshop();
   }, [id, isAuthenticated]);
-
-  const handleRegistration = async (formData) => {
-    setIsRegistering(true);
-    try {
-      await registrationAPI.registerForWorkshop({
-        workshopId: id,
-        formData
-      });
-      setSuccess('Registration successful! You will receive confirmation details soon.');
-      setIsRegistered(true);
-      setShowRegistrationForm(false);
-    } catch (err) {
-      throw new Error(err.response?.data?.message || 'Registration failed');
-    } finally {
-      setIsRegistering(false);
-    }
-  };
 
   if (loading) return <LoadingSpinner />;
 
@@ -188,10 +169,10 @@ export const WorkshopDetailPage = () => {
           )}
 
           {/* Registration Button */}
-          {isRegistered ? (
+          {registrationStatus === 'confirmed' ? (
             <div className="grid gap-3">
               <div className="w-full px-6 py-3 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-lg text-center">
-                Registered
+                Registration Confirmed
               </div>
               {workshop.telegramLink && (
                 <a
@@ -205,9 +186,17 @@ export const WorkshopDetailPage = () => {
                 </a>
               )}
             </div>
+          ) : registrationStatus === 'pending' ? (
+            <div className="w-full px-6 py-3 bg-amber-50 text-amber-800 rounded-lg font-bold text-lg text-center">
+              Reviewing your registration. Check My Events for your status.
+            </div>
+          ) : registrationStatus === 'rejected' ? (
+            <div className="w-full px-6 py-3 bg-rose-50 text-rose-700 rounded-lg font-bold text-lg text-center">
+              Registration rejected. Contact support for help.
+            </div>
           ) : isAuthenticated && registrationsOpen ? (
             <button
-              onClick={() => setShowRegistrationForm(true)}
+              onClick={() => navigate(`/workshop/${id}/register`)}
               className="w-full px-6 py-3 bg-slate-950 text-white rounded-lg font-bold text-lg hover:bg-slate-800 transition"
             >
               Register Now
@@ -225,15 +214,6 @@ export const WorkshopDetailPage = () => {
           )}
         </div>
       </div>
-
-      {/* Registration Form Modal */}
-      {showRegistrationForm && (
-        <RegistrationForm
-          workshop={workshop}
-          onClose={() => setShowRegistrationForm(false)}
-          onSubmit={handleRegistration}
-        />
-      )}
     </div>
   );
 };

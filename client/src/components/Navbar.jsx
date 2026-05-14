@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiMenu, FiX, FiLogOut, FiHome, FiCalendar, FiClipboard, FiSettings, FiEdit3 } from 'react-icons/fi';
+import { FiMenu, FiX, FiLogOut, FiHome, FiCalendar, FiClipboard, FiSettings, FiEdit3, FiUser } from 'react-icons/fi';
+import { resolveMediaUrl } from '../utils/api';
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,22 +27,29 @@ export const Navbar = () => {
   }`;
 
   return (
-    <nav className="bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+    <nav className="bg-white/95 backdrop-blur border-b border-slate-200 z-50">
+      <div className="max-w-[1680px] mx-auto px-4 sm:px-6">
+        <div className="flex justify-between items-center min-h-16 sm:min-h-20 py-2 gap-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-9 h-9 bg-secondary rounded-lg flex items-center justify-center text-white font-bold shadow-sm">
-              MC
-            </div>
-            <div className="hidden sm:block">
-              <span className="font-bold text-lg leading-none text-slate-950">MongoDB Club</span>
-              <p className="text-xs text-slate-500 -mt-0.5">Workshop Hub</p>
+          <Link to="/" className="flex flex-none items-center gap-5 w-[calc(100%-3.5rem)] max-w-[520px] md:w-[560px] md:max-w-none lg:w-[610px] xl:w-[670px] 2xl:w-[720px]">
+            <img
+              src="/brand/klh-head-banner.png"
+              alt="KLH University"
+              className="h-7 w-[190px] sm:h-8 sm:w-[235px] lg:h-10 lg:w-[320px] xl:h-11 xl:w-[360px] object-contain flex-none"
+            />
+            <div className="flex items-center gap-3 flex-none">
+              <div className="w-9 h-9 rounded-lg bg-secondary text-white flex items-center justify-center font-bold shadow-sm flex-none">
+                MC
+              </div>
+              <div className="w-[118px] lg:w-[150px]">
+                <span className="block font-bold text-sm lg:text-lg leading-tight text-slate-950">MongoDB Club</span>
+                <p className="text-[11px] lg:text-xs text-slate-500 leading-tight">Workshop Hub</p>
+              </div>
             </div>
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden lg:flex items-center space-x-2 flex-none">
             <Link
               to="/"
               className={navLinkClass('/')}
@@ -54,6 +62,15 @@ export const Navbar = () => {
             >
               <FiCalendar /> <span>Workshops</span>
             </Link>
+            {isAuthenticated && (
+              <Link
+                to="/profile"
+                className={navLinkClass('/profile')}
+              >
+                <FiUser /> <span>Profile</span>
+              </Link>
+            )}
+
             {isAuthenticated && (
               <Link
                 to="/blogs"
@@ -83,12 +100,12 @@ export const Navbar = () => {
 
             {isAuthenticated ? (
               <div className="flex items-center space-x-3 pl-3 ml-2 border-l border-slate-200">
-                <div className="flex items-center space-x-2 rounded-lg bg-slate-50 px-2 py-1">
+                <Link to="/profile" className="flex items-center space-x-2 rounded-lg bg-slate-50 px-2 py-1 transition hover:bg-primary/10">
                   {user?.profilePhoto && (
-                    <img src={user.profilePhoto} alt="Profile" className="w-8 h-8 rounded-full" />
+                    <img src={resolveMediaUrl(user.profilePhoto)} alt="Profile" className="w-8 h-8 rounded-full" />
                   )}
                   <span className="text-sm font-semibold text-slate-700 max-w-[140px] truncate">{user?.name}</span>
-                </div>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex items-center space-x-1 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition text-sm font-semibold"
@@ -108,7 +125,7 @@ export const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden rounded-lg border border-slate-200 p-2 text-slate-700"
+            className="lg:hidden rounded-lg border border-slate-200 p-2 text-slate-700"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -117,7 +134,7 @@ export const Navbar = () => {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="md:hidden pb-4 space-y-2 border-t border-slate-100 pt-3">
+          <div className="lg:hidden pb-4 space-y-2 border-t border-slate-100 pt-3">
             <Link
               to="/"
               className={mobileLinkClass('/')}
@@ -132,6 +149,15 @@ export const Navbar = () => {
             >
               Workshops
             </Link>
+            {isAuthenticated && (
+              <Link
+                to="/profile"
+                className={mobileLinkClass('/profile')}
+                onClick={() => setIsOpen(false)}
+              >
+                Profile
+              </Link>
+            )}
             {isAuthenticated && (
               <Link
                 to="/blogs"

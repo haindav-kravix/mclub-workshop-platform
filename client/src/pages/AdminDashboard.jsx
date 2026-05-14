@@ -113,6 +113,27 @@ export const AdminDashboard = () => {
     }
   };
 
+  const handleDownloadReport = async (workshopId) => {
+    try {
+      const response = await workshopAPI.downloadReport(workshopId);
+      const url = window.URL.createObjectURL(new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      }));
+      const link = document.createElement('a');
+      link.href = url;
+      const workshop = workshops.find(w => w._id === workshopId);
+      link.setAttribute('download', `${workshop.title}-workshop-report.docx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentElement.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      setSuccess('Workshop report downloaded successfully');
+    } catch (err) {
+      setError('Failed to generate workshop report');
+      console.error(err);
+    }
+  };
+
   const updateWorkshopInState = (updatedWorkshop) => {
     setWorkshops(prev => prev.map(workshop =>
       workshop._id === updatedWorkshop._id ? updatedWorkshop : workshop
@@ -156,11 +177,12 @@ export const AdminDashboard = () => {
     try {
       const response = await registrationAPI.getWorkshopRegistrations(emailWorkshop._id);
       const emails = response.data
+        .filter(registration => registration.status === 'confirmed')
         .map(registration => registration.userId?.email)
         .filter(Boolean);
 
       if (emails.length === 0) {
-        setError('No registered student emails found for this workshop');
+        setError('No confirmed student emails found for this workshop');
         return;
       }
 
@@ -172,7 +194,7 @@ export const AdminDashboard = () => {
       gmailUrl.searchParams.set('body', emailForm.message);
 
       window.open(gmailUrl.toString(), '_blank', 'noopener,noreferrer');
-      setSuccess(`Opened Gmail compose for ${emails.length} registered students`);
+      setSuccess(`Opened Gmail compose for ${emails.length} confirmed students`);
       setEmailWorkshop(null);
     } catch (err) {
       setError('Failed to collect registered student emails');
@@ -256,6 +278,7 @@ export const AdminDashboard = () => {
                 onDelete={handleDeleteWorkshop}
                 onViewRegistrations={(workshopId) => navigate(`/admin/registrations/${workshopId}`)}
                 onExport={handleExportRegistrations}
+                onReport={handleDownloadReport}
                 onEmail={openEmailComposer}
                 onToggleRegistrations={handleToggleRegistrations}
                 onToggleStopped={handleToggleStopped}

@@ -11,7 +11,7 @@ const formFieldSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['text', 'email', 'phone', 'textarea', 'select', 'radio', 'checkbox'],
+    enum: ['text', 'email', 'phone', 'textarea', 'select', 'radio', 'checkbox', 'question-text', 'question-mcq'],
     required: true
   },
   required: {
@@ -21,6 +21,10 @@ const formFieldSchema = new mongoose.Schema({
   options: {
     type: [String],
     default: []
+  },
+  correctAnswer: {
+    type: String,
+    default: ''
   },
   order: {
     type: Number,

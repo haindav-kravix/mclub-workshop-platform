@@ -33,6 +33,9 @@ export const verifyGoogleToken = async (req, res) => {
         isAdmin: false
       });
       await user.save();
+    } else if (!user.profilePhoto && picture) {
+      user.profilePhoto = picture;
+      await user.save();
     }
 
     // Generate JWT token
@@ -65,7 +68,11 @@ export const getProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json(user);
+    const profile = user.toObject();
+    res.json({
+      ...profile,
+      id: profile._id.toString()
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching profile', error: error.message });
   }

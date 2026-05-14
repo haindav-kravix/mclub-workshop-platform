@@ -11,6 +11,7 @@ router.get('/', workshopController.getAllWorkshops);
 // Admin routes
 router.post('/', authenticateToken, adminOnly, upload.single('coverImage'), workshopController.createWorkshop);
 router.get('/admin/my-workshops', authenticateToken, adminOnly, workshopController.getAdminWorkshops);
+router.get('/:id/report', authenticateToken, adminOnly, workshopController.generateWorkshopReport);
 router.put('/:id', authenticateToken, adminOnly, upload.single('coverImage'), workshopController.updateWorkshop);
 router.delete('/:id', authenticateToken, adminOnly, workshopController.deleteWorkshop);
 router.patch('/:id/toggle', authenticateToken, adminOnly, workshopController.toggleWorkshopStatus);

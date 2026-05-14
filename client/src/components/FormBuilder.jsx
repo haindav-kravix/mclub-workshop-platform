@@ -7,8 +7,24 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
     label: '',
     type: 'text',
     required: true,
-    options: []
+    options: [],
+    correctAnswer: ''
   });
+
+  const needsOptions = (type) => ['select', 'radio', 'checkbox', 'question-mcq'].includes(type);
+  const optionLetters = ['A', 'B', 'C', 'D'];
+
+  const fieldTypeLabel = (type) => ({
+    text: 'Text',
+    email: 'Email',
+    phone: 'Phone',
+    textarea: 'Textarea',
+    select: 'Dropdown',
+    radio: 'Radio Button',
+    checkbox: 'Checkbox',
+    'question-text': 'Question - Text Answer',
+    'question-mcq': 'Question - ABCD Options'
+  }[type] || type);
 
   const addField = () => {
     if (!newField.label) {
@@ -29,7 +45,8 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
       label: '',
       type: 'text',
       required: true,
-      options: []
+      options: [],
+      correctAnswer: ''
     });
   };
 
@@ -90,7 +107,15 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Field Type</label>
             <select
               value={newField.type}
-              onChange={(e) => setNewField({ ...newField, type: e.target.value })}
+              onChange={(e) => {
+                const type = e.target.value;
+                setNewField({
+                  ...newField,
+                  type,
+                  options: type === 'question-mcq' ? ['A', 'B', 'C', 'D'] : needsOptions(type) ? newField.options : [],
+                  correctAnswer: ['question-text', 'question-mcq'].includes(type) ? newField.correctAnswer : ''
+                });
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="text">Text</option>
@@ -100,6 +125,8 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
               <option value="select">Dropdown</option>
               <option value="radio">Radio Button</option>
               <option value="checkbox">Checkbox</option>
+              <option value="question-text">Question - Text Answer</option>
+              <option value="question-mcq">Question - ABCD Options</option>
             </select>
           </div>
 
@@ -116,7 +143,29 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
           </div>
         </div>
 
-        {(newField.type === 'select' || newField.type === 'radio' || newField.type === 'checkbox') && (
+        {newField.type === 'question-mcq' ? (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">ABCD Options</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {optionLetters.map((letter, index) => (
+                <label key={letter} className="rounded-lg border border-gray-200 bg-white p-3">
+                  <span className="block text-xs font-bold text-secondary mb-1">Option {letter}</span>
+                  <input
+                    type="text"
+                    value={newField.options[index] || ''}
+                    onChange={(e) => {
+                      const options = [...(newField.options.length ? newField.options : optionLetters)];
+                      options[index] = e.target.value;
+                      setNewField({ ...newField, options });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder={`Answer ${letter}`}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        ) : needsOptions(newField.type) && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Options (comma-separated)</label>
             <input
@@ -131,6 +180,38 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Option 1, Option 2, Option 3"
             />
+          </div>
+        )}
+
+        {(newField.type === 'question-text' || newField.type === 'question-mcq') && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Answer Key</label>
+            {newField.type === 'question-mcq' ? (
+              <div className="grid grid-cols-4 gap-2">
+                {optionLetters.map((letter, index) => (
+                  <button
+                    key={letter}
+                    type="button"
+                    onClick={() => setNewField({ ...newField, correctAnswer: newField.options[index] || letter })}
+                    className={`rounded-lg border px-3 py-2 text-sm font-bold transition ${
+                      newField.correctAnswer === (newField.options[index] || letter)
+                        ? 'border-secondary bg-secondary text-white'
+                        : 'border-gray-300 bg-white text-gray-700 hover:border-secondary'
+                    }`}
+                  >
+                    {letter}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <input
+                type="text"
+                value={newField.correctAnswer || ''}
+                onChange={(e) => setNewField({ ...newField, correctAnswer: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Expected answer"
+              />
+            )}
           </div>
         )}
 
@@ -155,8 +236,9 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
               <div className="flex-1">
                 <p className="font-medium text-gray-900">{field.label}</p>
                 <p className="text-sm text-gray-500">
-                  {field.type.charAt(0).toUpperCase() + field.type.slice(1)}
+                  {fieldTypeLabel(field.type)}
                   {field.required && ' (Required)'}
+                  {field.correctAnswer && ` - Answer: ${field.correctAnswer}`}
                 </p>
               </div>
 

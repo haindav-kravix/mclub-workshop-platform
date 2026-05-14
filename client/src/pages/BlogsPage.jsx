@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { API_ORIGIN, blogAPI } from '../utils/api';
+import { Link, useNavigate } from 'react-router-dom';
+import { API_ORIGIN, blogAPI, resolveMediaUrl } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
+import { MarkdownPreview } from '../utils/markdownParser';
 import { useAuth } from '../context/AuthContext';
+import { BrandMark } from '../components/BrandMark';
 import {
   FiBookOpen,
   FiCalendar,
   FiEdit3,
-  FiEye,
   FiHeart,
   FiHome,
   FiMenu,
@@ -15,41 +16,25 @@ import {
   FiSettings,
   FiShare2,
   FiTrash2,
-  FiUser,
   FiUserCheck,
   FiUserPlus,
   FiX
 } from 'react-icons/fi';
-
-const emptyPost = {
-  title: '',
-  body: '',
-  tags: '',
-  coverImage: ''
-};
 
 const getReadTime = (body = '') => {
   const words = body.trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.ceil(words / 200));
 };
 
-const formatTags = (tags = '') => tags.split(',').map(tag => tag.trim()).filter(Boolean);
-
 export const BlogsPage = () => {
   const { isAdmin, user } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [myPosts, setMyPosts] = useState([]);
-  const [profile, setProfile] = useState(null);
-  const [bioDraft, setBioDraft] = useState('');
   const [users, setUsers] = useState([]);
   const [query, setQuery] = useState('');
-  const [postForm, setPostForm] = useState(emptyPost);
   const [feedSection, setFeedSection] = useState('all');
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [editorTab, setEditorTab] = useState('write');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [imageUploading, setImageUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -67,19 +52,22 @@ export const BlogsPage = () => {
     } finally {
       setLoading(false);
     }
-
-    try {
-      const profileResponse = await blogAPI.getProfile();
-      setProfile(profileResponse.data);
-      setBioDraft(profileResponse.data.bio || '');
-    } catch (err) {
-      console.error('Failed to load blog profile', err);
-    }
   };
 
   useEffect(() => {
     loadBlogs();
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [menuOpen]);
 
   const visiblePosts = useMemo(() => {
     const published = posts.filter(post => post.status === 'published');
@@ -110,43 +98,6 @@ export const BlogsPage = () => {
     }
   };
 
-  const handleCreatePost = async (status) => {
-    if (!postForm.title || !postForm.body) {
-      setError('Title and content are required');
-      return;
-    }
-
-    try {
-      await blogAPI.createPost({
-        ...postForm,
-        status,
-        tags: formatTags(postForm.tags)
-      });
-      setPostForm(emptyPost);
-      setEditorOpen(false);
-      setEditorTab('write');
-      setSuccess(status === 'published' ? 'Blog published' : 'Draft saved');
-      loadBlogs();
-    } catch (err) {
-      setError('Failed to save blog');
-    }
-  };
-
-  const handleCoverImageUpload = async (file) => {
-    if (!file) return;
-    const data = new FormData();
-    data.append('image', file);
-    setImageUploading(true);
-    try {
-      const response = await blogAPI.uploadImage(data);
-      setPostForm(prev => ({ ...prev, coverImage: response.data.imageUrl }));
-    } catch (err) {
-      setError('Failed to upload cover image');
-    } finally {
-      setImageUploading(false);
-    }
-  };
-
   const handleLike = async (postId) => {
     const response = await blogAPI.toggleLike(postId);
     setPosts(prev => prev.map(post => post._id === postId ? response.data.post : post));
@@ -170,8 +121,15 @@ export const BlogsPage = () => {
       setUsers([]);
       return;
     }
-    const response = await blogAPI.searchUsers(value);
-    setUsers(response.data);
+    try {
+      const response = await blogAPI.searchUsers(value);
+      console.log('Search results:', response.data);
+      setUsers(response.data || []);
+    } catch (error) {
+      console.error('Search error:', error);
+      setUsers([]);
+      setError('Failed to search users');
+    }
   };
 
   const handleFollow = async (userId) => {
@@ -199,15 +157,9 @@ export const BlogsPage = () => {
     setSuccess('User deleted');
   };
 
-  const handleBioSave = async () => {
-    const response = await blogAPI.updateProfile({ bio: bioDraft });
-    setProfile(response.data.profile);
-    setBioDraft(response.data.profile.bio || '');
-    setSuccess('Profile bio updated');
-  };
-
   const navLinks = [
     { to: '/', label: 'Home', icon: FiHome },
+    { to: '/profile', label: 'Profile', icon: FiUserCheck },
     { to: '/workshops', label: 'Workshops', icon: FiCalendar },
     { to: '/my-registrations', label: 'My Events', icon: FiBookOpen },
     ...(isAdmin ? [{ to: '/admin', label: 'Admin', icon: FiSettings }] : [])
@@ -217,8 +169,8 @@ export const BlogsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <div className="sticky top-0 z-40 bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 min-h-16 py-2 flex flex-wrap items-center gap-3 sm:gap-4">
           <button
             onClick={() => setMenuOpen(true)}
             className="p-2 rounded-lg hover:bg-slate-100"
@@ -226,72 +178,95 @@ export const BlogsPage = () => {
           >
             <FiMenu size={24} />
           </button>
-          <Link to="/blogs" className="font-black text-xl text-slate-950">MClub Blogs</Link>
-          <div className="relative flex-1 max-w-2xl mx-auto">
+          <Link to="/blogs" className="flex items-center gap-3 min-w-0 flex-1 sm:flex-none">
+            <BrandMark compact />
+            <span className="font-black text-sm sm:text-lg xl:text-xl leading-tight text-slate-950">MClub Blogs</span>
+          </Link>
+          <div className="relative order-3 w-full flex-none sm:order-none sm:flex-1 sm:max-w-2xl sm:mx-auto">
             <FiSearch className="absolute left-4 top-3 text-slate-400" />
             <input
               value={query}
               onChange={(e) => handleUserSearch(e.target.value)}
               placeholder="Search users"
-              className="w-full pl-12 pr-4 py-2.5 border border-slate-300 rounded-lg focus-ring bg-white"
+              className="w-full pl-12 pr-4 py-2.5 border border-green-300 rounded-lg focus-ring bg-white shadow-md"
             />
             {users.length > 0 && (
-              <div className="absolute left-0 right-0 top-12 bg-white rounded-lg border border-slate-200 shadow-xl overflow-hidden">
+              <div className="absolute left-0 right-0 top-12 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-green-200 shadow-2xl overflow-hidden z-50 backdrop-filter backdrop-blur-md">
                 {users.map(foundUser => (
-                  <div key={foundUser._id} className="flex items-center justify-between gap-3 p-3 border-b last:border-b-0 border-slate-100">
-                    <div className="flex items-center gap-3 min-w-0">
-                      {foundUser.profilePhoto && <img src={foundUser.profilePhoto} alt={foundUser.name} className="w-10 h-10 rounded-full" />}
+                  <button
+                    key={foundUser._id}
+                    onClick={() => {
+                      setQuery('');
+                      setUsers([]);
+                      navigate(`/user/${foundUser._id}`);
+                    }}
+                    className="w-full flex items-center justify-between gap-3 p-4 border-b last:border-b-0 border-green-100 hover:bg-green-100 transition text-left"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      {foundUser.profilePhoto && <img src={resolveMediaUrl(foundUser.profilePhoto)} alt={foundUser.name} className="w-10 h-10 rounded-full border-2 border-green-500" />}
                       <div className="min-w-0">
-                        <p className="font-bold text-sm truncate">{foundUser.name}</p>
-                        <p className="text-xs text-slate-500">{foundUser.followerCount} followers</p>
+                        <p className="font-bold text-sm truncate text-slate-900">{foundUser.name}</p>
+                        <p className="text-xs text-slate-600">{foundUser.followerCount} followers</p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFollow(foundUser._id);
+                      }}
+                      className="px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-bold flex items-center gap-1 whitespace-nowrap shadow-md"
+                    >
+                      {foundUser.isFollowing ? <FiUserCheck /> : <FiUserPlus />}
+                      {foundUser.isFollowing ? 'Following' : 'Follow'}
+                    </button>
+                    {isAdmin && (
                       <button
-                        onClick={() => handleFollow(foundUser._id)}
-                        className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm font-bold flex items-center gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteUser(foundUser._id);
+                        }}
+                        className="p-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100"
+                        title="Delete user"
                       >
-                        {foundUser.isFollowing ? <FiUserCheck /> : <FiUserPlus />}
-                        {foundUser.isFollowing ? 'Following' : 'Follow'}
+                        <FiTrash2 />
                       </button>
-                      {isAdmin && (
-                        <button
-                          onClick={() => handleDeleteUser(foundUser._id)}
-                          className="p-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100"
-                          title="Delete user"
-                        >
-                          <FiTrash2 />
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                    )}
+                  </button>
                 ))}
               </div>
             )}
           </div>
           <button
-            onClick={() => setEditorOpen(true)}
-            className="hidden sm:inline-flex px-4 py-2 rounded-lg border border-primary text-primary font-bold hover:bg-primary/10"
+            onClick={() => navigate('/blogs/create')}
+            className="hidden sm:inline-flex px-4 py-2 rounded-lg border-2 border-green-600 text-green-600 font-bold hover:bg-green-600 hover:text-white transition"
           >
-            Create Post
+            ✏️ Create Post
           </button>
           <button
-            onClick={() => setProfileOpen(true)}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold"
+            onClick={() => navigate('/profile')}
+            className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-secondary hover:shadow-lg hover:scale-105 transition"
+            title="My Profile"
           >
-            {profile?.profilePhoto ? (
-              <img src={profile.profilePhoto} alt={profile.name} className="w-7 h-7 rounded-full" />
+            {user?.profilePhoto ? (
+              <img src={resolveMediaUrl(user.profilePhoto)} alt={user.name} className="w-10 h-10 rounded-full border-2 border-white object-cover" />
             ) : (
-              <FiUser />
+              <FiUserCheck className="text-white text-lg" />
             )}
-            <span className="hidden sm:inline">Profile</span>
           </button>
         </div>
       </div>
 
       {menuOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setMenuOpen(false)}>
-          <div className="w-80 max-w-[85vw] h-full bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="bg-black/40"
+          style={{ position: 'fixed', inset: 0, zIndex: 1000 }}
+          onClick={() => setMenuOpen(false)}
+        >
+          <div
+            className="w-80 max-w-[85vw] bg-white p-5 shadow-xl overflow-y-auto"
+            style={{ position: 'fixed', left: 0, top: 0, bottom: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-black">Menu</h2>
               <button onClick={() => setMenuOpen(false)} className="p-2 rounded-lg hover:bg-slate-100"><FiX /></button>
@@ -363,7 +338,7 @@ export const BlogsPage = () => {
                   {post.coverImage && <img src={post.coverImage.startsWith('/uploads') ? `${API_ORIGIN}${post.coverImage}` : post.coverImage} alt={post.title} className="w-full max-h-80 object-cover" />}
                   <div className="p-5 sm:p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      {post.author?.profilePhoto && <img src={post.author.profilePhoto} alt={post.author.name} className="w-10 h-10 rounded-full" />}
+                      {post.author?.profilePhoto && <img src={resolveMediaUrl(post.author.profilePhoto)} alt={post.author.name} className="w-10 h-10 rounded-full" />}
                       <div>
                         <p className="font-bold text-slate-950">{post.author?.name}</p>
                         <p className="text-xs text-slate-500">
@@ -384,7 +359,9 @@ export const BlogsPage = () => {
                         <span key={tag} className="text-sm text-slate-600 hover:text-primary">#{tag}</span>
                       ))}
                     </div>
-                    <p className="text-slate-700 whitespace-pre-wrap line-clamp-5 text-base leading-7">{post.body}</p>
+                    <div className="prose prose-lg max-w-none mb-5">
+                      <MarkdownPreview content={post.body} />
+                    </div>
                     <div className="flex flex-wrap gap-3 mt-5">
                       <button onClick={() => handleLike(post._id)} className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 ${post.isLiked ? 'bg-rose-50 text-rose-700' : 'bg-slate-100 text-slate-800'}`}>
                         <FiHeart /> {post.likeCount} likes
@@ -410,28 +387,6 @@ export const BlogsPage = () => {
           </main>
 
           <aside className="hidden lg:block space-y-4">
-            {(feedSection === 'profile-followers' || feedSection === 'profile-following') && (
-              <div className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
-                <h2 className="font-black text-slate-950 mb-3">
-                  {feedSection === 'profile-followers' ? 'Followers' : 'Following'}
-                </h2>
-                <div className="space-y-3">
-                  {(feedSection === 'profile-followers' ? profile?.followers : profile?.following)?.map(person => (
-                    <div key={person._id} className="flex items-center gap-2">
-                      {person.profilePhoto && <img src={person.profilePhoto} alt={person.name} className="w-8 h-8 rounded-full" />}
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm truncate">{person.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{person.bio || person.email}</p>
-                      </div>
-                    </div>
-                  ))}
-                  {(feedSection === 'profile-followers' ? profile?.followers : profile?.following)?.length === 0 && (
-                    <p className="text-sm text-slate-500">No users yet</p>
-                  )}
-                </div>
-              </div>
-            )}
-
             {isAdmin && (
               <div className="bg-amber-50 rounded-lg border border-amber-200 p-4">
                 <h2 className="font-black text-amber-900 mb-2">Admin Options</h2>
@@ -463,146 +418,13 @@ export const BlogsPage = () => {
       </div>
 
       <button
-        onClick={() => setEditorOpen(true)}
-        className="fixed bottom-5 right-5 z-40 h-14 w-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center"
+        onClick={() => navigate('/blogs/create')}
+        className="fixed bottom-5 right-5 z-40 h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl flex items-center justify-center text-2xl hover:scale-110 transition transform"
         aria-label="Create post"
+        title="Create new post"
       >
-        <FiEdit3 size={24} />
+        ✏️
       </button>
-
-      {editorOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-100 overflow-y-auto">
-          <div className="sticky top-0 bg-white border-b border-slate-200 z-10">
-            <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <button onClick={() => setEditorOpen(false)} className="p-2 rounded-lg hover:bg-slate-100"><FiX /></button>
-                <span className="font-black text-slate-950">Create Post</span>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => setEditorTab('write')} className={`px-4 py-2 rounded-lg font-bold ${editorTab === 'write' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-700'}`}>
-                  Write
-                </button>
-                <button onClick={() => setEditorTab('preview')} className={`px-4 py-2 rounded-lg font-bold ${editorTab === 'preview' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-700'}`}>
-                  <FiEye className="inline mr-1" /> Preview
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="max-w-5xl mx-auto px-4 py-6">
-            {editorTab === 'write' ? (
-              <div className="bg-white rounded-lg border border-slate-200 p-5 sm:p-8">
-                <div className="mb-5">
-                  {postForm.coverImage ? (
-                    <img
-                      src={postForm.coverImage.startsWith('/uploads') ? `${API_ORIGIN}${postForm.coverImage}` : postForm.coverImage}
-                      alt="Cover preview"
-                      className="w-full max-h-72 object-cover rounded-lg mb-3"
-                    />
-                  ) : (
-                    <div className="rounded-lg border-2 border-dashed border-slate-300 p-8 text-center text-slate-500 mb-3">
-                      Upload a cover photo from your device
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleCoverImageUpload(e.target.files?.[0])}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus-ring"
-                  />
-                  {imageUploading && <p className="text-sm text-slate-500 mt-2">Uploading image...</p>}
-                </div>
-                <input
-                  value={postForm.title}
-                  onChange={(e) => setPostForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="New post title here..."
-                  className="w-full text-4xl sm:text-5xl font-black border-none focus:outline-none placeholder:text-slate-400 mb-5"
-                />
-                <input
-                  value={postForm.tags}
-                  onChange={(e) => setPostForm(prev => ({ ...prev, tags: e.target.value }))}
-                  placeholder="Add up to 4 tags, comma separated"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus-ring mb-5"
-                />
-                <textarea
-                  rows="18"
-                  value={postForm.body}
-                  onChange={(e) => setPostForm(prev => ({ ...prev, body: e.target.value }))}
-                  placeholder="Write your post content here..."
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus-ring text-lg leading-8"
-                />
-              </div>
-            ) : (
-              <article className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-                {postForm.coverImage && <img src={postForm.coverImage.startsWith('/uploads') ? `${API_ORIGIN}${postForm.coverImage}` : postForm.coverImage} alt={postForm.title} className="w-full max-h-96 object-cover" />}
-                <div className="p-5 sm:p-8">
-                  <h1 className="text-4xl sm:text-5xl font-black mb-4">{postForm.title || 'Post preview title'}</h1>
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {formatTags(postForm.tags).map(tag => <span key={tag} className="text-slate-600">#{tag}</span>)}
-                  </div>
-                  <p className="text-lg leading-8 whitespace-pre-wrap text-slate-800">{postForm.body || 'Your preview will appear here as you write.'}</p>
-                </div>
-              </article>
-            )}
-
-            <div className="flex flex-col sm:flex-row gap-3 mt-5">
-              <button onClick={() => handleCreatePost('published')} className="px-6 py-3 bg-primary text-white rounded-lg font-black">
-                Publish
-              </button>
-              <button onClick={() => handleCreatePost('draft')} className="px-6 py-3 bg-slate-200 text-slate-900 rounded-lg font-black">
-                Save Draft
-              </button>
-              <button onClick={() => setEditorOpen(false)} className="px-6 py-3 text-slate-700 rounded-lg font-bold">
-                Dismiss
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {profileOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setProfileOpen(false)}>
-          <div className="bg-white rounded-lg max-w-xl w-full overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="h-24 bg-slate-950"></div>
-            <div className="p-5 -mt-12">
-              <div className="flex items-start justify-between gap-3">
-                {profile?.profilePhoto ? (
-                  <img src={profile.profilePhoto} alt={profile.name} className="w-20 h-20 rounded-full border-4 border-white" />
-                ) : (
-                  <div className="w-20 h-20 rounded-full border-4 border-white bg-slate-200 flex items-center justify-center">
-                    <FiUser />
-                  </div>
-                )}
-                <button onClick={() => setProfileOpen(false)} className="mt-12 p-2 rounded-lg hover:bg-slate-100"><FiX /></button>
-              </div>
-              <h2 className="font-black text-2xl text-slate-950 mt-3">{profile?.name || user?.name}</h2>
-              <p className="text-sm text-slate-500 break-all">{profile?.email || user?.email}</p>
-              <div className="grid grid-cols-2 gap-2 my-4">
-                <button onClick={() => setFeedSection('profile-followers')} className="rounded-lg bg-slate-50 p-3 text-left">
-                  <p className="font-black">{profile?.followerCount || 0}</p>
-                  <p className="text-xs text-slate-500">Followers</p>
-                </button>
-                <button onClick={() => setFeedSection('profile-following')} className="rounded-lg bg-slate-50 p-3 text-left">
-                  <p className="font-black">{profile?.followingCount || 0}</p>
-                  <p className="text-xs text-slate-500">Following</p>
-                </button>
-              </div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Bio</label>
-              <textarea
-                value={bioDraft}
-                onChange={(e) => setBioDraft(e.target.value)}
-                maxLength={280}
-                rows="4"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus-ring text-sm"
-                placeholder="Tell the community about yourself..."
-              />
-              <button onClick={handleBioSave} className="mt-3 w-full px-4 py-2 rounded-lg bg-slate-950 text-white font-bold">
-                Update Bio
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
