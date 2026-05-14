@@ -27,8 +27,8 @@ export const registerForWorkshop = async (req, res) => {
       const statusMessages = {
         pending: 'Your registration is already under review',
         confirmed: 'You are already confirmed for this workshop',
-        rejected: 'Your registration was rejected. Please contact support for help.',
-        cancelled: 'This registration was cancelled. Please contact support if you need help.'
+        rejected: 'Your registration was rejected. Please contact guidance for help.',
+        cancelled: 'This registration was cancelled. Please contact guidance if you need help.'
       };
       return res.status(400).json({ message: statusMessages[existingRegistration.status] || 'You are already registered for this workshop' });
     }

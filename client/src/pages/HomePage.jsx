@@ -23,7 +23,7 @@ export const HomePage = () => {
             </p>
             <div className="grid sm:grid-cols-2 gap-3 mb-8 max-w-2xl">
               <div className="rounded-lg border border-white/10 bg-white/10 p-4">
-                <p className="font-bold text-white">MongoDB Global Certification Support</p>
+                <p className="font-bold text-white">MongoDB Global Certification Guidance</p>
                 <p className="text-sm text-slate-300 mt-1">We help members prepare for globally recognized MongoDB certifications.</p>
               </div>
               <div className="rounded-lg border border-white/10 bg-white/10 p-4">
@@ -71,7 +71,7 @@ export const HomePage = () => {
                 <FiAward className="text-primary text-2xl flex-none" />
                 <div>
                   <p className="font-bold text-slate-950">Certification Guidance</p>
-                  <p className="text-sm text-slate-600">Support for students preparing for MongoDB global certifications.</p>
+                  <p className="text-sm text-slate-600">Guidance for students preparing for MongoDB global certifications.</p>
                 </div>
               </div>
               <div className="rounded-lg bg-slate-50 soft-border p-4 flex gap-3">
@@ -114,7 +114,7 @@ export const HomePage = () => {
               <div className="w-12 h-12 bg-cyan-50 rounded-lg flex items-center justify-center mb-5">
                 <FiAward className="text-primary text-3xl" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Certification Support</h3>
+              <h3 className="text-xl font-bold mb-2">Certification Guidance</h3>
               <p className="text-gray-600">
                 Get guidance for MongoDB global certification preparation
               </p>

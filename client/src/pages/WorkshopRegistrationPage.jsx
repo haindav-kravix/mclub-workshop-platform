@@ -84,7 +84,7 @@ export const WorkshopRegistrationPage = () => {
         ) : registrationStatus === 'rejected' ? (
           <div className="rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-xl">
             <h1 className="text-2xl font-black text-rose-700">Registration rejected</h1>
-            <p className="mt-2 text-slate-600">Contact support if you need help with this registration.</p>
+            <p className="mt-2 text-slate-600">Contact guidance if you need help with this registration.</p>
           </div>
         ) : !registrationsOpen ? (
           <div className="rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-xl">

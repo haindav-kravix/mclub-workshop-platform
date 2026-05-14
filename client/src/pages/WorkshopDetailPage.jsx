@@ -192,7 +192,7 @@ export const WorkshopDetailPage = () => {
             </div>
           ) : registrationStatus === 'rejected' ? (
             <div className="w-full px-6 py-3 bg-rose-50 text-rose-700 rounded-lg font-bold text-lg text-center">
-              Registration rejected. Contact support for help.
+              Registration rejected. Contact guidance for help.
             </div>
           ) : isAuthenticated && registrationsOpen ? (
             <button
