@@ -1,19 +1,51 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiLock, FiShield, FiUsers, FiDownload } from 'react-icons/fi';
+import { FiCheckCircle, FiDownload, FiLock, FiShield, FiUsers, FiX } from 'react-icons/fi';
 import { ErrorMessage } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import { BrandMark } from '../components/BrandMark';
 import { GoogleAuthButton } from '../components/GoogleAuthButton';
 
+const ADMIN_ACCESS_CODE = 'KLHAZ';
+
 export const AdminAuthPage = () => {
   const [mode, setMode] = useState('login');
   const [error, setError] = useState('');
+  const [accessCode, setAccessCode] = useState('');
+  const [accessError, setAccessError] = useState('');
+  const [accessGranted, setAccessGranted] = useState(false);
+  const [showAccessPopup, setShowAccessPopup] = useState(false);
   const [loading, setLoading] = useState(false);
   const { handleAdminAuth } = useAuth();
   const navigate = useNavigate();
 
+  const openAccessPopup = (selectedMode) => {
+    setMode(selectedMode);
+    setAccessCode('');
+    setAccessError('');
+    setShowAccessPopup(true);
+  };
+
+  const verifyAccessCode = (event) => {
+    event.preventDefault();
+    const normalizedCode = accessCode.trim().toUpperCase();
+
+    if (normalizedCode !== ADMIN_ACCESS_CODE) {
+      setAccessError('Invalid access code. Please check and try again.');
+      return;
+    }
+
+    setAccessError('');
+    setAccessGranted(true);
+    setShowAccessPopup(false);
+  };
+
   const completeAdminAuth = async ({ credential, selectedMode = mode }) => {
+    if (!accessGranted) {
+      openAccessPopup(selectedMode);
+      return;
+    }
+
     setError('');
     setLoading(true);
 
@@ -73,7 +105,7 @@ export const AdminAuthPage = () => {
           <div className="grid grid-cols-2 gap-3 mb-8">
             <button
               type="button"
-              onClick={() => setMode('login')}
+              onClick={() => openAccessPopup('login')}
               className={`px-6 py-3 rounded-lg font-bold transition transform ${
                 mode === 'login' 
                   ? 'bg-green-600 text-white shadow-lg scale-105' 
@@ -84,7 +116,7 @@ export const AdminAuthPage = () => {
             </button>
             <button
               type="button"
-              onClick={() => setMode('signup')}
+              onClick={() => openAccessPopup('signup')}
               className={`px-6 py-3 rounded-lg font-bold transition transform ${
                 mode === 'signup' 
                   ? 'bg-green-600 text-white shadow-lg scale-105' 
@@ -98,15 +130,31 @@ export const AdminAuthPage = () => {
           {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
 
           <div className="mb-8">
-            <GoogleAuthButton
-              onSuccess={(credentialResponse) => completeAdminAuth({ credential: credentialResponse.credential })}
-              onError={() => setError('Google authentication failed. Please try again.')}
-              text={mode === 'signup' ? 'signup_with' : 'signin_with'}
-            />
-            {loading && (
-              <p className="mt-3 text-center text-sm font-semibold text-slate-700">
-                Signing you in...
-              </p>
+            {accessGranted ? (
+              <>
+                <div className="mb-4 flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">
+                  <FiCheckCircle />
+                  Access code verified
+                </div>
+                <GoogleAuthButton
+                  onSuccess={(credentialResponse) => completeAdminAuth({ credential: credentialResponse.credential })}
+                  onError={() => setError('Google authentication failed. Please try again.')}
+                  text={mode === 'signup' ? 'signup_with' : 'signin_with'}
+                />
+                {loading && (
+                  <p className="mt-3 text-center text-sm font-semibold text-slate-700">
+                    Signing you in...
+                  </p>
+                )}
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => openAccessPopup(mode)}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-black text-white transition hover:bg-primary/90"
+              >
+                <FiLock /> Enter Access Code
+              </button>
             )}
           </div>
 
@@ -126,6 +174,60 @@ export const AdminAuthPage = () => {
           </div>
         </div>
       </div>
+
+      {showAccessPopup && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-emerald-100">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+                  <FiLock size={24} />
+                </div>
+                <h2 className="text-2xl font-black text-slate-950">Admin Access Code</h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  Enter the access code to continue with admin {mode === 'signup' ? 'sign up' : 'login'}.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAccessPopup(false)}
+                className="rounded-lg bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
+                aria-label="Close access code popup"
+              >
+                <FiX />
+              </button>
+            </div>
+
+            <form onSubmit={verifyAccessCode} className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-bold text-slate-800">Access Code</label>
+                <input
+                  type="password"
+                  value={accessCode}
+                  onChange={(event) => setAccessCode(event.target.value)}
+                  className="w-full px-4 py-3 text-center text-lg font-black uppercase tracking-[0.2em] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="•••••"
+                  autoComplete="off"
+                  autoFocus
+                />
+              </div>
+
+              {accessError && (
+                <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+                  {accessError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full rounded-lg bg-primary px-4 py-3 font-black text-white transition hover:bg-primary/90"
+              >
+                Verify Code
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
