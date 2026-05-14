@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { API_ORIGIN, blogAPI, resolveMediaUrl } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
@@ -170,7 +171,7 @@ export const BlogsPage = () => {
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 min-h-16 py-2 flex flex-wrap items-center gap-3 sm:gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 grid grid-cols-[auto_minmax(0,1fr)_auto] lg:grid-cols-[auto_auto_minmax(260px,1fr)_auto_auto] items-center gap-3">
           <button
             onClick={() => setMenuOpen(true)}
             className="p-2 rounded-lg hover:bg-slate-100"
@@ -178,20 +179,20 @@ export const BlogsPage = () => {
           >
             <FiMenu size={24} />
           </button>
-          <Link to="/blogs" className="flex items-center gap-3 min-w-0 flex-1 sm:flex-none">
+          <Link to="/blogs" className="flex items-center gap-2 sm:gap-3 min-w-0">
             <BrandMark compact />
-            <span className="font-black text-sm sm:text-lg xl:text-xl leading-tight text-slate-950">MClub Blogs</span>
+            <span className="font-black text-sm sm:text-lg xl:text-xl leading-tight text-slate-950 whitespace-nowrap">MClub Blogs</span>
           </Link>
-          <div className="relative order-3 w-full flex-none sm:order-none sm:flex-1 sm:max-w-2xl sm:mx-auto">
-            <FiSearch className="absolute left-4 top-3 text-slate-400" />
+          <div className="relative col-span-3 row-start-2 w-full lg:col-span-1 lg:row-start-auto lg:max-w-xl lg:justify-self-stretch">
+            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               value={query}
               onChange={(e) => handleUserSearch(e.target.value)}
               placeholder="Search users"
-              className="w-full pl-12 pr-4 py-2.5 border border-green-300 rounded-lg focus-ring bg-white shadow-md"
+              className="w-full h-11 pl-12 pr-4 border border-emerald-200 rounded-lg focus-ring bg-white shadow-sm"
             />
             {users.length > 0 && (
-              <div className="absolute left-0 right-0 top-12 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-green-200 shadow-2xl overflow-hidden z-50 backdrop-filter backdrop-blur-md">
+              <div className="absolute left-0 right-0 top-12 bg-white rounded-lg border border-emerald-200 shadow-2xl overflow-hidden z-50">
                 {users.map(foundUser => (
                   <button
                     key={foundUser._id}
@@ -238,7 +239,7 @@ export const BlogsPage = () => {
           </div>
           <button
             onClick={() => navigate('/blogs/create')}
-            className="hidden sm:inline-flex px-4 py-2 rounded-lg border-2 border-green-600 text-green-600 font-bold hover:bg-green-600 hover:text-white transition"
+            className="hidden md:inline-flex px-4 py-2 rounded-lg border-2 border-green-600 text-green-600 font-bold hover:bg-green-600 hover:text-white transition whitespace-nowrap justify-self-end"
           >
             ✏️ Create Post
           </button>
@@ -256,7 +257,7 @@ export const BlogsPage = () => {
         </div>
       </div>
 
-      {menuOpen && (
+      {menuOpen && createPortal((
         <div
           className="bg-black/40"
           style={{ position: 'fixed', inset: 0, zIndex: 1000 }}
@@ -293,7 +294,7 @@ export const BlogsPage = () => {
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
