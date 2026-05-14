@@ -6,17 +6,12 @@ import { useAuth } from '../context/AuthContext';
 import { BrandMark } from '../components/BrandMark';
 import { GoogleAuthButton } from '../components/GoogleAuthButton';
 
-const getPublicOrigin = () => (
-  import.meta.env.VITE_PUBLIC_ORIGIN || window.location.origin
-);
-
 export const AdminAuthPage = () => {
   const [mode, setMode] = useState('login');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { handleAdminAuth } = useAuth();
   const navigate = useNavigate();
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
   const completeAdminAuth = async ({ credential, selectedMode = mode }) => {
     setError('');
@@ -35,48 +30,6 @@ export const AdminAuthPage = () => {
     }
 
     setError(result.error || 'Admin authentication failed');
-  };
-
-  React.useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-    const idToken = hashParams.get('id_token');
-    const state = hashParams.get('state');
-    const expectedState = sessionStorage.getItem('googleAdminLoginState');
-    const selectedMode = sessionStorage.getItem('googleAdminLoginMode') || mode;
-
-    if (!idToken) return;
-
-    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
-
-    if (expectedState && state !== expectedState) {
-      setError('Google login verification failed. Please try again.');
-      return;
-    }
-
-    sessionStorage.removeItem('googleAdminLoginState');
-    sessionStorage.removeItem('googleAdminLoginMode');
-    completeAdminAuth({ credential: idToken, selectedMode });
-  }, []);
-
-  const startGoogleLogin = () => {
-    if (!googleClientId) {
-      setError('Google login is not configured.');
-      return;
-    }
-
-    const state = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    sessionStorage.setItem('googleAdminLoginState', state);
-    sessionStorage.setItem('googleAdminLoginMode', mode);
-
-    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-    authUrl.searchParams.set('client_id', googleClientId);
-    authUrl.searchParams.set('redirect_uri', `${getPublicOrigin()}/MC-ADMIN`);
-    authUrl.searchParams.set('response_type', 'id_token');
-    authUrl.searchParams.set('scope', 'openid email profile');
-    authUrl.searchParams.set('nonce', state);
-    authUrl.searchParams.set('state', state);
-    authUrl.searchParams.set('prompt', 'select_account');
-    window.location.assign(authUrl.toString());
   };
 
   return (
@@ -146,9 +99,9 @@ export const AdminAuthPage = () => {
 
           <div className="mb-8">
             <GoogleAuthButton
-              onClick={startGoogleLogin}
-              label={mode === 'signup' ? 'Sign up with Google' : 'Continue with Google'}
-              disabled={loading}
+              onSuccess={(credentialResponse) => completeAdminAuth({ credential: credentialResponse.credential })}
+              onError={() => setError('Google authentication failed. Please try again.')}
+              text={mode === 'signup' ? 'signup_with' : 'signin_with'}
             />
             {loading && (
               <p className="mt-3 text-center text-sm font-semibold text-slate-700">

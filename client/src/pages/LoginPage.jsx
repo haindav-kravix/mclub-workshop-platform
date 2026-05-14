@@ -6,10 +6,6 @@ import { ErrorMessage } from '../components/UI';
 import { BrandMark } from '../components/BrandMark';
 import { GoogleAuthButton } from '../components/GoogleAuthButton';
 
-const getPublicOrigin = () => (
-  import.meta.env.VITE_PUBLIC_ORIGIN || window.location.origin
-);
-
 export const LoginPage = () => {
   const { handleGoogleLoginSuccess } = useAuth();
   const navigate = useNavigate();
@@ -17,60 +13,22 @@ export const LoginPage = () => {
   const [error, setError] = React.useState('');
   const [isSigningIn, setIsSigningIn] = React.useState(false);
   const redirectTo = searchParams.get('redirect') || '/workshops';
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
-  const completeLogin = async (credential) => {
+  const handleSuccess = async (credentialResponse) => {
     setIsSigningIn(true);
     setError('');
-    const result = await handleGoogleLoginSuccess({ credential });
+    const result = await handleGoogleLoginSuccess(credentialResponse);
     if (result.success) {
-      const storedRedirect = sessionStorage.getItem('googleLoginRedirect');
-      sessionStorage.removeItem('googleLoginRedirect');
-      navigate(storedRedirect || redirectTo);
+      navigate(redirectTo);
     } else {
       setError(result.error || 'Login failed');
       setIsSigningIn(false);
     }
   };
 
-  React.useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-    const idToken = hashParams.get('id_token');
-    const state = hashParams.get('state');
-    const expectedState = sessionStorage.getItem('googleLoginState');
-
-    if (!idToken) return;
-
-    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
-
-    if (expectedState && state !== expectedState) {
-      setError('Google login verification failed. Please try again.');
-      return;
-    }
-
-    sessionStorage.removeItem('googleLoginState');
-    completeLogin(idToken);
-  }, []);
-
-  const startGoogleLogin = () => {
-    if (!googleClientId) {
-      setError('Google login is not configured.');
-      return;
-    }
-
-    const state = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    sessionStorage.setItem('googleLoginState', state);
-    sessionStorage.setItem('googleLoginRedirect', redirectTo);
-
-    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-    authUrl.searchParams.set('client_id', googleClientId);
-    authUrl.searchParams.set('redirect_uri', `${getPublicOrigin()}/login`);
-    authUrl.searchParams.set('response_type', 'id_token');
-    authUrl.searchParams.set('scope', 'openid email profile');
-    authUrl.searchParams.set('nonce', state);
-    authUrl.searchParams.set('state', state);
-    authUrl.searchParams.set('prompt', 'select_account');
-    window.location.assign(authUrl.toString());
+  const handleError = () => {
+    setError('Login failed. Please try again.');
+    setIsSigningIn(false);
   };
 
   return (
@@ -103,8 +61,9 @@ export const LoginPage = () => {
 
           <div className="mb-8">
             <GoogleAuthButton
-              onClick={startGoogleLogin}
-              disabled={isSigningIn}
+              onSuccess={handleSuccess}
+              onError={handleError}
+              text="signin_with"
             />
             {isSigningIn && (
               <p className="mt-3 text-center text-sm font-semibold text-slate-700">
