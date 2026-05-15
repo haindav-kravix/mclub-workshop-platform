@@ -3,6 +3,11 @@ import Workshop from '../models/Workshop.js';
 import User from '../models/User.js';
 import { generateExcelReport } from '../utils/excelExport.js';
 
+const safeExportFileName = (value = 'registrations') => String(value)
+  .replace(/[^a-z0-9]+/gi, '-')
+  .replace(/^-+|-+$/g, '')
+  .toLowerCase() || 'registrations';
+
 export const registerForWorkshop = async (req, res) => {
   try {
     const { workshopId, formData } = req.body;
@@ -135,16 +140,20 @@ export const exportRegistrationsToExcel = async (req, res) => {
       return res.status(404).json({ message: 'Workshop not found' });
     }
 
-    const registrations = await Registration.find({ workshopId, status: 'confirmed' })
-      .populate('userId', 'name email');
+    const registrations = await Registration.find({ workshopId })
+      .populate('userId', 'name email')
+      .sort({ createdAt: -1 });
 
     const workbook = await generateExcelReport(registrations, workshop.title, workshop.registrationFormFields);
+    const fileName = `${safeExportFileName(workshop.title)}-registrations.xlsx`;
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${workshop.title}-registrations.xlsx"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
 
     await workbook.xlsx.write(res);
+    res.end();
   } catch (error) {
+    console.error('Error exporting registrations:', error);
     res.status(500).json({ message: 'Error exporting registrations', error: error.message });
   }
 };

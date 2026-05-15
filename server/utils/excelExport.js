@@ -3,8 +3,9 @@ import ExcelJS from 'exceljs';
 const getFormValue = (formData, fieldId) => {
   if (!formData) return '';
   const value = typeof formData.get === 'function' ? formData.get(fieldId) : formData[fieldId];
-  if (Array.isArray(value)) return value.join(', ');
-  return value ?? '';
+  if (Array.isArray(value)) return value.map(item => String(item ?? '')).join(', ');
+  if (value && typeof value === 'object') return JSON.stringify(value);
+  return String(value ?? '');
 };
 
 const buildFieldHeaders = (registrations, formFields = []) => {
@@ -38,7 +39,7 @@ export const generateExcelReport = async (registrations, workshopTitle, formFiel
   const fieldHeaders = buildFieldHeaders(registrations, formFields);
 
   // Add title
-  const finalColumn = Math.max(3 + fieldHeaders.length, 3);
+  const finalColumn = Math.max(4 + fieldHeaders.length, 4);
   worksheet.mergeCells(1, 1, 1, finalColumn);
   worksheet.getCell('A1').value = `${workshopTitle} - Registration Report`;
   worksheet.getCell('A1').font = { bold: true, size: 14 };
@@ -52,7 +53,7 @@ export const generateExcelReport = async (registrations, workshopTitle, formFiel
 
   // Add headers
   let headerIndex = 4;
-  const headers = ['Name', 'Email', 'Registration Date', ...fieldHeaders.map(field => field.label)];
+  const headers = ['Name', 'Email', 'Status', 'Registration Date', ...fieldHeaders.map(field => field.label)];
   headers.forEach((header, index) => {
     const cell = worksheet.getCell(headerIndex, index + 1);
     cell.value = header;
@@ -64,12 +65,13 @@ export const generateExcelReport = async (registrations, workshopTitle, formFiel
   // Add data rows
   let rowIndex = 5;
   registrations.forEach((reg) => {
-    worksheet.getCell(rowIndex, 1).value = reg.userId.name;
-    worksheet.getCell(rowIndex, 2).value = reg.userId.email;
-    worksheet.getCell(rowIndex, 3).value = new Date(reg.createdAt).toLocaleString();
+    worksheet.getCell(rowIndex, 1).value = reg.userId?.name || 'Unknown user';
+    worksheet.getCell(rowIndex, 2).value = reg.userId?.email || '';
+    worksheet.getCell(rowIndex, 3).value = reg.status || 'pending';
+    worksheet.getCell(rowIndex, 4).value = reg.createdAt ? new Date(reg.createdAt).toLocaleString() : '';
 
     fieldHeaders.forEach((field, index) => {
-      worksheet.getCell(rowIndex, index + 4).value = getFormValue(reg.formData, field.id);
+      worksheet.getCell(rowIndex, index + 5).value = getFormValue(reg.formData, field.id);
     });
 
     rowIndex++;
