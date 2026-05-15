@@ -183,6 +183,17 @@ button:hover {
   transform: translateY(-2px) scale(1.02);
 }
 
+.blog-create-fab {
+  position: fixed !important;
+  right: max(1rem, env(safe-area-inset-right)) !important;
+  bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+  transform: none;
+}
+
+.blog-create-fab:hover {
+  transform: scale(1.04);
+}
+
 .bg-primary, button.bg-primary, [role="button"].bg-primary {
   background: linear-gradient(135deg, #00D66A 0%, #00B159 100%) !important;
   color: #ffffff !important;

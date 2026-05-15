@@ -1,10 +1,33 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiArrowRight, FiAward, FiBriefcase, FiCalendar } from 'react-icons/fi';
+import { workshopAPI, resolveMediaUrl } from '../utils/api';
+import { formatWorkshopTime } from '../utils/formatters';
+import { FiArrowRight, FiAward, FiBriefcase, FiCalendar, FiClock, FiMapPin } from 'react-icons/fi';
 
 export const HomePage = () => {
   const { isAuthenticated } = useAuth();
+  const [workshops, setWorkshops] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadWorkshops = async () => {
+      try {
+        const response = await workshopAPI.getAllWorkshops();
+        if (mounted) setWorkshops(response.data || []);
+      } catch {
+        if (mounted) setWorkshops([]);
+      }
+    };
+
+    loadWorkshops();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const featuredWorkshops = useMemo(() => workshops.slice(0, 3), [workshops]);
 
   return (
     <div className="min-h-screen app-shell">
@@ -85,6 +108,76 @@ export const HomePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Live Workshops Section */}
+      {featuredWorkshops.length > 0 && (
+        <div className="py-12 sm:py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+              <div>
+                <p className="text-sm uppercase tracking-wide text-primary font-bold mb-2">Live from admin</p>
+                <h2 className="text-3xl sm:text-4xl font-bold text-slate-950">Workshops Open Now</h2>
+                <p className="text-slate-600 mt-3 max-w-2xl">Admin-created workshops appear here automatically. Open any workshop to view details and register.</p>
+              </div>
+              <Link
+                to="/workshops"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-3 font-bold text-slate-950 transition hover:border-primary hover:bg-primary/10"
+              >
+                View All <FiArrowRight />
+              </Link>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {featuredWorkshops.map(workshop => (
+                <Link
+                  key={workshop._id}
+                  to={`/workshop/${workshop._id}`}
+                  className="panel block overflow-hidden rounded-lg bg-white text-slate-950 transition hover:shadow-xl"
+                >
+                  <div className="h-36 sm:h-44 bg-slate-100 overflow-hidden">
+                    {workshop.coverImage ? (
+                      <img
+                        src={resolveMediaUrl(workshop.coverImage)}
+                        alt={workshop.title}
+                        className="h-full w-full object-contain"
+                        onError={(event) => {
+                          event.currentTarget.onerror = null;
+                          event.currentTarget.src = '/brand/klh-head-banner.png';
+                        }}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-emerald-50 text-4xl font-black text-primary">
+                        {workshop.title?.charAt(0) || 'W'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4 sm:p-5">
+                    <div className="mb-3 inline-flex rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                      Registrations {workshop.registrationsOpen !== false ? 'Open' : 'Closed'}
+                    </div>
+                    <h3 className="line-clamp-2 text-xl font-black leading-tight">{workshop.title}</h3>
+                    <p className="mt-2 line-clamp-2 text-sm text-slate-600">{workshop.description}</p>
+                    <div className="mt-4 space-y-2 text-sm text-slate-700">
+                      <div className="flex items-center gap-2">
+                        <FiCalendar className="flex-none text-primary" />
+                        <span>{new Date(workshop.startDate || workshop.date).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FiClock className="flex-none text-primary" />
+                        <span>{formatWorkshopTime(workshop)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FiMapPin className="flex-none text-primary" />
+                        <span className="truncate">{workshop.venue}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Features Section */}
       <div className="py-16 bg-white">

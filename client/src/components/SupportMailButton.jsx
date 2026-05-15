@@ -10,12 +10,12 @@ export const SupportMailButton = () => {
       href={GMAIL_COMPOSE_URL}
       target="_blank"
       rel="noreferrer"
-      className="fixed bottom-5 left-5 z-[80] inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-slate-950 shadow-xl transition hover:bg-primary/80 sm:w-auto sm:px-5 sm:gap-2"
+      className="fixed bottom-4 left-4 z-[80] inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary text-slate-950 shadow-xl transition hover:bg-primary/80 sm:w-auto sm:px-4 sm:gap-2"
       aria-label="Email guidance"
       title="Email guidance"
     >
-      <FiMail size={22} />
-      <span className="hidden font-bold sm:inline">Guidance</span>
+      <FiMail size={18} />
+      <span className="hidden text-sm font-bold sm:inline">Guidance</span>
     </a>
   );
 };
