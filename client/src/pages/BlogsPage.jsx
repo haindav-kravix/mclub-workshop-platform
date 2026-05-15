@@ -158,6 +158,9 @@ export const BlogsPage = () => {
     setSuccess('User deleted');
   };
 
+  const canManagePost = (post) => isAdmin || post.author?._id === user?.id || post.author?._id === user?._id;
+  const canEditPost = (post) => post.author?._id === user?.id || post.author?._id === user?._id;
+
   const navLinks = [
     { to: '/', label: 'Home', icon: FiHome },
     { to: '/profile', label: 'Profile', icon: FiUserCheck },
@@ -380,7 +383,12 @@ export const BlogsPage = () => {
                       <button onClick={() => handleShare(post)} className="px-4 py-2 rounded-lg font-semibold flex items-center gap-2 bg-slate-100 text-slate-800">
                         <FiShare2 /> Share
                       </button>
-                      {(isAdmin || post.author?._id === user?.id || post.author?._id === user?._id) && (
+                      {canEditPost(post) && (
+                        <button onClick={() => navigate(`/blogs/${post._id}/edit`)} className="px-4 py-2 rounded-lg font-semibold flex items-center gap-2 bg-emerald-50 text-emerald-700">
+                          <FiEdit3 /> Edit
+                        </button>
+                      )}
+                      {canManagePost(post) && (
                         <button onClick={() => handleDeletePost(post._id)} className="px-4 py-2 rounded-lg font-semibold flex items-center gap-2 bg-rose-50 text-rose-700">
                           <FiTrash2 /> Delete
                         </button>
@@ -430,7 +438,7 @@ export const BlogsPage = () => {
 
       <button
         onClick={() => navigate('/blogs/create')}
-        className="fixed bottom-5 right-5 z-40 h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl flex items-center justify-center text-2xl hover:scale-110 transition transform"
+        className="fixed bottom-5 right-5 z-[80] h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl flex items-center justify-center text-2xl hover:scale-110 transition transform"
         aria-label="Create post"
         title="Create new post"
       >

@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { API_ORIGIN, blogAPI } from '../utils/api';
-import { ErrorMessage, SuccessMessage } from '../components/UI';
+import { API_ORIGIN, blogAPI, resolveMediaUrl } from '../utils/api';
+import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { MarkdownPreview } from '../utils/markdownParser';
 import {
   FiArrowLeft,
@@ -29,13 +29,19 @@ const formatTags = (tags = '') => tags.split(',').map(tag => tag.trim()).filter(
 
 export const BlogEditorPage = () => {
   const navigate = useNavigate();
+  const { postId } = useParams();
   const editorRef = useRef(null);
   const [postForm, setPostForm] = useState(emptyPost);
   const [editorTab, setEditorTab] = useState('write');
   const [imageUploading, setImageUploading] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionSuggestions, setMentionSuggestions] = useState([]);
+  const [mentionStart, setMentionStart] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(Boolean(postId));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const isEditing = Boolean(postId);
 
   const primaryButtonClass = 'inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-slate-950 rounded-lg font-bold hover:bg-primary/80 transition disabled:opacity-50 disabled:cursor-not-allowed';
   const secondaryButtonClass = 'inline-flex items-center justify-center gap-2 px-6 py-3 border border-slate-300 text-slate-800 rounded-lg font-bold hover:bg-white/50 transition disabled:opacity-50 disabled:cursor-not-allowed';
@@ -57,7 +63,39 @@ export const BlogEditorPage = () => {
     }
   };
 
-  const handleCreatePost = async (status) => {
+  useEffect(() => {
+    if (!postId) return undefined;
+
+    let mounted = true;
+    const loadPostForEditing = async () => {
+      try {
+        const response = await blogAPI.getMyPosts();
+        const post = (response.data || []).find(item => item._id === postId);
+        if (!post) {
+          setError('This blog is not available for editing');
+          return;
+        }
+        if (!mounted) return;
+        setPostForm({
+          title: post.title || '',
+          body: post.body || '',
+          tags: Array.isArray(post.tags) ? post.tags.join(', ') : '',
+          coverImage: post.coverImage || ''
+        });
+      } catch (err) {
+        setError('Failed to load blog for editing');
+      } finally {
+        if (mounted) setInitialLoading(false);
+      }
+    };
+
+    loadPostForEditing();
+    return () => {
+      mounted = false;
+    };
+  }, [postId]);
+
+  const handleSavePost = async (status) => {
     if (!postForm.title || !postForm.body) {
       setError('Title and content are required');
       return;
@@ -65,11 +103,18 @@ export const BlogEditorPage = () => {
 
     setLoading(true);
     try {
-      await blogAPI.createPost({
+      const payload = {
         ...postForm,
         status,
         tags: formatTags(postForm.tags)
-      });
+      };
+
+      if (isEditing) {
+        await blogAPI.updatePost(postId, payload);
+      } else {
+        await blogAPI.createPost(payload);
+      }
+
       setSuccess(status === 'published' ? 'Blog published successfully!' : 'Draft saved successfully!');
       setTimeout(() => {
         navigate('/blogs');
@@ -101,6 +146,62 @@ export const BlogEditorPage = () => {
     }, 0);
   };
 
+  const detectMention = async (value, cursorPosition) => {
+    const textBeforeCursor = value.slice(0, cursorPosition);
+    const match = textBeforeCursor.match(/(^|\s)@([a-zA-Z0-9_.-]{0,30})$/);
+
+    if (!match) {
+      setMentionQuery('');
+      setMentionSuggestions([]);
+      setMentionStart(null);
+      return;
+    }
+
+    const query = match[2];
+    setMentionQuery(query);
+    setMentionStart(cursorPosition - query.length - 1);
+
+    if (!query) {
+      setMentionSuggestions([]);
+      return;
+    }
+
+    try {
+      const response = await blogAPI.searchUsers(query);
+      setMentionSuggestions(response.data || []);
+    } catch {
+      setMentionSuggestions([]);
+    }
+  };
+
+  const handleBodyChange = (event) => {
+    const value = event.target.value;
+    setPostForm(prev => ({ ...prev, body: value }));
+    detectMention(value, event.target.selectionStart);
+  };
+
+  const insertMention = (foundUser) => {
+    if (mentionStart === null) return;
+    const textarea = editorRef.current;
+    const cursorPosition = textarea?.selectionStart ?? postForm.body.length;
+    const mentionText = `@${foundUser.name.replace(/\s+/g, '')} `;
+    const nextBody = `${postForm.body.slice(0, mentionStart)}${mentionText}${postForm.body.slice(cursorPosition)}`;
+
+    setPostForm(prev => ({ ...prev, body: nextBody }));
+    setMentionQuery('');
+    setMentionSuggestions([]);
+    setMentionStart(null);
+
+    setTimeout(() => {
+      textarea?.focus();
+      const nextCursor = mentionStart + mentionText.length;
+      textarea.selectionStart = nextCursor;
+      textarea.selectionEnd = nextCursor;
+    }, 0);
+  };
+
+  if (initialLoading) return <LoadingSpinner />;
+
   return (
     <div className="min-h-screen app-shell">
       {/* Header */}
@@ -110,7 +211,7 @@ export const BlogEditorPage = () => {
             <button onClick={() => navigate('/blogs')} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white/70 text-slate-800 transition hover:bg-primary/10" aria-label="Back to blogs">
               <FiArrowLeft size={24} />
             </button>
-            <span className="font-black text-slate-950">Create Blog Post</span>
+            <span className="font-black text-slate-950">{isEditing ? 'Edit Blog Post' : 'Create Blog Post'}</span>
           </div>
           <div className="flex gap-2">
             <button
@@ -150,7 +251,7 @@ export const BlogEditorPage = () => {
               {postForm.coverImage ? (
                 <div className="relative">
                   <img
-                    src={postForm.coverImage.startsWith('/uploads') ? `${API_ORIGIN}${postForm.coverImage}` : postForm.coverImage}
+                    src={resolveMediaUrl(postForm.coverImage)}
                     alt="Cover preview"
                     className="w-full max-h-96 object-cover rounded-lg mb-4"
                   />
@@ -284,7 +385,8 @@ export const BlogEditorPage = () => {
               ref={editorRef}
               rows="24"
               value={postForm.body}
-              onChange={(e) => setPostForm(prev => ({ ...prev, body: e.target.value }))}
+              onChange={handleBodyChange}
+              onKeyUp={(event) => detectMention(event.currentTarget.value, event.currentTarget.selectionStart)}
               placeholder="Write your blog content here...
 
 Use the format buttons above to style your text. Markdown is supported:
@@ -296,6 +398,33 @@ Use the format buttons above to style your text. Markdown is supported:
 - Use > for quotes"
               className="w-full px-5 py-4 border-2 border-slate-300 rounded-xl focus-ring text-base leading-8 font-mono resize-none"
             />
+            {mentionSuggestions.length > 0 && (
+              <div className="mt-3 overflow-hidden rounded-xl border border-emerald-200 bg-white shadow-xl">
+                <div className="border-b border-emerald-100 px-4 py-2 text-sm font-black text-slate-900">
+                  Tag teammate @{mentionQuery}
+                </div>
+                {mentionSuggestions.map(foundUser => (
+                  <button
+                    key={foundUser._id}
+                    type="button"
+                    onClick={() => insertMention(foundUser)}
+                    className="flex w-full items-center gap-3 border-b border-emerald-50 px-4 py-3 text-left transition last:border-b-0 hover:bg-emerald-50"
+                  >
+                    {foundUser.profilePhoto ? (
+                      <img src={resolveMediaUrl(foundUser.profilePhoto)} alt={foundUser.name} className="h-10 w-10 rounded-full object-cover" />
+                    ) : (
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary font-black text-white">
+                        {foundUser.name?.charAt(0) || 'U'}
+                      </span>
+                    )}
+                    <span>
+                      <span className="block font-black text-slate-950">{foundUser.name}</span>
+                      <span className="block text-xs text-slate-500">{foundUser.followerCount || 0} followers</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Character Count */}
             <p className="text-sm text-slate-600 mt-3">{postForm.body.length} characters</p>
@@ -303,15 +432,15 @@ Use the format buttons above to style your text. Markdown is supported:
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 mt-6">
               <button
-                onClick={() => handleCreatePost('published')}
+                onClick={() => handleSavePost('published')}
                 disabled={loading}
                 className={`flex-1 ${primaryButtonClass}`}
               >
                 <FiSend />
-                {loading ? 'Publishing...' : 'Publish'}
+                {loading ? 'Publishing...' : isEditing ? 'Update & Publish' : 'Publish'}
               </button>
               <button
-                onClick={() => handleCreatePost('draft')}
+                onClick={() => handleSavePost('draft')}
                 disabled={loading}
                 className={`flex-1 ${secondaryButtonClass}`}
               >
@@ -331,7 +460,7 @@ Use the format buttons above to style your text. Markdown is supported:
           <article className="panel rounded-2xl overflow-hidden p-8">
             {postForm.coverImage && (
               <img
-                src={postForm.coverImage.startsWith('/uploads') ? `${API_ORIGIN}${postForm.coverImage}` : postForm.coverImage}
+                src={resolveMediaUrl(postForm.coverImage)}
                 alt={postForm.title}
                 className="w-full max-h-96 object-cover rounded-lg mb-6"
               />

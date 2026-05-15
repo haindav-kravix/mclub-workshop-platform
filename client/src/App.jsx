@@ -77,6 +77,14 @@ const AppContent = () => {
             }
           />
           <Route
+            path="/blogs/:postId/edit"
+            element={
+              <PrivateRoute>
+                <BlogEditorPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/profile"
             element={
               <PrivateRoute>
