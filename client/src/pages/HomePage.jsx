@@ -115,9 +115,8 @@ export const HomePage = () => {
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
               <div>
-                <p className="text-sm uppercase tracking-wide text-primary font-bold mb-2">Live from admin</p>
-                <h2 className="text-3xl sm:text-4xl font-bold text-slate-950">Workshops Open Now</h2>
-                <p className="text-slate-600 mt-3 max-w-2xl">Admin-created workshops appear here automatically. Open any workshop to view details and register.</p>
+                <p className="text-sm uppercase tracking-wide text-primary font-bold mb-2">Upcoming Workshop</p>
+                <h2 className="text-3xl sm:text-4xl font-bold text-slate-950">Upcoming Workshops</h2>
               </div>
               <Link
                 to="/workshops"
@@ -237,7 +236,7 @@ export const HomePage = () => {
                 We are a community-driven organization dedicated to learning, sharing, and advancing knowledge about MongoDB and modern NoSQL databases.
               </p>
               <p className="text-gray-600 mb-4">
-                Through our workshops, meetups, and collaborative projects, we help developers:
+                Through our workshops, meetups, and guided learning activities, we help developers:
               </p>
               <ul className="space-y-2 text-gray-600 mb-6">
                 <li>✓ Master MongoDB concepts and best practices</li>
@@ -259,7 +258,7 @@ export const HomePage = () => {
               <h3 className="text-2xl font-bold mb-4">For Registered Students</h3>
               <div className="space-y-4 text-slate-200">
                 <p>Access workshop-specific Telegram groups after registration.</p>
-                <p>Receive updates from admins about session schedules, resources, and opportunities.</p>
+                <p>Receive updates about session schedules, resources, and opportunities.</p>
                 <p>Stay connected with the community while preparing for certification and career growth.</p>
               </div>
             </div>
