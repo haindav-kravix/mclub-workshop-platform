@@ -523,8 +523,9 @@ export const createWorkshop = async (req, res) => {
 export const getAllWorkshops = async (req, res) => {
   try {
     const workshops = await Workshop.find({ isActive: true, isStopped: { $ne: true } })
-      .populate('createdBy', 'name email')
-      .sort({ date: 1 });
+      .select('title description coverImage date startDate endDate time duration dailyTimings venue registrationsOpen isStopped isActive')
+      .sort({ date: 1 })
+      .lean();
     res.json(workshops);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching workshops', error: error.message });

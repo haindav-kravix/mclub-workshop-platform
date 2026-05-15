@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { workshopAPI, resolveMediaUrl } from '../utils/api';
@@ -8,6 +8,7 @@ import { FiArrowRight, FiAward, FiBriefcase, FiCalendar, FiClock, FiMapPin } fro
 export const HomePage = () => {
   const { isAuthenticated } = useAuth();
   const [workshops, setWorkshops] = useState([]);
+  const [workshopsLoading, setWorkshopsLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -18,6 +19,8 @@ export const HomePage = () => {
         if (mounted) setWorkshops(response.data || []);
       } catch {
         if (mounted) setWorkshops([]);
+      } finally {
+        if (mounted) setWorkshopsLoading(false);
       }
     };
 
@@ -27,7 +30,7 @@ export const HomePage = () => {
     };
   }, []);
 
-  const featuredWorkshops = useMemo(() => workshops.slice(0, 3), [workshops]);
+  const featuredWorkshop = workshops[0];
 
   return (
     <div className="min-h-screen app-shell">
@@ -109,14 +112,13 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* Live Workshops Section */}
-      {featuredWorkshops.length > 0 && (
+      {/* Upcoming Workshop Section */}
+      {(workshopsLoading || featuredWorkshop) && (
         <div className="py-12 sm:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
               <div>
-                <p className="text-sm uppercase tracking-wide text-primary font-bold mb-2">Upcoming Workshop</p>
-                <h2 className="text-3xl sm:text-4xl font-bold text-slate-950">Upcoming Workshops</h2>
+                <h2 className="text-3xl sm:text-4xl font-bold text-slate-950">Upcoming Workshop</h2>
               </div>
               <Link
                 to="/workshops"
@@ -126,19 +128,32 @@ export const HomePage = () => {
               </Link>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {featuredWorkshops.map(workshop => (
+            {workshopsLoading ? (
+              <div className="grid overflow-hidden rounded-lg border border-emerald-100 bg-white shadow-sm lg:grid-cols-[0.95fr_1.05fr]">
+                <div className="h-56 animate-pulse bg-emerald-50 sm:h-72" />
+                <div className="space-y-4 p-5 sm:p-8">
+                  <div className="h-7 w-2/3 animate-pulse rounded bg-emerald-100" />
+                  <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
+                  <div className="h-4 w-4/5 animate-pulse rounded bg-slate-100" />
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="h-14 animate-pulse rounded-lg bg-emerald-50" />
+                    <div className="h-14 animate-pulse rounded-lg bg-emerald-50" />
+                    <div className="h-14 animate-pulse rounded-lg bg-emerald-50" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              featuredWorkshop && (
                 <Link
-                  key={workshop._id}
-                  to={`/workshop/${workshop._id}`}
-                  className="panel block overflow-hidden rounded-lg bg-white text-slate-950 transition hover:shadow-xl"
+                  to={`/workshop/${featuredWorkshop._id}`}
+                  className="grid overflow-hidden rounded-lg border border-emerald-100 bg-white text-slate-950 shadow-lg transition hover:-translate-y-1 hover:border-primary hover:shadow-2xl lg:grid-cols-[0.95fr_1.05fr]"
                 >
-                  <div className="h-36 sm:h-44 bg-slate-100 overflow-hidden">
-                    {workshop.coverImage ? (
+                  <div className="relative h-56 overflow-hidden bg-emerald-50 sm:h-72 lg:h-auto">
+                    {featuredWorkshop.coverImage ? (
                       <img
-                        src={resolveMediaUrl(workshop.coverImage)}
-                        alt={workshop.title}
-                        className="h-full w-full object-contain"
+                        src={resolveMediaUrl(featuredWorkshop.coverImage)}
+                        alt={featuredWorkshop.title}
+                        className="h-full w-full object-contain p-3 sm:p-5"
                         onError={(event) => {
                           event.currentTarget.onerror = null;
                           event.currentTarget.src = '/brand/klh-head-banner.png';
@@ -146,34 +161,37 @@ export const HomePage = () => {
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-emerald-50 text-4xl font-black text-primary">
-                        {workshop.title?.charAt(0) || 'W'}
+                        {featuredWorkshop.title?.charAt(0) || 'W'}
                       </div>
                     )}
-                  </div>
-                  <div className="p-4 sm:p-5">
-                    <div className="mb-3 inline-flex rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                      Registrations {workshop.registrationsOpen !== false ? 'Open' : 'Closed'}
+                    <div className="absolute left-4 top-4 rounded-lg bg-white/90 px-3 py-1 text-xs font-black text-emerald-700 shadow-sm">
+                      Registrations {featuredWorkshop.registrationsOpen !== false ? 'Open' : 'Closed'}
                     </div>
-                    <h3 className="line-clamp-2 text-xl font-black leading-tight">{workshop.title}</h3>
-                    <p className="mt-2 line-clamp-2 text-sm text-slate-600">{workshop.description}</p>
-                    <div className="mt-4 space-y-2 text-sm text-slate-700">
-                      <div className="flex items-center gap-2">
-                        <FiCalendar className="flex-none text-primary" />
-                        <span>{new Date(workshop.startDate || workshop.date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex flex-col justify-center p-5 sm:p-8">
+                    <h3 className="text-2xl font-black leading-tight sm:text-4xl">{featuredWorkshop.title}</h3>
+                    <p className="mt-4 line-clamp-3 text-base leading-7 text-slate-600">{featuredWorkshop.description}</p>
+                    <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
+                        <FiCalendar className="mb-2 text-primary" />
+                        <p className="text-sm font-bold">{new Date(featuredWorkshop.startDate || featuredWorkshop.date).toLocaleDateString()}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <FiClock className="flex-none text-primary" />
-                        <span>{formatWorkshopTime(workshop)}</span>
+                      <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
+                        <FiClock className="mb-2 text-primary" />
+                        <p className="text-sm font-bold">{formatWorkshopTime(featuredWorkshop)}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <FiMapPin className="flex-none text-primary" />
-                        <span className="truncate">{workshop.venue}</span>
+                      <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
+                        <FiMapPin className="mb-2 text-primary" />
+                        <p className="truncate text-sm font-bold">{featuredWorkshop.venue}</p>
                       </div>
+                    </div>
+                    <div className="mt-6 inline-flex items-center gap-2 font-black text-primary">
+                      View Details <FiArrowRight />
                     </div>
                   </div>
                 </Link>
-              ))}
-            </div>
+              )
+            )}
           </div>
         </div>
       )}
