@@ -436,14 +436,14 @@ export const BlogsPage = () => {
         </div>
       </div>
 
-      <button
-        onClick={() => navigate('/blogs/create')}
-        className="blog-create-fab fixed bottom-4 right-4 z-[80] flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600 text-xl text-white shadow-xl transition hover:scale-105 sm:h-14 sm:w-14 sm:text-2xl"
+      <Link
+        to="/blogs/create"
+        className="blog-create-fab"
         aria-label="Create post"
         title="Create new post"
       >
         ✏️
-      </button>
+      </Link>
     </div>
   );
 };
