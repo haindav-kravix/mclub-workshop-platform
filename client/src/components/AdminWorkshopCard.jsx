@@ -17,6 +17,9 @@ export const AdminWorkshopCard = ({
   onAttendanceReports
 }) => {
   const registrationsOpen = workshop.registrationsOpen !== false && !workshop.isStopped;
+  const totalRegistrations = workshop.totalRegistrationCount ?? workshop.registrationStats?.total ?? workshop.registrationCount ?? 0;
+  const confirmedRegistrations = workshop.confirmedRegistrationCount ?? workshop.registrationStats?.confirmed ?? workshop.registrationCount ?? 0;
+  const rejectedRegistrations = workshop.rejectedRegistrationCount ?? workshop.registrationStats?.rejected ?? 0;
 
   return (
     <div className="panel rounded-lg overflow-hidden transition hover:-translate-y-1 hover:shadow-xl">
@@ -38,7 +41,7 @@ export const AdminWorkshopCard = ({
           </div>
         )}
         <div className="absolute top-3 right-3 bg-slate-950/90 text-white px-3 py-1 rounded-lg text-xs font-semibold shadow">
-          {workshop.registrationCount || 0} Registrations
+          {totalRegistrations} Registrations
         </div>
         <div className={`absolute left-3 top-3 px-3 py-1 rounded-lg text-xs font-semibold ${
           workshop.isStopped ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'
@@ -56,6 +59,21 @@ export const AdminWorkshopCard = ({
       <div className="p-5">
         <h3 className="font-bold text-xl mb-2 break-words text-slate-950">{workshop.title}</h3>
         <p className="text-slate-600 text-sm mb-4 line-clamp-2">{workshop.description}</p>
+
+        <div className="mb-4 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-lg border border-slate-200 bg-white p-2">
+            <p className="text-lg font-black text-slate-950">{totalRegistrations}</p>
+            <p className="text-[11px] font-bold text-slate-500">Total</p>
+          </div>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-2">
+            <p className="text-lg font-black text-emerald-700">{confirmedRegistrations}</p>
+            <p className="text-[11px] font-bold text-emerald-700">Confirmed</p>
+          </div>
+          <div className="rounded-lg border border-rose-200 bg-rose-50 p-2">
+            <p className="text-lg font-black text-rose-700">{rejectedRegistrations}</p>
+            <p className="text-[11px] font-bold text-rose-700">Rejected</p>
+          </div>
+        </div>
 
         <div className="text-sm text-slate-600 mb-5 grid gap-2">
           <p className="flex items-center gap-2"><FiCalendar className="text-primary" /> {new Date(workshop.date).toLocaleDateString()} at {formatWorkshopTime(workshop)}</p>

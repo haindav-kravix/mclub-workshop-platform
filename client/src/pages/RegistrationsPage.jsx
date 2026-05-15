@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { registrationAPI, workshopAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
 import { RegistrationsTable } from '../components/RegistrationsTable';
-import { FiArrowLeft, FiDownload } from 'react-icons/fi';
+import { FiArrowLeft, FiCheckCircle, FiClock, FiDownload, FiUsers, FiXCircle } from 'react-icons/fi';
 
 export const RegistrationsPage = () => {
   const { workshopId } = useParams();
@@ -14,6 +14,18 @@ export const RegistrationsPage = () => {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const totalCount = registrations.length;
+  const confirmedCount = registrations.filter(registration => registration.status === 'confirmed').length;
+  const pendingCount = registrations.filter(registration => registration.status === 'pending').length;
+  const rejectedCount = registrations.filter(registration => registration.status === 'rejected').length;
+  const cancelledCount = registrations.filter(registration => registration.status === 'cancelled').length;
+  const countCards = [
+    { label: 'Total Registrations', value: totalCount, icon: FiUsers, className: 'border-slate-200 bg-white text-slate-950' },
+    { label: 'Confirmed Students', value: confirmedCount, icon: FiCheckCircle, className: 'border-emerald-200 bg-emerald-50 text-emerald-800' },
+    { label: 'Pending Review', value: pendingCount, icon: FiClock, className: 'border-amber-200 bg-amber-50 text-amber-800' },
+    { label: 'Rejected', value: rejectedCount, icon: FiXCircle, className: 'border-rose-200 bg-rose-50 text-rose-800' }
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -102,8 +114,7 @@ export const RegistrationsPage = () => {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{workshop.title}</h1>
               <p className="text-gray-600 mt-2">
-                {registrations.filter(registration => registration.status === 'confirmed').length} confirmed,{' '}
-                {registrations.filter(registration => registration.status === 'pending').length} pending review
+                {totalCount} registrations, {confirmedCount} confirmed, {rejectedCount} rejected
               </p>
             </div>
           )}
@@ -113,6 +124,29 @@ export const RegistrationsPage = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
         {success && <SuccessMessage message={success} onDismiss={() => setSuccess('')} />}
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          {countCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div key={card.label} className={`rounded-lg border p-4 shadow-sm ${card.className}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-2xl font-black">{card.value}</p>
+                    <p className="text-xs sm:text-sm font-bold">{card.label}</p>
+                  </div>
+                  <Icon size={22} className="flex-none" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {cancelledCount > 0 && (
+          <div className="mb-6 rounded-lg border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-600">
+            Cancelled registrations: <span className="font-black text-slate-950">{cancelledCount}</span>
+          </div>
+        )}
 
         {/* Export Button */}
         {registrations.length > 0 && (

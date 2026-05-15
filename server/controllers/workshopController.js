@@ -622,8 +622,57 @@ export const getAdminWorkshops = async (req, res) => {
   try {
     const workshops = await Workshop.find({})
       .populate('createdBy', 'name email')
-      .sort({ createdAt: -1 });
-    res.json(workshops);
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const registrationCounts = await Registration.aggregate([
+      {
+        $group: {
+          _id: {
+            workshopId: '$workshopId',
+            status: '$status'
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const countsByWorkshop = registrationCounts.reduce((counts, item) => {
+      const workshopId = item._id.workshopId.toString();
+      const status = item._id.status || 'pending';
+      if (!counts[workshopId]) {
+        counts[workshopId] = {
+          total: 0,
+          confirmed: 0,
+          pending: 0,
+          rejected: 0,
+          cancelled: 0
+        };
+      }
+      counts[workshopId][status] = item.count;
+      counts[workshopId].total += item.count;
+      return counts;
+    }, {});
+
+    res.json(workshops.map(workshop => {
+      const counts = countsByWorkshop[workshop._id.toString()] || {
+        total: 0,
+        confirmed: 0,
+        pending: 0,
+        rejected: 0,
+        cancelled: 0
+      };
+
+      return {
+        ...workshop,
+        registrationStats: counts,
+        totalRegistrationCount: counts.total,
+        confirmedRegistrationCount: counts.confirmed,
+        pendingRegistrationCount: counts.pending,
+        rejectedRegistrationCount: counts.rejected,
+        cancelledRegistrationCount: counts.cancelled
+      };
+    }));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching workshops', error: error.message });
   }

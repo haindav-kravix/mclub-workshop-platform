@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { workshopAPI, registrationAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
 import { AdminWorkshopCard } from '../components/AdminWorkshopCard';
-import { FiCalendar, FiMail, FiPlus, FiUsers, FiX, FiZap } from 'react-icons/fi';
+import { FiCalendar, FiCheckCircle, FiMail, FiPlus, FiUsers, FiX, FiXCircle } from 'react-icons/fi';
 import { CreateWorkshopModal } from '../components/CreateWorkshopModal';
 import { useNavigate } from 'react-router-dom';
 
@@ -206,14 +206,14 @@ export const AdminDashboard = () => {
 
   if (loading) return <LoadingSpinner />;
 
-  const totalRegistrations = workshops.reduce((total, workshop) => total + (workshop.registrationCount || 0), 0);
-  const activeWorkshops = workshops.filter(workshop => workshop.isActive).length;
-  const upcomingWorkshops = workshops.filter(workshop => new Date(workshop.date) >= new Date()).length;
+  const totalRegistrations = workshops.reduce((total, workshop) => total + (workshop.totalRegistrationCount ?? workshop.registrationStats?.total ?? workshop.registrationCount ?? 0), 0);
+  const confirmedRegistrations = workshops.reduce((total, workshop) => total + (workshop.confirmedRegistrationCount ?? workshop.registrationStats?.confirmed ?? workshop.registrationCount ?? 0), 0);
+  const rejectedRegistrations = workshops.reduce((total, workshop) => total + (workshop.rejectedRegistrationCount ?? workshop.registrationStats?.rejected ?? 0), 0);
   const statCards = [
     { label: 'Total Workshops', value: workshops.length, icon: FiCalendar },
-    { label: 'Active Now', value: activeWorkshops, icon: FiZap },
-    { label: 'Upcoming', value: upcomingWorkshops, icon: FiCalendar },
-    { label: 'Registrations', value: totalRegistrations, icon: FiUsers }
+    { label: 'Registrations', value: totalRegistrations, icon: FiUsers },
+    { label: 'Confirmed', value: confirmedRegistrations, icon: FiCheckCircle },
+    { label: 'Rejected', value: rejectedRegistrations, icon: FiXCircle }
   ];
 
   return (
