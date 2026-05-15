@@ -1,7 +1,7 @@
 import React from 'react';
 import { FiMail } from 'react-icons/fi';
 
-const GUIDANCE_EMAIL = 'mongodb.tc@gmail.com';
+const GUIDANCE_EMAIL = 'mongodbclub@klh.edu.in';
 const GMAIL_COMPOSE_URL = `https://mail.google.com/mail/?view=cm&fs=1&to=${GUIDANCE_EMAIL}&su=MongoDB%20Club%20Guidance`;
 
 export const SupportMailButton = () => {
