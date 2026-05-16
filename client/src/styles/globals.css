@@ -8,11 +8,48 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 50%, #A5D6A7 100%);
   color: #000000;
   min-height: 100vh;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+input,
+textarea,
+select,
+button {
+  min-width: 0;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+a,
+span,
+li,
+td,
+th {
+  overflow-wrap: anywhere;
 }
 
 :root {
@@ -229,6 +266,42 @@ button:hover {
 
 .guidance-fab:hover {
   transform: scale(1.04);
+}
+
+@media (max-width: 380px) {
+  .blog-create-fab,
+  .guidance-fab {
+    width: 2.5rem;
+    height: 2.5rem;
+    bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  .blog-create-fab {
+    right: max(0.75rem, env(safe-area-inset-right)) !important;
+  }
+
+  .guidance-fab {
+    left: max(0.75rem, env(safe-area-inset-left)) !important;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  button:hover,
+  .panel:hover,
+  .blog-create-fab:hover,
+  .guidance-fab:hover {
+    transform: none !important;
+  }
+
+  .panel:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 214, 106, 0.08);
+  }
+}
+
+@media (max-width: 640px) {
+  .panel {
+    border-radius: 12px;
+  }
 }
 
 .bg-primary, button.bg-primary, [role="button"].bg-primary {

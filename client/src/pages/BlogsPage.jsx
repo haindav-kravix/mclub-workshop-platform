@@ -239,10 +239,10 @@ export const BlogsPage = () => {
               value={query}
               onChange={(e) => handleUserSearch(e.target.value)}
               placeholder="Search users"
-              className="w-full h-11 pl-12 pr-4 border border-emerald-200 rounded-lg focus-ring bg-white shadow-sm"
+              className="w-full h-11 pl-12 pr-4 border border-emerald-200 rounded-lg focus-ring !bg-white shadow-sm"
             />
             {users.length > 0 && (
-              <div className="absolute left-0 right-0 top-12 bg-white rounded-lg border border-emerald-200 shadow-2xl overflow-hidden z-50">
+              <div className="absolute left-0 right-0 top-12 !bg-white rounded-lg border border-emerald-200 shadow-2xl overflow-hidden z-50">
                 {users.map(foundUser => (
                   <button
                     key={foundUser._id}
@@ -298,7 +298,7 @@ export const BlogsPage = () => {
           <div className="relative">
             <button
               onClick={openNotifications}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-emerald-200 bg-white text-slate-800 shadow-sm transition hover:bg-emerald-50"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-emerald-200 !bg-white text-slate-800 shadow-sm transition hover:bg-emerald-50"
               aria-label="Notifications"
               title="Notifications"
             >
@@ -310,11 +310,11 @@ export const BlogsPage = () => {
               )}
             </button>
             {notificationsOpen && (
-              <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-xl border border-emerald-100 bg-white shadow-2xl">
-                <div className="border-b border-slate-100 px-4 py-3">
+              <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-xl border border-emerald-100 !bg-white shadow-2xl">
+                <div className="border-b border-slate-100 !bg-white px-4 py-3">
                   <h2 className="font-black text-slate-950">Notifications</h2>
                 </div>
-                <div className="max-h-96 overflow-y-auto">
+                <div className="max-h-96 overflow-y-auto !bg-white">
                   {notifications.length === 0 ? (
                     <div className="p-4 text-sm font-semibold text-slate-500">No notifications yet</div>
                   ) : (

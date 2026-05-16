@@ -36,12 +36,12 @@ export const HomePage = () => {
     <div className="min-h-screen app-shell">
       {/* Hero Section */}
       <div className="bg-slate-950 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-16 sm:py-20 grid lg:grid-cols-[1.05fr_0.95fr] gap-10 items-center">
+        <div className="max-w-7xl mx-auto px-4 py-10 sm:py-16 lg:py-20 grid lg:grid-cols-[1.05fr_0.95fr] gap-6 sm:gap-10 items-center">
           <div>
             <div className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-sm font-semibold text-secondary mb-6">
               <FiCalendar /> Live workshops and technical sessions
             </div>
-            <h1 className="text-4xl sm:text-6xl font-bold mb-6 leading-tight">
+            <h1 className="text-3xl min-[380px]:text-4xl sm:text-6xl font-bold mb-6 leading-tight">
               MongoDB Technical Club
             </h1>
             <p className="text-lg sm:text-xl text-slate-300 mb-8 max-w-2xl">
@@ -169,7 +169,7 @@ export const HomePage = () => {
                     </div>
                   </div>
                   <div className="flex flex-col justify-center p-5 sm:p-8">
-                    <h3 className="text-2xl font-black leading-tight sm:text-4xl">{featuredWorkshop.title}</h3>
+                    <h3 className="text-2xl font-black leading-tight sm:text-4xl break-words">{featuredWorkshop.title}</h3>
                     <p className="mt-4 line-clamp-3 text-base leading-7 text-slate-600">{featuredWorkshop.description}</p>
                     <div className="mt-6 grid gap-3 sm:grid-cols-3">
                       <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
