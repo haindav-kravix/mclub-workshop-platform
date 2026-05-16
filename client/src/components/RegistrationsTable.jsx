@@ -42,6 +42,59 @@ const StatusBadge = ({ status }) => (
   </span>
 );
 
+const StudentAvatar = ({ user }) => (
+  user?.profilePhoto ? (
+    <img
+      src={resolveMediaUrl(user.profilePhoto)}
+      alt={user.name}
+      className="h-11 w-11 flex-none rounded-full object-cover ring-2 ring-white"
+    />
+  ) : (
+    <div className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-secondary text-sm font-black text-white ring-2 ring-white">
+      {(user?.name || 'S').charAt(0)}
+    </div>
+  )
+);
+
+const RegistrationActions = ({ registration, loading, onUpdateRegistrationStatus, onDeleteRegistration }) => (
+  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+    {registration.status !== 'confirmed' && registration.status !== 'cancelled' && (
+      <button
+        type="button"
+        onClick={() => onUpdateRegistrationStatus(registration._id, 'confirmed')}
+        disabled={loading}
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        title="Approve registration"
+      >
+        <FiCheck size={18} />
+        Approve
+      </button>
+    )}
+    {registration.status !== 'rejected' && registration.status !== 'cancelled' && (
+      <button
+        type="button"
+        onClick={() => onUpdateRegistrationStatus(registration._id, 'rejected')}
+        disabled={loading}
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-amber-100 px-3 py-2 text-sm font-black text-amber-800 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
+        title="Reject registration"
+      >
+        <FiX size={18} />
+        Reject
+      </button>
+    )}
+    <button
+      type="button"
+      onClick={() => onDeleteRegistration(registration._id)}
+      disabled={loading}
+      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-black text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+      title="Delete registration"
+    >
+      <FiTrash2 size={18} />
+      Delete
+    </button>
+  </div>
+);
+
 export const RegistrationsTable = ({
   registrations,
   formFields = [],
@@ -63,163 +116,52 @@ export const RegistrationsTable = ({
         </div>
       </div>
 
-      <div className="hidden lg:block overflow-x-auto">
-        <table className="w-full min-w-[980px]">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50">
-              <th className="sticky left-0 z-10 bg-slate-50 px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-slate-600">Student</th>
-              <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-slate-600">Email</th>
-              <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-slate-600">Status</th>
-              <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-slate-600">Date</th>
-              {fields.map(field => (
-                <th key={field.id} className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-slate-600">
-                  {field.label}
-                </th>
-              ))}
-              <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wide text-slate-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {registrations.map((reg, index) => (
-              <tr key={reg._id} className={index % 2 === 0 ? 'bg-white hover:bg-emerald-50/40' : 'bg-slate-50/50 hover:bg-emerald-50/40'}>
-                <td className="sticky left-0 z-10 bg-inherit px-4 py-3 text-sm text-slate-900">
-                  <div className="flex min-w-[180px] items-center gap-3">
-                    {reg.userId?.profilePhoto ? (
-                      <img
-                        src={resolveMediaUrl(reg.userId.profilePhoto)}
-                        alt={reg.userId.name}
-                        className="h-9 w-9 rounded-full object-cover ring-2 ring-white"
-                      />
-                    ) : (
-                      <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-secondary text-sm font-black text-white">
-                        {(reg.userId?.name || 'S').charAt(0)}
-                      </div>
-                    )}
-                    <span className="font-bold">{reg.userId?.name || 'Unknown student'}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-sm font-semibold text-slate-600">{reg.userId?.email || '-'}</td>
-                <td className="px-4 py-3 text-sm text-slate-600"><StatusBadge status={reg.status} /></td>
-                <td className="px-4 py-3 text-sm font-semibold text-slate-500">
-                  {new Date(reg.createdAt).toLocaleDateString()}
-                </td>
-                {fields.map(field => (
-                  <td key={field.id} className="max-w-[260px] px-4 py-3 text-sm font-medium text-slate-700">
-                    <div className="line-clamp-3 break-words">
-                    {getFormValue(reg.formData, field.id) || '-'}
-                    </div>
-                  </td>
-                ))}
-                <td className="px-4 py-3 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    {reg.status !== 'confirmed' && reg.status !== 'cancelled' && (
-                      <button
-                        onClick={() => onUpdateRegistrationStatus(reg._id, 'confirmed')}
-                        disabled={loading}
-                        className="rounded-lg bg-emerald-50 p-2 text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-900 disabled:opacity-50"
-                        title="Approve registration"
-                      >
-                        <FiCheck size={18} />
-                      </button>
-                    )}
-                    {reg.status !== 'rejected' && reg.status !== 'cancelled' && (
-                      <button
-                        onClick={() => onUpdateRegistrationStatus(reg._id, 'rejected')}
-                        disabled={loading}
-                        className="rounded-lg bg-amber-50 p-2 text-amber-700 transition hover:bg-amber-100 hover:text-amber-900 disabled:opacity-50"
-                        title="Reject registration"
-                      >
-                        <FiX size={18} />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => onDeleteRegistration(reg._id)}
-                      disabled={loading}
-                      className="rounded-lg bg-rose-50 p-2 text-rose-700 transition hover:bg-rose-100 hover:text-rose-900 disabled:opacity-50"
-                      title="Delete registration"
-                    >
-                      <FiTrash2 size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="lg:hidden divide-y divide-slate-100">
+      <div className="divide-y divide-slate-100">
         {registrations.map((reg) => (
-          <div key={reg._id} className="p-4">
-            <div className="flex items-start justify-between gap-3">
+          <article key={reg._id} className="p-4 transition hover:bg-emerald-50/30 sm:p-5">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px] xl:grid-cols-[minmax(0,1fr)_320px]">
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  {reg.userId?.profilePhoto ? (
-                    <img
-                      src={resolveMediaUrl(reg.userId.profilePhoto)}
-                      alt={reg.userId.name}
-                      className="h-10 w-10 flex-none rounded-full object-cover ring-2 ring-white"
-                    />
-                  ) : (
-                    <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-secondary text-sm font-black text-white">
-                      {(reg.userId?.name || 'S').charAt(0)}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <StudentAvatar user={reg.userId} />
+                    <div className="min-w-0">
+                      <p className="truncate text-lg font-black text-slate-950">{reg.userId?.name || 'Unknown student'}</p>
+                      <p className="break-all text-sm font-semibold text-slate-500">{reg.userId?.email || '-'}</p>
                     </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="truncate font-black text-slate-950">{reg.userId?.name || 'Unknown student'}</p>
-                    <p className="break-all text-sm font-semibold text-slate-500">{reg.userId?.email || '-'}</p>
-                    <div className="mt-1"><StatusBadge status={reg.status} /></div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                    <StatusBadge status={reg.status} />
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-500">
+                      {new Date(reg.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
-                <p className="mt-2 text-xs font-semibold text-slate-500">
-                  {new Date(reg.createdAt).toLocaleString()}
-                </p>
+
+                {fields.length > 0 && (
+                  <dl className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {fields.map(field => (
+                      <div key={field.id} className="min-w-0 rounded-lg border border-slate-100 bg-slate-50 p-3">
+                        <dt className="text-[11px] font-black uppercase tracking-wide text-slate-500">{field.label}</dt>
+                        <dd className="mt-1 whitespace-pre-wrap break-words text-sm font-semibold leading-relaxed text-slate-900">
+                          {getFormValue(reg.formData, field.id) || '-'}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
               </div>
-              <div className="flex flex-none flex-col gap-1">
-                {reg.status !== 'confirmed' && reg.status !== 'cancelled' && (
-                  <button
-                    onClick={() => onUpdateRegistrationStatus(reg._id, 'confirmed')}
-                    disabled={loading}
-                    className="rounded-lg bg-emerald-50 p-2 text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
-                    title="Approve registration"
-                  >
-                    <FiCheck size={18} />
-                  </button>
-                )}
-                {reg.status !== 'rejected' && reg.status !== 'cancelled' && (
-                  <button
-                    onClick={() => onUpdateRegistrationStatus(reg._id, 'rejected')}
-                    disabled={loading}
-                    className="rounded-lg bg-amber-50 p-2 text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
-                    title="Reject registration"
-                  >
-                    <FiX size={18} />
-                  </button>
-                )}
-                <button
-                  onClick={() => onDeleteRegistration(reg._id)}
-                  disabled={loading}
-                  className="rounded-lg bg-rose-50 p-2 text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
-                  title="Delete registration"
-                >
-                  <FiTrash2 size={18} />
-                </button>
+
+              <div className="rounded-xl border border-slate-100 bg-white p-3 shadow-sm lg:sticky lg:top-24 lg:self-start">
+                <p className="mb-2 text-xs font-black uppercase tracking-wide text-slate-500">Actions</p>
+                <RegistrationActions
+                  registration={reg}
+                  loading={loading}
+                  onUpdateRegistrationStatus={onUpdateRegistrationStatus}
+                  onDeleteRegistration={onDeleteRegistration}
+                />
               </div>
             </div>
-
-            {fields.length > 0 && (
-              <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {fields.map(field => (
-                  <div key={field.id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-                    <dt className="text-xs font-black uppercase tracking-wide text-slate-500">{field.label}</dt>
-                    <dd className="mt-1 break-words text-sm font-semibold text-slate-900">
-                      {getFormValue(reg.formData, field.id) || '-'}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-          </div>
+          </article>
         ))}
       </div>
 
