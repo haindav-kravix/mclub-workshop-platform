@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { PrivateRoute } from './components/PrivateRoute';
 import { SupportMailButton } from './components/SupportMailButton';
+import { Footer } from './components/Footer';
 import { LoadingSpinner } from './components/UI';
 
 // Pages
@@ -40,9 +41,9 @@ const AppContent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex min-h-screen flex-col bg-white">
       {!hideGlobalNavbar && <Navbar />}
-      <main>
+      <main className="flex-1">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -150,6 +151,7 @@ const AppContent = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <Footer />
       <SupportMailButton />
     </div>
   );
