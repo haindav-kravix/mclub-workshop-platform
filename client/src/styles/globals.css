@@ -191,15 +191,15 @@ button:hover {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #22c55e 0%, #00b159 100%);
+  background: linear-gradient(135deg, #00D66A 0%, #00B159 100%);
   color: #ffffff;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   line-height: 1;
   text-decoration: none;
-  box-shadow: 0 12px 30px rgba(0, 177, 89, 0.32);
+  box-shadow: 0 10px 24px rgba(0, 177, 89, 0.28);
   transform: translate3d(0, 0, 0);
   will-change: transform;
 }
@@ -229,14 +229,6 @@ button:hover {
 
 .guidance-fab:hover {
   transform: scale(1.04);
-}
-
-@media (min-width: 640px) {
-  .blog-create-fab {
-    width: 3.25rem;
-    height: 3.25rem;
-    font-size: 1.3rem;
-  }
 }
 
 .bg-primary, button.bg-primary, [role="button"].bg-primary {

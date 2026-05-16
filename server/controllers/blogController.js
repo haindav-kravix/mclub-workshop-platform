@@ -1,4 +1,5 @@
 import BlogPost from '../models/BlogPost.js';
+import BlogNotification from '../models/BlogNotification.js';
 import User from '../models/User.js';
 
 const serializePost = (post, viewerId = null) => {
@@ -17,6 +18,41 @@ const serializeProfile = (user) => {
     id: profile._id.toString(),
     followerCount: user.followers.length,
     followingCount: user.following.length
+  };
+};
+
+const createBlogNotification = async ({ recipient, actor, type, post = null }) => {
+  if (!recipient || !actor || recipient.toString() === actor.toString()) return;
+
+  await BlogNotification.findOneAndUpdate(
+    {
+      recipient,
+      actor,
+      type,
+      ...(post ? { post } : {})
+    },
+    {
+      recipient,
+      actor,
+      type,
+      post,
+      read: false,
+      createdAt: new Date()
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+};
+
+const serializeNotification = (notification, viewer) => {
+  const item = notification.toObject();
+  const actorId = item.actor?._id?.toString();
+  const isFollowingActor = actorId
+    ? (viewer.following || []).some(id => id.toString() === actorId)
+    : false;
+
+  return {
+    ...item,
+    isFollowingActor
   };
 };
 
@@ -191,6 +227,16 @@ export const toggleLike = async (req, res) => {
       : [...post.likes, userId];
     post.updatedAt = new Date();
     await post.save();
+
+    if (!alreadyLiked) {
+      await createBlogNotification({
+        recipient: post.author,
+        actor: userId,
+        type: 'like',
+        post: post._id
+      });
+    }
+
     await post.populate('author', 'name email profilePhoto bio followers');
 
     res.json({ success: true, post: serializePost(post, userId) });
@@ -312,6 +358,11 @@ export const toggleFollow = async (req, res) => {
     } else {
       current.following.push(targetUserId);
       target.followers.push(req.user.id);
+      await createBlogNotification({
+        recipient: targetUserId,
+        actor: req.user.id,
+        type: 'follow'
+      });
     }
 
     await current.save();
@@ -324,6 +375,42 @@ export const toggleFollow = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error updating follow status', error: error.message });
+  }
+};
+
+export const getNotifications = async (req, res) => {
+  try {
+    const viewer = await User.findById(req.user.id).select('following');
+    const notifications = await BlogNotification.find({ recipient: req.user.id })
+      .populate('actor', 'name email profilePhoto followers following')
+      .populate('post', 'title')
+      .sort({ createdAt: -1 })
+      .limit(30);
+
+    const unreadCount = await BlogNotification.countDocuments({
+      recipient: req.user.id,
+      read: false
+    });
+
+    res.json({
+      notifications: notifications.map(notification => serializeNotification(notification, viewer)),
+      unreadCount
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error loading notifications', error: error.message });
+  }
+};
+
+export const markNotificationsRead = async (req, res) => {
+  try {
+    await BlogNotification.updateMany(
+      { recipient: req.user.id, read: false },
+      { read: true }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating notifications', error: error.message });
   }
 };
 

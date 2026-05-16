@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { BrandMark } from '../components/BrandMark';
 import {
   FiBookOpen,
+  FiBell,
   FiCalendar,
   FiEdit3,
   FiHeart,
@@ -36,6 +37,9 @@ export const BlogsPage = () => {
   const [query, setQuery] = useState('');
   const [feedSection, setFeedSection] = useState('all');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -55,8 +59,20 @@ export const BlogsPage = () => {
     }
   };
 
+  const loadNotifications = async () => {
+    try {
+      const response = await blogAPI.getNotifications();
+      setNotifications(response.data.notifications || []);
+      setUnreadCount(response.data.unreadCount || 0);
+    } catch {
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  };
+
   useEffect(() => {
     loadBlogs();
+    loadNotifications();
   }, [isAdmin]);
 
   useEffect(() => {
@@ -104,6 +120,16 @@ export const BlogsPage = () => {
     setPosts(prev => prev.map(post => post._id === postId ? response.data.post : post));
   };
 
+  const openNotifications = async () => {
+    const nextOpen = !notificationsOpen;
+    setNotificationsOpen(nextOpen);
+    if (!nextOpen) return;
+
+    await loadNotifications();
+    await blogAPI.markNotificationsRead();
+    setUnreadCount(0);
+  };
+
   const handleShare = async (post) => {
     await blogAPI.recordShare(post._id);
     const url = `${window.location.origin}/blogs?post=${post._id}`;
@@ -142,6 +168,16 @@ export const BlogsPage = () => {
     ));
   };
 
+  const handleNotificationFollowBack = async (actorId) => {
+    const response = await blogAPI.toggleFollow(actorId);
+    setNotifications(prev => prev.map(notification =>
+      notification.actor?._id === actorId
+        ? { ...notification, isFollowingActor: response.data.isFollowing }
+        : notification
+    ));
+    setSuccess(response.data.isFollowing ? 'Followed back' : 'Unfollowed');
+  };
+
   const handleDeletePost = async (postId) => {
     if (!window.confirm('Delete this blog post?')) return;
     await blogAPI.deletePost(postId);
@@ -174,19 +210,19 @@ export const BlogsPage = () => {
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 grid grid-cols-[auto_minmax(0,1fr)_auto] lg:grid-cols-[auto_auto_minmax(260px,1fr)_auto_auto] items-center gap-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 grid grid-cols-[44px_minmax(0,1fr)_44px_44px] lg:grid-cols-[auto_auto_minmax(260px,1fr)_auto_auto_auto] items-center gap-2 sm:gap-3">
           <button
             onClick={() => setMenuOpen(true)}
-            className="p-2 rounded-lg hover:bg-slate-100"
+            className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-slate-100"
             aria-label="Open menu"
           >
             <FiMenu size={24} />
           </button>
-          <Link to="/blogs" className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <Link to="/blogs" className="flex min-w-0 items-center justify-center gap-2 overflow-hidden sm:justify-start sm:gap-3">
             <BrandMark compact />
-            <span className="font-black text-sm sm:text-lg xl:text-xl leading-tight text-slate-950 whitespace-nowrap">MClub Blogs</span>
+            <span className="min-w-0 truncate font-black text-sm leading-tight text-slate-950 sm:text-lg xl:text-xl">MClub Blogs</span>
           </Link>
-          <div className="relative col-span-3 row-start-2 w-full lg:col-span-1 lg:row-start-auto lg:max-w-xl lg:justify-self-stretch">
+          <div className="relative col-span-4 row-start-2 w-full lg:col-span-1 lg:row-start-auto lg:max-w-xl lg:justify-self-stretch">
             <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               value={query}
@@ -242,17 +278,80 @@ export const BlogsPage = () => {
           </div>
           <button
             onClick={() => navigate('/blogs/create')}
-            className="hidden md:inline-flex px-4 py-2 rounded-lg border-2 border-green-600 text-green-600 font-bold hover:bg-green-600 hover:text-white transition whitespace-nowrap justify-self-end"
+            className="hidden md:inline-flex h-11 w-11 items-center justify-center rounded-full border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white transition justify-self-end"
+            aria-label="Create post"
+            title="Create post"
           >
-            ✏️ Create Post
+            <FiEdit3 />
           </button>
+          <div className="relative">
+            <button
+              onClick={openNotifications}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-emerald-200 bg-white text-slate-800 shadow-sm transition hover:bg-emerald-50"
+              aria-label="Notifications"
+              title="Notifications"
+            >
+              <FiBell />
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-black text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+            {notificationsOpen && (
+              <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-xl border border-emerald-100 bg-white shadow-2xl">
+                <div className="border-b border-slate-100 px-4 py-3">
+                  <h2 className="font-black text-slate-950">Notifications</h2>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-sm font-semibold text-slate-500">No notifications yet</div>
+                  ) : (
+                    notifications.map(notification => (
+                      <div key={notification._id} className="border-b border-slate-100 p-4 last:border-b-0">
+                        <div className="flex items-start gap-3">
+                          {notification.actor?.profilePhoto ? (
+                            <img src={resolveMediaUrl(notification.actor.profilePhoto)} alt={notification.actor.name} className="h-10 w-10 rounded-full object-cover" />
+                          ) : (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary font-black text-white">
+                              {notification.actor?.name?.charAt(0) || 'U'}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm text-slate-700">
+                              <span className="font-black text-slate-950">{notification.actor?.name || 'Someone'}</span>
+                              {notification.type === 'like' ? ' liked your post' : ' followed you'}
+                              {notification.post?.title ? <span className="font-semibold">: {notification.post.title}</span> : ''}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">{new Date(notification.createdAt).toLocaleString()}</p>
+                            {notification.type === 'follow' && notification.actor?._id && (
+                              <button
+                                onClick={() => handleNotificationFollowBack(notification.actor._id)}
+                                className={`mt-3 rounded-lg px-3 py-2 text-xs font-black transition ${
+                                  notification.isFollowingActor
+                                    ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                    : 'bg-primary text-white hover:bg-primary/80'
+                                }`}
+                              >
+                                {notification.isFollowingActor ? 'Following' : 'Follow Back'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={() => navigate('/profile')}
-            className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-secondary hover:shadow-lg hover:scale-105 transition"
+            className="inline-flex h-11 w-11 flex-none items-center justify-center justify-self-end rounded-full bg-secondary hover:shadow-lg hover:scale-105 transition"
             title="My Profile"
           >
             {user?.profilePhoto ? (
-              <img src={resolveMediaUrl(user.profilePhoto)} alt={user.name} className="w-10 h-10 rounded-full border-2 border-white object-cover" />
+              <img src={resolveMediaUrl(user.profilePhoto)} alt={user.name} className="h-11 w-11 rounded-full border-2 border-white object-cover" />
             ) : (
               <FiUserCheck className="text-white text-lg" />
             )}
@@ -442,7 +541,7 @@ export const BlogsPage = () => {
         aria-label="Create post"
         title="Create new post"
       >
-        ✏️
+        <FiEdit3 />
       </Link>
     </div>
   );

@@ -10,6 +10,8 @@ router.get('/admin/all', authenticateToken, adminOnly, blogController.getAdminPo
 router.get('/me', authenticateToken, blogController.getMyPosts);
 router.get('/profile/me', authenticateToken, blogController.getBlogProfile);
 router.put('/profile/me', authenticateToken, blogController.updateBlogProfile);
+router.get('/notifications', authenticateToken, blogController.getNotifications);
+router.patch('/notifications/read', authenticateToken, blogController.markNotificationsRead);
 router.post('/upload-image', authenticateToken, upload.single('image'), blogController.uploadBlogImage);
 router.post('/', authenticateToken, blogController.createPost);
 router.put('/:postId', authenticateToken, blogController.updatePost);

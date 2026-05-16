@@ -109,6 +109,8 @@ export const blogAPI = {
   likePost: (postId) => axios.patch(`${API_URL}/blogs/${postId}/like`, {}, { headers: getAuthHeaders() }),
   toggleLike: (postId) => axios.patch(`${API_URL}/blogs/${postId}/like`, {}, { headers: getAuthHeaders() }),
   recordShare: (postId) => axios.patch(`${API_URL}/blogs/${postId}/share`, {}, { headers: getAuthHeaders() }),
+  getNotifications: () => axios.get(`${API_URL}/blogs/notifications`, { headers: getAuthHeaders() }),
+  markNotificationsRead: () => axios.patch(`${API_URL}/blogs/notifications/read`, {}, { headers: getAuthHeaders() }),
   searchUsers: (query) => axios.get(`${API_URL}/blogs/users/search`, {
     headers: getAuthHeaders(),
     params: { q: query }
