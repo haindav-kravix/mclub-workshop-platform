@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiTrash2, FiPlus } from 'react-icons/fi';
+import { FiCheck, FiEdit3, FiPlus, FiTrash2, FiX } from 'react-icons/fi';
 
 export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
   const [fields, setFields] = useState(initialFields);
@@ -10,6 +10,7 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
     options: [],
     correctAnswer: ''
   });
+  const [editingFieldId, setEditingFieldId] = useState(null);
 
   const needsOptions = (type) => ['select', 'radio', 'checkbox', 'question-mcq'].includes(type);
   const getOptionLabel = (index) => {
@@ -35,36 +36,7 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
     'question-mcq': 'Question - ABCD Options'
   }[type] || type);
 
-  const addField = () => {
-    if (!newField.label) {
-      alert('Please enter a field label');
-      return;
-    }
-
-    const cleanedOptions = needsOptions(newField.type)
-      ? newField.options.map(option => option.trim()).filter(Boolean)
-      : [];
-
-    if (needsOptions(newField.type) && cleanedOptions.length < 2) {
-      alert('Please enter at least two options');
-      return;
-    }
-
-    if (newField.type === 'question-mcq' && !newField.correctAnswer) {
-      alert('Please select the correct answer');
-      return;
-    }
-
-    const field = {
-      fieldId: `field_${Date.now()}`,
-      ...newField,
-      options: cleanedOptions,
-      order: fields.length
-    };
-
-    const updatedFields = [...fields, field];
-    setFields(updatedFields);
-    onFieldsChange(updatedFields);
+  const resetBuilder = () => {
     setNewField({
       label: '',
       type: 'text',
@@ -72,6 +44,74 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
       options: [],
       correctAnswer: ''
     });
+    setEditingFieldId(null);
+  };
+
+  const validateFieldDraft = () => {
+    if (!newField.label.trim()) {
+      alert('Please enter a field label');
+      return null;
+    }
+
+    const cleanedOptions = needsOptions(newField.type)
+      ? (newField.options.length ? newField.options : emptyOptions()).map(option => option.trim()).filter(Boolean)
+      : [];
+
+    if (needsOptions(newField.type) && cleanedOptions.length < 2) {
+      alert('Please enter at least two options');
+      return null;
+    }
+
+    if (newField.type === 'question-mcq' && (!newField.correctAnswer || !cleanedOptions.includes(newField.correctAnswer))) {
+      alert('Please select the correct answer');
+      return null;
+    }
+
+    return {
+      ...newField,
+      label: newField.label.trim(),
+      options: cleanedOptions,
+      correctAnswer: ['question-text', 'question-mcq'].includes(newField.type) ? newField.correctAnswer : ''
+    };
+  };
+
+  const addField = () => {
+    const validField = validateFieldDraft();
+    if (!validField) return;
+
+    const field = {
+      fieldId: `field_${Date.now()}`,
+      ...validField,
+      order: fields.length
+    };
+
+    const updatedFields = [...fields, field];
+    setFields(updatedFields);
+    onFieldsChange(updatedFields);
+    resetBuilder();
+  };
+
+  const startEditField = (field) => {
+    setEditingFieldId(field.fieldId);
+    setNewField({
+      label: field.label || '',
+      type: field.type || 'text',
+      required: field.required !== false,
+      options: needsOptions(field.type) ? (field.options?.length ? field.options : emptyOptions()) : [],
+      correctAnswer: field.correctAnswer || ''
+    });
+  };
+
+  const saveEditedField = () => {
+    const validField = validateFieldDraft();
+    if (!validField) return;
+
+    const updatedFields = fields.map(field =>
+      field.fieldId === editingFieldId ? { ...field, ...validField } : field
+    );
+    setFields(updatedFields);
+    onFieldsChange(updatedFields);
+    resetBuilder();
   };
 
   const removeField = (fieldId) => {
@@ -80,6 +120,9 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
       .map((f, index) => ({ ...f, order: index }));
     setFields(updatedFields);
     onFieldsChange(updatedFields);
+    if (editingFieldId === fieldId) {
+      resetBuilder();
+    }
   };
 
   const updateField = (fieldId, updates) => {
@@ -113,7 +156,18 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
 
       {/* Add New Field */}
       <div className="bg-gray-50 p-4 rounded-lg mb-6 space-y-4">
-        <h4 className="font-semibold">Add New Field</h4>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h4 className="font-semibold">{editingFieldId ? 'Edit Field' : 'Add New Field'}</h4>
+          {editingFieldId && (
+            <button
+              type="button"
+              onClick={resetBuilder}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-bold text-gray-700 transition hover:border-rose-300 hover:text-rose-700"
+            >
+              <FiX /> Cancel Edit
+            </button>
+          )}
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Field Label</label>
@@ -268,10 +322,11 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
 
         <button
           type="button"
-          onClick={addField}
+          onClick={editingFieldId ? saveEditedField : addField}
           className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium flex items-center justify-center space-x-2"
         >
-          <FiPlus /> <span>Add Field</span>
+          {editingFieldId ? <FiCheck /> : <FiPlus />}
+          <span>{editingFieldId ? 'Save Field Changes' : 'Add Field'}</span>
         </button>
       </div>
 
@@ -283,8 +338,10 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
           <p className="text-gray-500 text-center py-6">No fields added yet</p>
         ) : (
           fields.map((field, index) => (
-            <div key={field.fieldId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-              <div className="flex-1">
+            <div key={field.fieldId} className={`flex flex-col gap-3 rounded-lg p-3 transition sm:flex-row sm:items-center sm:justify-between ${
+              editingFieldId === field.fieldId ? 'bg-emerald-50 ring-2 ring-emerald-200' : 'bg-gray-50 hover:bg-gray-100'
+            }`}>
+              <div className="min-w-0 flex-1">
                 <p className="font-medium text-gray-900">{field.label}</p>
                 <p className="text-sm text-gray-500">
                   {fieldTypeLabel(field.type)}
@@ -293,7 +350,14 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
                 </p>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => startEditField(field)}
+                  className="inline-flex items-center justify-center gap-1 rounded-lg bg-white px-3 py-2 text-sm font-bold text-secondary ring-1 ring-emerald-200 transition hover:bg-emerald-50"
+                >
+                  <FiEdit3 /> Edit
+                </button>
                 <button
                   type="button"
                   onClick={() => moveField(field.fieldId, 'up')}

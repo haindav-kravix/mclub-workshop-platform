@@ -11,7 +11,7 @@ export const Navbar = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  const navLinkClass = (path) => `flex items-center space-x-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+  const navLinkClass = (path) => `flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${
     isActive(path) ? 'bg-primary/15 text-secondary' : 'text-slate-600 hover:bg-primary/10 hover:text-secondary'
   }`;
 
@@ -24,25 +24,25 @@ export const Navbar = () => {
       <div className="max-w-[1680px] mx-auto px-3 sm:px-6">
         <div className="flex justify-between items-center min-h-16 sm:min-h-20 py-2 gap-2 sm:gap-4">
           {/* Logo */}
-          <Link to="/" className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-4 lg:flex-none lg:gap-5 lg:w-[610px] xl:w-[670px] 2xl:w-[720px]">
+          <Link to="/" className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-4 min-[1440px]:flex-none min-[1440px]:gap-4 min-[1440px]:w-[470px] 2xl:w-[600px]">
             <img
               src="/brand/klh-head-banner.png"
               alt="KLH University"
-              className="h-7 w-[108px] min-[380px]:w-[138px] sm:h-8 sm:w-[235px] lg:h-10 lg:w-[320px] xl:h-11 xl:w-[360px] object-contain flex-none"
+              className="h-7 w-[108px] min-[380px]:w-[138px] sm:h-8 sm:w-[235px] lg:h-10 lg:w-[300px] min-[1440px]:h-10 min-[1440px]:w-[320px] 2xl:h-11 2xl:w-[360px] object-contain flex-none"
             />
-            <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3 lg:flex-none">
+            <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3 min-[1440px]:flex-none">
               <div className="w-8 h-8 min-[380px]:w-9 min-[380px]:h-9 sm:w-10 sm:h-10 rounded-lg bg-secondary text-white flex items-center justify-center font-bold shadow-sm flex-none text-sm sm:text-base">
                 MC
               </div>
-              <div className="min-w-0 max-w-[82px] min-[380px]:max-w-[112px] sm:max-w-[150px] lg:w-[150px]">
-                <span className="block truncate font-bold text-xs min-[380px]:text-sm sm:text-base lg:text-lg leading-tight text-slate-950">MongoDB Club</span>
+              <div className="min-w-0 max-w-[82px] min-[380px]:max-w-[112px] sm:max-w-[150px] min-[1440px]:w-[128px] 2xl:w-[150px]">
+                <span className="block truncate font-bold text-xs min-[380px]:text-sm sm:text-base min-[1440px]:text-base 2xl:text-lg leading-tight text-slate-950">MongoDB Club</span>
                 <p className="hidden min-[380px]:block truncate text-[11px] lg:text-xs text-slate-500 leading-tight">Workshop Hub</p>
               </div>
             </div>
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center space-x-2 flex-none">
+          <div className="hidden min-[1440px]:flex items-center gap-1.5 flex-none">
             <Link
               to="/"
               className={navLinkClass('/')}
@@ -92,12 +92,12 @@ export const Navbar = () => {
             )}
 
             {isAuthenticated ? (
-              <div className="flex items-center space-x-3 pl-3 ml-2 border-l border-slate-200">
-                <Link to="/profile" className="flex items-center space-x-2 rounded-lg bg-slate-50 px-2 py-1 transition hover:bg-primary/10">
+              <div className="flex min-w-0 items-center pl-2 ml-1 border-l border-slate-200">
+                <Link to="/profile" className="flex min-w-0 items-center gap-2 rounded-lg bg-slate-50 px-2 py-1 transition hover:bg-primary/10">
                   {user?.profilePhoto && (
-                    <img src={resolveMediaUrl(user.profilePhoto)} alt="Profile" className="w-8 h-8 rounded-full" />
+                    <img src={resolveMediaUrl(user.profilePhoto)} alt="Profile" className="h-8 w-8 flex-none rounded-full object-cover" />
                   )}
-                  <span className="text-sm font-semibold text-slate-700 max-w-[140px] truncate">{user?.name}</span>
+                  <span className="min-w-0 max-w-[92px] truncate text-sm font-semibold text-slate-700 2xl:max-w-[140px]">{user?.name}</span>
                 </Link>
               </div>
             ) : (
@@ -112,7 +112,7 @@ export const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="lg:hidden flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-700"
+            className="min-[1440px]:hidden flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-700"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? 'Close menu' : 'Open menu'}
           >
@@ -122,7 +122,7 @@ export const Navbar = () => {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="lg:hidden pb-4 space-y-2 border-t border-slate-100 pt-3">
+          <div className="min-[1440px]:hidden pb-4 space-y-2 border-t border-slate-100 pt-3">
             <Link
               to="/"
               className={mobileLinkClass('/')}
