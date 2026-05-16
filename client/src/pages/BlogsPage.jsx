@@ -118,13 +118,13 @@ export const BlogsPage = () => {
 
   const handleUserSearch = async (value) => {
     setQuery(value);
-    if (!value.trim()) {
+    const searchTerm = value.trim();
+    if (!searchTerm) {
       setUsers([]);
       return;
     }
     try {
-      const response = await blogAPI.searchUsers(value);
-      console.log('Search results:', response.data);
+      const response = await blogAPI.searchUsers(searchTerm);
       setUsers(response.data || []);
     } catch (error) {
       console.error('Search error:', error);

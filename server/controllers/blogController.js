@@ -217,7 +217,11 @@ export const recordShare = async (req, res) => {
 
 export const searchUsers = async (req, res) => {
   try {
-    const query = req.query.q || '';
+    const query = String(req.query.q || '').trim();
+    if (!query) {
+      return res.json([]);
+    }
+
     const users = await User.find({
       _id: { $ne: req.user.id },
       $or: [

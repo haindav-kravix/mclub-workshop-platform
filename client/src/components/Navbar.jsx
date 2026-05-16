@@ -1,20 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiMenu, FiX, FiLogOut, FiHome, FiCalendar, FiClipboard, FiSettings, FiEdit3, FiUser } from 'react-icons/fi';
+import { FiMenu, FiX, FiHome, FiCalendar, FiClipboard, FiSettings, FiEdit3, FiUser } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, isAdmin, user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { isAuthenticated, isAdmin, user } = useAuth();
   const location = useLocation();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-    setIsOpen(false);
-  };
 
   const isActive = (path) => location.pathname === path;
 
@@ -106,12 +99,6 @@ export const Navbar = () => {
                   )}
                   <span className="text-sm font-semibold text-slate-700 max-w-[140px] truncate">{user?.name}</span>
                 </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center space-x-1 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition text-sm font-semibold"
-                >
-                  <FiLogOut /> <span>Logout</span>
-                </button>
               </div>
             ) : (
               <Link
@@ -186,14 +173,7 @@ export const Navbar = () => {
                 Admin Dashboard
               </Link>
             )}
-            {isAuthenticated ? (
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition font-semibold"
-              >
-                Logout
-              </button>
-            ) : (
+            {!isAuthenticated && (
               <Link
                 to="/login"
                 className="block px-4 py-3 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition text-center font-semibold"
