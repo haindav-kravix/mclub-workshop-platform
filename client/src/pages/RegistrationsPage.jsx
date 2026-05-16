@@ -21,10 +21,10 @@ export const RegistrationsPage = () => {
   const rejectedCount = registrations.filter(registration => registration.status === 'rejected').length;
   const cancelledCount = registrations.filter(registration => registration.status === 'cancelled').length;
   const countCards = [
-    { label: 'Total Registrations', value: totalCount, icon: FiUsers, className: 'border-slate-200 bg-white text-slate-950' },
-    { label: 'Confirmed Students', value: confirmedCount, icon: FiCheckCircle, className: 'border-emerald-200 bg-emerald-50 text-emerald-800' },
-    { label: 'Pending Review', value: pendingCount, icon: FiClock, className: 'border-amber-200 bg-amber-50 text-amber-800' },
-    { label: 'Rejected', value: rejectedCount, icon: FiXCircle, className: 'border-rose-200 bg-rose-50 text-rose-800' }
+    { label: 'Total', value: totalCount, icon: FiUsers, className: 'border-slate-200 bg-white text-slate-950', iconClass: 'bg-slate-100 text-slate-700' },
+    { label: 'Confirmed', value: confirmedCount, icon: FiCheckCircle, className: 'border-emerald-200 bg-emerald-50 text-emerald-900', iconClass: 'bg-emerald-100 text-emerald-700' },
+    { label: 'Reviewing', value: pendingCount, icon: FiClock, className: 'border-amber-200 bg-amber-50 text-amber-900', iconClass: 'bg-amber-100 text-amber-700' },
+    { label: 'Rejected', value: rejectedCount, icon: FiXCircle, className: 'border-rose-200 bg-rose-50 text-rose-900', iconClass: 'bg-rose-100 text-rose-700' }
   ];
 
   useEffect(() => {
@@ -102,40 +102,45 @@ export const RegistrationsPage = () => {
   return (
     <div className="min-h-screen app-shell">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="border-b border-emerald-100 bg-white/95 backdrop-blur">
+        <div className="mx-auto max-w-7xl px-4 py-5 sm:py-7">
           <button
             onClick={() => navigate('/admin')}
-            className="flex items-center space-x-2 text-primary hover:text-primary/80 transition font-medium mb-4"
+            className="mb-4 inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-black text-secondary transition hover:bg-emerald-100"
           >
             <FiArrowLeft /> <span>Back to Dashboard</span>
           </button>
           {workshop && (
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{workshop.title}</h1>
-              <p className="text-gray-600 mt-2">
-                {totalCount} registrations, {confirmedCount} confirmed, {rejectedCount} rejected
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-wide text-secondary">Workshop registrations</p>
+                <h1 className="mt-2 max-w-4xl break-words text-2xl font-black leading-tight text-slate-950 sm:text-4xl">{workshop.title}</h1>
+              </div>
+              <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700">
+                {totalCount} total · {confirmedCount} confirmed · {rejectedCount} rejected
               </p>
             </div>
           )}
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
         {success && <SuccessMessage message={success} onDismiss={() => setSuccess('')} />}
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {countCards.map((card) => {
             const Icon = card.icon;
             return (
-              <div key={card.label} className={`rounded-lg border p-4 shadow-sm ${card.className}`}>
+              <div key={card.label} className={`rounded-xl border p-4 shadow-sm ${card.className}`}>
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-2xl font-black">{card.value}</p>
-                    <p className="text-xs sm:text-sm font-bold">{card.label}</p>
+                  <div className="min-w-0">
+                    <p className="text-3xl font-black leading-none">{card.value}</p>
+                    <p className="mt-1 truncate text-xs font-black uppercase tracking-wide sm:text-sm">{card.label}</p>
                   </div>
-                  <Icon size={22} className="flex-none" />
+                  <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-lg ${card.iconClass}`}>
+                    <Icon size={20} />
+                  </div>
                 </div>
               </div>
             );
@@ -143,17 +148,17 @@ export const RegistrationsPage = () => {
         </div>
 
         {cancelledCount > 0 && (
-          <div className="mb-6 rounded-lg border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-600">
+          <div className="mb-5 rounded-lg border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-600">
             Cancelled registrations: <span className="font-black text-slate-950">{cancelledCount}</span>
           </div>
         )}
 
         {/* Export Button */}
         {registrations.length > 0 && (
-          <div className="mb-6">
+          <div className="mb-5 flex justify-end">
             <button
               onClick={handleExportToExcel}
-              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-slate-950 text-white rounded-lg hover:bg-slate-800 transition font-semibold"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-5 py-3 font-black text-white shadow-sm transition hover:bg-slate-800 sm:w-auto"
             >
               <FiDownload /> <span>Export to Excel</span>
             </button>

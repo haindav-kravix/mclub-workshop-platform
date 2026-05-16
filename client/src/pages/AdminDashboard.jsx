@@ -3,7 +3,6 @@ import { workshopAPI, registrationAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
 import { AdminWorkshopCard } from '../components/AdminWorkshopCard';
 import { FiCalendar, FiCheckCircle, FiMail, FiPlus, FiUsers, FiX, FiXCircle } from 'react-icons/fi';
-import { CreateWorkshopModal } from '../components/CreateWorkshopModal';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminDashboard = () => {
@@ -11,8 +10,6 @@ export const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingWorkshop, setEditingWorkshop] = useState(null);
   const [emailWorkshop, setEmailWorkshop] = useState(null);
   const [emailForm, setEmailForm] = useState({ subject: '', message: '' });
   const [emailLoading, setEmailLoading] = useState(false);
@@ -31,54 +28,6 @@ export const AdminDashboard = () => {
       console.error(err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreateWorkshop = async (workshopData) => {
-    try {
-      const formData = new FormData();
-      Object.keys(workshopData).forEach(key => {
-        if (key === 'registrationFormFields' || key === 'dailyTimings') {
-          formData.append(key, JSON.stringify(workshopData[key]));
-        } else if (key !== 'coverImage') {
-          formData.append(key, workshopData[key]);
-        }
-      });
-      if (workshopData.coverImage) {
-        formData.append('coverImage', workshopData.coverImage);
-      }
-
-      await workshopAPI.createWorkshop(formData);
-      setSuccess('Workshop created successfully!');
-      setShowCreateModal(false);
-      fetchWorkshops();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create workshop');
-      console.error(err);
-    }
-  };
-
-  const handleUpdateWorkshop = async (workshopData) => {
-    try {
-      const formData = new FormData();
-      Object.keys(workshopData).forEach(key => {
-        if (key === 'registrationFormFields' || key === 'dailyTimings') {
-          formData.append(key, JSON.stringify(workshopData[key]));
-        } else if (key !== 'coverImage') {
-          formData.append(key, workshopData[key] ?? '');
-        }
-      });
-      if (workshopData.coverImage) {
-        formData.append('coverImage', workshopData.coverImage);
-      }
-
-      await workshopAPI.updateWorkshop(editingWorkshop._id, formData);
-      setSuccess('Workshop updated successfully!');
-      setEditingWorkshop(null);
-      fetchWorkshops();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update workshop');
-      console.error(err);
     }
   };
 
@@ -228,7 +177,7 @@ export const AdminDashboard = () => {
               <p className="text-slate-300 mt-2">Every admin can manage every workshop, registration, and export.</p>
             </div>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => navigate('/admin/workshops/new')}
               className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-primary text-slate-950 rounded-lg hover:bg-primary/80 transition font-bold"
             >
               <FiPlus /> <span>Create Workshop</span>
@@ -262,7 +211,7 @@ export const AdminDashboard = () => {
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
             <p className="text-gray-600 text-lg mb-4">You haven't created any workshops yet</p>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => navigate('/admin/workshops/new')}
               className="inline-flex items-center space-x-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-bold"
             >
               <FiPlus /> <span>Create Your First Workshop</span>
@@ -274,7 +223,7 @@ export const AdminDashboard = () => {
               <AdminWorkshopCard
                 key={workshop._id}
                 workshop={workshop}
-                onEdit={(workshop) => setEditingWorkshop(workshop)}
+                onEdit={(workshop) => navigate(`/admin/workshops/${workshop._id}/edit`)}
                 onDelete={handleDeleteWorkshop}
                 onViewRegistrations={(workshopId) => navigate(`/admin/registrations/${workshopId}`)}
                 onExport={handleExportRegistrations}
@@ -289,22 +238,6 @@ export const AdminDashboard = () => {
           </div>
         )}
       </div>
-
-      {/* Create Workshop Modal */}
-      {showCreateModal && (
-        <CreateWorkshopModal
-          onClose={() => setShowCreateModal(false)}
-          onCreate={handleCreateWorkshop}
-        />
-      )}
-
-      {editingWorkshop && (
-        <CreateWorkshopModal
-          initialData={editingWorkshop}
-          onClose={() => setEditingWorkshop(null)}
-          onCreate={handleUpdateWorkshop}
-        />
-      )}
 
       {emailWorkshop && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">

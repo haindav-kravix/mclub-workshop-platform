@@ -48,7 +48,7 @@ const buildInitialTimings = (initialData) => {
   return [];
 };
 
-export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null }) => {
+export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, layout = 'modal' }) => {
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     description: initialData?.description || '',
@@ -135,15 +135,19 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null }) =
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+  const formContent = (
+    <div className={layout === 'page' ? 'rounded-xl border border-slate-200 bg-white shadow-sm' : 'bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto'}>
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white">
-          <h2 className="text-2xl font-bold">
+        <div className="flex justify-between items-center gap-3 p-5 sm:p-6 border-b sticky top-0 bg-white z-10">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wide text-secondary">
+              {initialData ? 'Edit workshop details' : 'New workshop setup'}
+            </p>
+            <h2 className="mt-1 text-2xl font-black text-slate-950">
             {initialData ? 'Edit Workshop' : 'Create New Workshop'}
-          </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            </h2>
+          </div>
+          <button onClick={onClose} className="flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-slate-200 text-gray-500 hover:text-gray-700">
             <FiX size={24} />
           </button>
         </div>
@@ -331,11 +335,20 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null }) =
               disabled={loading}
               className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium disabled:opacity-50"
             >
-              {loading ? 'Creating...' : initialData ? 'Update Workshop' : 'Create Workshop'}
+              {loading ? (initialData ? 'Updating...' : 'Creating...') : initialData ? 'Update Workshop' : 'Create Workshop'}
             </button>
           </div>
         </form>
       </div>
+  );
+
+  if (layout === 'page') {
+    return formContent;
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      {formContent}
     </div>
   );
 };

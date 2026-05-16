@@ -17,6 +17,7 @@ import { WorkshopRegistrationPage } from './pages/WorkshopRegistrationPage';
 import { MyRegistrationsPage } from './pages/MyRegistrationsPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { RegistrationsPage } from './pages/RegistrationsPage';
+import { WorkshopFormPage } from './pages/WorkshopFormPage';
 import { AdminAuthPage } from './pages/AdminAuthPage';
 import { TakeAttendancePage } from './pages/TakeAttendancePage';
 import { AttendanceReportsPage } from './pages/AttendanceReportsPage';
@@ -127,6 +128,22 @@ const AppContent = () => {
             element={
               <PrivateRoute requireAdmin={true}>
                 <RegistrationsPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/workshops/new"
+            element={
+              <PrivateRoute requireAdmin={true}>
+                <WorkshopFormPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/workshops/:workshopId/edit"
+            element={
+              <PrivateRoute requireAdmin={true}>
+                <WorkshopFormPage />
               </PrivateRoute>
             }
           />
