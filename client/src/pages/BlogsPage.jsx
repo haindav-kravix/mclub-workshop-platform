@@ -207,6 +207,17 @@ export const BlogsPage = () => {
 
   if (loading) return <LoadingSpinner />;
 
+  const createPostButton = createPortal((
+    <Link
+      to="/blogs/create"
+      className="blog-create-fab"
+      aria-label="Create post"
+      title="Create new post"
+    >
+      <FiEdit3 />
+    </Link>
+  ), document.body);
+
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
@@ -535,14 +546,7 @@ export const BlogsPage = () => {
         </div>
       </div>
 
-      <Link
-        to="/blogs/create"
-        className="blog-create-fab"
-        aria-label="Create post"
-        title="Create new post"
-      >
-        <FiEdit3 />
-      </Link>
+      {createPostButton}
     </div>
   );
 };
