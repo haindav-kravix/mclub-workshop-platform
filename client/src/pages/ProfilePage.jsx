@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { blogAPI, resolveMediaUrl } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
-import { FiCamera, FiEdit3, FiMail, FiSave, FiUserCheck, FiUsers } from 'react-icons/fi';
+import { FiCamera, FiEdit3, FiLogOut, FiMail, FiSave, FiUserCheck, FiUsers } from 'react-icons/fi';
 
 export const ProfilePage = () => {
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, logout } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [bioDraft, setBioDraft] = useState('');
   const [loading, setLoading] = useState(true);
@@ -65,6 +66,11 @@ export const ProfilePage = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   if (loading) return <LoadingSpinner />;
 
   const displayProfile = profile || user;
@@ -73,12 +79,23 @@ export const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-8">
-          <p className="text-sm font-bold uppercase tracking-wide text-secondary">Account profile</p>
-          <h1 className="mt-2 text-3xl font-black text-slate-950 sm:text-5xl">Your MongoDB Club identity</h1>
-          <p className="mt-3 max-w-2xl text-slate-600">
-            Your photo comes from Google when you sign in. You can replace it here anytime.
-          </p>
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-bold uppercase tracking-wide text-secondary">Account profile</p>
+              <h1 className="mt-2 text-3xl font-black text-slate-950 sm:text-5xl">Your MongoDB Club identity</h1>
+              <p className="mt-3 max-w-2xl text-slate-600">
+                Your photo comes from Google when you sign in. You can replace it here anytime.
+              </p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-5 py-3 font-black text-rose-700 transition hover:bg-rose-100 sm:w-auto"
+            >
+              <FiLogOut />
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 
@@ -164,9 +181,9 @@ export const ProfilePage = () => {
           <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="text-xl font-black text-slate-950">Community Profile</h2>
             <p className="mt-2 text-sm text-slate-600">Preview the public version of your profile and posts.</p>
-            <Link
-              to={`/user/${displayProfile?.id || displayProfile?._id}`}
-              className="mt-4 inline-flex rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-700 transition hover:border-secondary hover:text-secondary"
+              <Link
+                to={`/user/${displayProfile?.id || displayProfile?._id}`}
+              className="mt-4 inline-flex w-full justify-center rounded-lg border border-slate-300 px-4 py-2 font-bold text-slate-700 transition hover:border-secondary hover:text-secondary sm:w-auto"
             >
               View Public Profile
             </Link>

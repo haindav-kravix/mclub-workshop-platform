@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { FiMail } from 'react-icons/fi';
 
 const GUIDANCE_EMAIL = 'mongodbclub@klh.edu.in';
@@ -22,7 +23,7 @@ export const SupportMailButton = () => {
     }, 900);
   };
 
-  return (
+  const button = (
     <a
       href={GMAIL_COMPOSE_URL}
       target="_blank"
@@ -35,4 +36,6 @@ export const SupportMailButton = () => {
       <FiMail size={17} />
     </a>
   );
+
+  return createPortal(button, document.body);
 };
