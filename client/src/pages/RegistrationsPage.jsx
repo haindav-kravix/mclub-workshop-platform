@@ -14,6 +14,7 @@ export const RegistrationsPage = () => {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [activeStatus, setActiveStatus] = useState('all');
 
   const totalCount = registrations.length;
   const confirmedCount = registrations.filter(registration => registration.status === 'confirmed').length;
@@ -21,11 +22,15 @@ export const RegistrationsPage = () => {
   const rejectedCount = registrations.filter(registration => registration.status === 'rejected').length;
   const cancelledCount = registrations.filter(registration => registration.status === 'cancelled').length;
   const countCards = [
-    { label: 'Total', value: totalCount, icon: FiUsers, className: 'border-slate-200 bg-white text-slate-950', iconClass: 'bg-slate-100 text-slate-700' },
-    { label: 'Confirmed', value: confirmedCount, icon: FiCheckCircle, className: 'border-emerald-200 bg-emerald-50 text-emerald-900', iconClass: 'bg-emerald-100 text-emerald-700' },
-    { label: 'Reviewing', value: pendingCount, icon: FiClock, className: 'border-amber-200 bg-amber-50 text-amber-900', iconClass: 'bg-amber-100 text-amber-700' },
-    { label: 'Rejected', value: rejectedCount, icon: FiXCircle, className: 'border-rose-200 bg-rose-50 text-rose-900', iconClass: 'bg-rose-100 text-rose-700' }
+    { label: 'Total', value: totalCount, status: 'all', icon: FiUsers, className: 'border-slate-200 bg-white text-slate-950', activeClass: 'ring-slate-400', iconClass: 'bg-slate-100 text-slate-700' },
+    { label: 'Confirmed', value: confirmedCount, status: 'confirmed', icon: FiCheckCircle, className: 'border-emerald-200 bg-emerald-50 text-emerald-900', activeClass: 'ring-emerald-500', iconClass: 'bg-emerald-100 text-emerald-700' },
+    { label: 'Reviewing', value: pendingCount, status: 'pending', icon: FiClock, className: 'border-amber-200 bg-amber-50 text-amber-900', activeClass: 'ring-amber-500', iconClass: 'bg-amber-100 text-amber-700' },
+    { label: 'Rejected', value: rejectedCount, status: 'rejected', icon: FiXCircle, className: 'border-rose-200 bg-rose-50 text-rose-900', activeClass: 'ring-rose-500', iconClass: 'bg-rose-100 text-rose-700' }
   ];
+  const filteredRegistrations = activeStatus === 'all'
+    ? registrations
+    : registrations.filter(registration => registration.status === activeStatus);
+  const activeCard = countCards.find(card => card.status === activeStatus) || countCards[0];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -131,18 +136,30 @@ export const RegistrationsPage = () => {
         <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {countCards.map((card) => {
             const Icon = card.icon;
+            const isActive = activeStatus === card.status;
             return (
-              <div key={card.label} className={`rounded-xl border p-4 shadow-sm ${card.className}`}>
+              <button
+                key={card.label}
+                type="button"
+                onClick={() => setActiveStatus(card.status)}
+                className={`rounded-xl border p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-emerald-100 ${card.className} ${
+                  isActive ? `ring-2 ${card.activeClass}` : ''
+                }`}
+                aria-pressed={isActive}
+              >
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-3xl font-black leading-none">{card.value}</p>
                     <p className="mt-1 truncate text-xs font-black uppercase tracking-wide sm:text-sm">{card.label}</p>
+                    <p className="mt-1 text-[11px] font-bold opacity-70">
+                      {isActive ? 'Showing now' : 'Click to view'}
+                    </p>
                   </div>
                   <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-lg ${card.iconClass}`}>
                     <Icon size={20} />
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -155,7 +172,10 @@ export const RegistrationsPage = () => {
 
         {/* Export Button */}
         {registrations.length > 0 && (
-          <div className="mb-5 flex justify-end">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-bold text-slate-600">
+              Showing <span className="text-slate-950">{filteredRegistrations.length}</span> {activeCard.label.toLowerCase()} registration{filteredRegistrations.length === 1 ? '' : 's'}
+            </p>
             <button
               onClick={handleExportToExcel}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-5 py-3 font-black text-white shadow-sm transition hover:bg-slate-800 sm:w-auto"
@@ -167,11 +187,12 @@ export const RegistrationsPage = () => {
 
         {/* Registrations Table */}
         <RegistrationsTable
-          registrations={registrations}
+          registrations={filteredRegistrations}
           formFields={workshop?.registrationFormFields || []}
           onDeleteRegistration={handleDeleteRegistration}
           onUpdateRegistrationStatus={handleUpdateRegistrationStatus}
           loading={deleting}
+          emptyMessage={activeStatus === 'all' ? 'No registrations yet' : `No ${activeCard.label.toLowerCase()} registrations`}
         />
       </div>
     </div>

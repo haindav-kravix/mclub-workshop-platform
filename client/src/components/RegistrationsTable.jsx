@@ -100,7 +100,8 @@ export const RegistrationsTable = ({
   formFields = [],
   onDeleteRegistration,
   onUpdateRegistrationStatus,
-  loading
+  loading,
+  emptyMessage = 'No registrations yet'
 }) => {
   const fields = buildFields(registrations, formFields);
 
@@ -170,7 +171,7 @@ export const RegistrationsTable = ({
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
             <FiInbox size={22} />
           </div>
-          <p className="font-black text-slate-700">No registrations yet</p>
+          <p className="font-black text-slate-700">{emptyMessage}</p>
           <p className="mt-1 text-sm">Students will appear here after they register.</p>
         </div>
       )}
