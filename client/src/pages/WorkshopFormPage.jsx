@@ -36,13 +36,16 @@ export const WorkshopFormPage = () => {
     Object.keys(workshopData).forEach(key => {
       if (key === 'registrationFormFields' || key === 'dailyTimings') {
         formData.append(key, JSON.stringify(workshopData[key]));
-      } else if (key !== 'coverImage') {
+      } else if (key !== 'coverImage' && key !== 'qrImage') {
         formData.append(key, workshopData[key] ?? '');
       }
     });
 
     if (workshopData.coverImage) {
       formData.append('coverImage', workshopData.coverImage);
+    }
+    if (workshopData.qrImage) {
+      formData.append('qrImage', workshopData.qrImage);
     }
 
     return formData;
@@ -86,7 +89,7 @@ export const WorkshopFormPage = () => {
             {isEditing ? 'Edit Workshop' : 'Create New Workshop'}
           </h1>
           <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-600 sm:text-base">
-            {isEditing ? 'Update workshop details, timings, cover image, and registration questions.' : 'Add workshop details, timings, cover image, and registration questions.'}
+            {isEditing ? 'Update workshop details, timings, images, and registration questions.' : 'Add workshop details, timings, images, and registration questions.'}
           </p>
         </div>
       </div>

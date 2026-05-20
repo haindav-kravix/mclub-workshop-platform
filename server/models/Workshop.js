@@ -60,6 +60,10 @@ const workshopSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  qrImage: {
+    type: String,
+    default: ''
+  },
   date: {
     type: Date,
     required: true

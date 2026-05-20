@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
-import { registrationAPI, workshopAPI } from '../utils/api';
+import { registrationAPI, resolveMediaUrl, workshopAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { RegistrationForm } from '../components/RegistrationForm';
 import { useAuth } from '../context/AuthContext';
@@ -92,11 +92,24 @@ export const WorkshopRegistrationPage = () => {
             <p className="mt-2 text-slate-600">This workshop is not accepting new registrations right now.</p>
           </div>
         ) : (
-          <RegistrationForm
-            workshop={workshop}
-            onSubmit={handleRegistration}
-            variant="page"
-          />
+          <>
+            {workshop.qrImage && (
+              <div className="mb-5 rounded-2xl border border-emerald-200 bg-white p-5 text-center shadow-xl">
+                <h2 className="text-xl font-black text-slate-950">Workshop QR</h2>
+                <p className="mt-1 text-sm font-semibold text-slate-600">Scan or save this QR before submitting if it is required.</p>
+                <img
+                  src={resolveMediaUrl(workshop.qrImage)}
+                  alt={`${workshop.title} QR`}
+                  className="mx-auto mt-4 max-h-72 w-full max-w-xs rounded-xl border border-slate-100 object-contain p-3"
+                />
+              </div>
+            )}
+            <RegistrationForm
+              workshop={workshop}
+              onSubmit={handleRegistration}
+              variant="page"
+            />
+          </>
         )}
       </div>
     </div>
