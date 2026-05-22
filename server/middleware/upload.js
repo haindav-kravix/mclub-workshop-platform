@@ -33,15 +33,26 @@ const fileFilter = (req, file, cb) => {
     'image/avif',
     'image/heic',
     'image/heif',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain',
     'application/octet-stream'
   ];
-  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.heic', '.heif'];
+  const allowedExtensions = [
+    '.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.heic', '.heif',
+    '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.txt'
+  ];
   const extension = path.extname(file.originalname || '').toLowerCase();
 
   if (allowedMimes.includes(file.mimetype) && allowedExtensions.includes(extension)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Please upload JPG, PNG, GIF, WebP, AVIF, HEIC, or HEIF image files.'));
+    cb(new Error('Invalid file type. Please upload an image, PDF, Word, PowerPoint, Excel, or text file.'));
   }
 };
 

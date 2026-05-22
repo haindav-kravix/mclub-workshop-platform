@@ -5,6 +5,15 @@ const getFormValue = (formData, fieldId) => {
   const value = typeof formData.get === 'function' ? formData.get(fieldId) : formData[fieldId];
   if (Array.isArray(value)) return value.map(item => String(item ?? '')).join(', ');
   if (value && typeof value === 'object') return JSON.stringify(value);
+  if (typeof value === 'string') {
+    if (value.startsWith('data:image/')) return '[Image uploaded]';
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed?.dataUrl) return parsed.name ? `[File uploaded] ${parsed.name}` : '[File uploaded]';
+    } catch {
+      // Keep normal text responses as-is.
+    }
+  }
   return String(value ?? '');
 };
 

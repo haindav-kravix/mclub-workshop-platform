@@ -30,6 +30,7 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
     phone: 'Phone',
     textarea: 'Textarea',
     image: 'Image Upload',
+    file: 'File Upload',
     select: 'Dropdown',
     radio: 'Radio Button',
     checkbox: 'Checkbox',
@@ -202,6 +203,7 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
               <option value="phone">Phone</option>
               <option value="textarea">Textarea</option>
               <option value="image">Image Upload</option>
+              <option value="file">File Upload</option>
               <option value="select">Dropdown</option>
               <option value="radio">Radio Button</option>
               <option value="checkbox">Checkbox</option>

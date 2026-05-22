@@ -46,12 +46,23 @@ const cleanupUploadedFiles = (req) => {
   (req.files || []).forEach(cleanupUploadedFile);
 };
 
-const attachRegistrationImages = (formData, files = []) => {
+const serializeUploadedDocument = (file) => JSON.stringify({
+  dataUrl: uploadedFileToDataUrl(file),
+  name: file.originalname || 'uploaded-file',
+  mimeType: file.mimetype || 'application/octet-stream',
+  size: file.size || 0
+});
+
+const attachRegistrationUploads = (formData, files = [], formFields = []) => {
   const nextFormData = { ...formData };
+  const fieldsById = new Map(formFields.map(field => [field.fieldId, field]));
   files
     .filter(file => file.fieldname !== 'paymentScreenshot')
     .forEach(file => {
-      nextFormData[file.fieldname] = uploadedFileToDataUrl(file);
+      const field = fieldsById.get(file.fieldname);
+      nextFormData[file.fieldname] = field?.type === 'file'
+        ? serializeUploadedDocument(file)
+        : uploadedFileToDataUrl(file);
     });
   return nextFormData;
 };
@@ -109,7 +120,7 @@ export const registerForWorkshop = async (req, res) => {
       }
     }
 
-    parsedFormData = attachRegistrationImages(parsedFormData, req.files || []);
+    parsedFormData = attachRegistrationUploads(parsedFormData, req.files || [], workshop.registrationFormFields || []);
 
     const registration = new Registration({
       workshopId,

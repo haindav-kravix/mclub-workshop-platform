@@ -37,6 +37,7 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
   const [formData, setFormData] = useState(() => getInitialFormData(workshop, user));
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [imageFiles, setImageFiles] = useState({});
+  const [documentFiles, setDocumentFiles] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const isModal = variant === 'modal';
@@ -108,8 +109,17 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
       return;
     }
 
+    const missingRequiredFileField = (workshop.registrationFormFields || []).find(field =>
+      field.type === 'file' && field.required && !documentFiles[field.fieldId]
+    );
+    if (missingRequiredFileField) {
+      setError(`Please upload ${missingRequiredFileField.label}`);
+      setLoading(false);
+      return;
+    }
+
     try {
-      await onSubmit(formData, paymentScreenshot, imageFiles);
+      await onSubmit(formData, paymentScreenshot, imageFiles, documentFiles);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -218,6 +228,32 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
                     )}
                     <p className="mt-2 text-xs font-semibold text-slate-500">
                       Upload JPG, PNG, GIF, WebP, AVIF, HEIC, or HEIF.
+                    </p>
+                  </div>
+                )}
+
+                {field.type === 'file' && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                      required={field.required}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] || null;
+                        setDocumentFiles(prev => ({
+                          ...prev,
+                          [field.fieldId]: file
+                        }));
+                      }}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    {documentFiles[field.fieldId] && (
+                      <p className="mt-2 break-words text-xs font-bold text-emerald-700">
+                        Selected: {documentFiles[field.fieldId].name}
+                      </p>
+                    )}
+                    <p className="mt-2 text-xs font-semibold text-slate-500">
+                      Upload PDF, Word, PowerPoint, Excel, or text files up to 10MB.
                     </p>
                   </div>
                 )}

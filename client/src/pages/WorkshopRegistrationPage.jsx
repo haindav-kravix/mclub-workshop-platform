@@ -39,7 +39,7 @@ export const WorkshopRegistrationPage = () => {
     loadData();
   }, [id, isAuthenticated]);
 
-  const handleRegistration = async (formData, paymentScreenshot, imageFiles = {}) => {
+  const handleRegistration = async (formData, paymentScreenshot, imageFiles = {}, documentFiles = {}) => {
     try {
       const payload = new FormData();
       payload.append('workshopId', id);
@@ -48,6 +48,9 @@ export const WorkshopRegistrationPage = () => {
         payload.append('paymentScreenshot', paymentScreenshot);
       }
       Object.entries(imageFiles).forEach(([fieldId, file]) => {
+        if (file) payload.append(fieldId, file);
+      });
+      Object.entries(documentFiles).forEach(([fieldId, file]) => {
         if (file) payload.append(fieldId, file);
       });
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiCheck, FiInbox, FiTrash2, FiX } from 'react-icons/fi';
+import { FiCheck, FiFileText, FiInbox, FiTrash2, FiX } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
 
 const getFormValue = (formData, fieldId) => {
@@ -7,6 +7,16 @@ const getFormValue = (formData, fieldId) => {
   const value = formData[fieldId];
   if (Array.isArray(value)) return value.join(', ');
   return value || '';
+};
+
+const getUploadedFileMeta = (value) => {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed?.dataUrl ? parsed : null;
+  } catch {
+    return null;
+  }
 };
 
 const buildFields = (registrations, formFields = []) => {
@@ -158,6 +168,24 @@ export const RegistrationsTable = ({
                                 className="h-16 w-16 rounded-md object-cover"
                               />
                               <span className="text-sm font-black text-secondary">View image</span>
+                            </button>
+                          </dd>
+                        ) : field.type === 'file' && getFormValue(reg.formData, field.id) ? (
+                          <dd className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() => onViewPaymentScreenshot?.(reg._id, field.id)}
+                              className="inline-flex max-w-full items-center gap-3 rounded-lg border border-emerald-200 bg-white p-2 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
+                            >
+                              <span className="flex h-12 w-12 flex-none items-center justify-center rounded-md bg-emerald-50 text-secondary">
+                                <FiFileText size={22} />
+                              </span>
+                              <span className="min-w-0">
+                                <span className="block truncate text-sm font-black text-secondary">
+                                  {getUploadedFileMeta(getFormValue(reg.formData, field.id))?.name || 'View file'}
+                                </span>
+                                <span className="block text-xs font-bold text-slate-500">Open upload</span>
+                              </span>
                             </button>
                           </dd>
                         ) : (

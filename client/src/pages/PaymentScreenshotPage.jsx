@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiDownload, FiFileText } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner } from '../components/UI';
 import { registrationAPI, resolveMediaUrl, workshopAPI } from '../utils/api';
 
@@ -38,11 +38,26 @@ export const PaymentScreenshotPage = () => {
 
   if (loading) return <LoadingSpinner />;
 
+  const parseUploadedFile = (value) => {
+    if (!value) return null;
+    try {
+      const parsed = JSON.parse(value);
+      return parsed?.dataUrl ? parsed : null;
+    } catch {
+      return null;
+    }
+  };
+
   const imageField = (workshop?.registrationFormFields || []).find(field => field.fieldId === imageKey);
   const isPaymentScreenshot = imageKey === 'paymentScreenshot';
-  const imageTitle = isPaymentScreenshot ? 'Payment screenshot' : (imageField?.label || 'Uploaded image');
-  const imageValue = isPaymentScreenshot ? registration?.paymentScreenshot : registration?.formData?.[imageKey];
-  const screenshot = imageValue ? resolveMediaUrl(imageValue) : '';
+  const isFileUpload = imageField?.type === 'file';
+  const imageTitle = isPaymentScreenshot ? 'Payment screenshot' : (imageField?.label || (isFileUpload ? 'Uploaded file' : 'Uploaded image'));
+  const rawValue = isPaymentScreenshot ? registration?.paymentScreenshot : registration?.formData?.[imageKey];
+  const uploadedFile = isFileUpload ? parseUploadedFile(rawValue) : null;
+  const mediaUrl = uploadedFile?.dataUrl ? uploadedFile.dataUrl : (rawValue ? resolveMediaUrl(rawValue) : '');
+  const mimeType = uploadedFile?.mimeType || '';
+  const isPreviewImage = !isFileUpload || mimeType.startsWith('image/');
+  const isPdf = mimeType === 'application/pdf';
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -63,7 +78,7 @@ export const PaymentScreenshotPage = () => {
       <div className="mx-auto max-w-5xl px-4 py-6">
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
 
-        {!error && screenshot ? (
+        {!error && mediaUrl ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:p-6">
             <div className="mb-4 rounded-lg bg-slate-50 p-4">
               <p className="text-sm font-black text-slate-950">{registration?.userId?.email}</p>
@@ -71,15 +86,42 @@ export const PaymentScreenshotPage = () => {
                 Status: {registration?.status || 'pending'}
               </p>
             </div>
-            <img
-              src={screenshot}
-              alt={`${registration?.userId?.name || 'Student'} ${imageTitle}`}
-              className="mx-auto max-h-[75vh] w-full rounded-xl border border-slate-100 object-contain"
-            />
+            {isPreviewImage ? (
+              <img
+                src={mediaUrl}
+                alt={`${registration?.userId?.name || 'Student'} ${imageTitle}`}
+                className="mx-auto max-h-[75vh] w-full rounded-xl border border-slate-100 object-contain"
+              />
+            ) : isPdf ? (
+              <iframe
+                title={`${registration?.userId?.name || 'Student'} ${imageTitle}`}
+                src={mediaUrl}
+                className="h-[75vh] w-full rounded-xl border border-slate-100"
+              />
+            ) : (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-8 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-emerald-50 text-secondary">
+                  <FiFileText size={30} />
+                </div>
+                <p className="mt-4 break-words text-lg font-black text-slate-950">{uploadedFile?.name || imageTitle}</p>
+                <p className="mt-1 text-sm font-semibold text-slate-500">Preview is not available for this file type.</p>
+              </div>
+            )}
+            {isFileUpload && (
+              <a
+                href={mediaUrl}
+                download={uploadedFile?.name || 'uploaded-file'}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-3 text-sm font-black text-white transition hover:bg-slate-800"
+              >
+                <FiDownload /> Download file
+              </a>
+            )}
           </div>
         ) : !error ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center font-black text-slate-600">
-            No image uploaded.
+            No upload found.
           </div>
         ) : null}
       </div>
