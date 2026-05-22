@@ -2,24 +2,59 @@ import Registration from '../models/Registration.js';
 import Workshop from '../models/Workshop.js';
 import User from '../models/User.js';
 import { generateExcelReport } from '../utils/excelExport.js';
+import fs from 'fs';
 
 const safeExportFileName = (value = 'registrations') => String(value)
   .replace(/[^a-z0-9]+/gi, '-')
   .replace(/^-+|-+$/g, '')
   .toLowerCase() || 'registrations';
 
+const parseFormData = (formData) => {
+  if (!formData) return {};
+  if (typeof formData !== 'string') return formData;
+
+  try {
+    const parsed = JSON.parse(formData);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const uploadedFileToDataUrl = (file) => {
+  const fileBuffer = fs.readFileSync(file.path);
+  fs.unlink(file.path, (err) => {
+    if (err) console.error('Error deleting temporary upload:', err);
+  });
+  return `data:${file.mimetype};base64,${fileBuffer.toString('base64')}`;
+};
+
+const cleanupUploadedFile = (file) => {
+  if (!file?.path) return;
+  fs.unlink(file.path, (err) => {
+    if (err) console.error('Error deleting file:', err);
+  });
+};
+
 export const registerForWorkshop = async (req, res) => {
   try {
     const { workshopId, formData } = req.body;
+    const parsedFormData = parseFormData(formData);
 
     // Check if workshop exists
     const workshop = await Workshop.findById(workshopId);
     if (!workshop) {
+      cleanupUploadedFile(req.file);
       return res.status(404).json({ message: 'Workshop not found' });
     }
 
     if (workshop.isStopped || !workshop.registrationsOpen) {
+      cleanupUploadedFile(req.file);
       return res.status(400).json({ message: 'Registrations are closed for this workshop' });
+    }
+
+    if (workshop.qrImage && !req.file) {
+      return res.status(400).json({ message: 'Payment screenshot is required for this workshop' });
     }
 
     // Check if already registered
@@ -35,6 +70,7 @@ export const registerForWorkshop = async (req, res) => {
         rejected: 'Your registration was rejected. Please contact guidance for help.',
         cancelled: 'This registration was cancelled. Please contact guidance if you need help.'
       };
+      cleanupUploadedFile(req.file);
       return res.status(400).json({ message: statusMessages[existingRegistration.status] || 'You are already registered for this workshop' });
     }
 
@@ -46,6 +82,7 @@ export const registerForWorkshop = async (req, res) => {
       });
 
       if (registrationCount >= workshop.capacity) {
+        cleanupUploadedFile(req.file);
         return res.status(400).json({ message: 'Workshop is full' });
       }
     }
@@ -53,7 +90,8 @@ export const registerForWorkshop = async (req, res) => {
     const registration = new Registration({
       workshopId,
       userId: req.user.id,
-      formData,
+      formData: parsedFormData,
+      paymentScreenshot: req.file ? uploadedFileToDataUrl(req.file) : '',
       status: 'pending'
     });
 
@@ -65,6 +103,7 @@ export const registerForWorkshop = async (req, res) => {
       registration
     });
   } catch (error) {
+    cleanupUploadedFile(req.file);
     res.status(500).json({ message: 'Error registering for workshop', error: error.message });
   }
 };

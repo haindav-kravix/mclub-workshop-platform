@@ -39,9 +39,16 @@ export const WorkshopRegistrationPage = () => {
     loadData();
   }, [id, isAuthenticated]);
 
-  const handleRegistration = async (formData) => {
+  const handleRegistration = async (formData, paymentScreenshot) => {
     try {
-      await registrationAPI.registerForWorkshop({ workshopId: id, formData });
+      const payload = new FormData();
+      payload.append('workshopId', id);
+      payload.append('formData', JSON.stringify(formData));
+      if (paymentScreenshot) {
+        payload.append('paymentScreenshot', paymentScreenshot);
+      }
+
+      await registrationAPI.registerForWorkshop(payload);
       setRegistrationStatus('pending');
       setSuccess('Registration submitted. Your registration is under review. Check My Events for your latest status.');
       window.scrollTo({ top: 0, behavior: 'smooth' });

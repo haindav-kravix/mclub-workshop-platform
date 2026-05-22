@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FiCheck, FiInbox, FiTrash2, FiX } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
 
@@ -104,6 +104,7 @@ export const RegistrationsTable = ({
   emptyMessage = 'No registrations yet'
 }) => {
   const fields = buildFields(registrations, formFields);
+  const [previewImage, setPreviewImage] = useState(null);
 
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -150,6 +151,29 @@ export const RegistrationsTable = ({
                     ))}
                   </dl>
                 )}
+
+                <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50 p-3">
+                  <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Payment Screenshot</p>
+                  {reg.paymentScreenshot ? (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewImage({
+                        src: resolveMediaUrl(reg.paymentScreenshot),
+                        name: reg.userId?.name || 'Student'
+                      })}
+                      className="mt-2 inline-flex items-center gap-3 rounded-lg border border-emerald-200 bg-white p-2 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
+                    >
+                      <img
+                        src={resolveMediaUrl(reg.paymentScreenshot)}
+                        alt={`${reg.userId?.name || 'Student'} payment screenshot`}
+                        className="h-16 w-16 rounded-md object-cover"
+                      />
+                      <span className="text-sm font-black text-secondary">View screenshot</span>
+                    </button>
+                  ) : (
+                    <p className="mt-1 text-sm font-semibold text-slate-500">Not uploaded</p>
+                  )}
+                </div>
               </div>
 
               <div className="rounded-xl border border-slate-100 bg-white p-3 shadow-sm lg:sticky lg:top-24 lg:self-start">
@@ -173,6 +197,34 @@ export const RegistrationsTable = ({
           </div>
           <p className="font-black text-slate-700">{emptyMessage}</p>
           <p className="mt-1 text-sm">Students will appear here after they register.</p>
+        </div>
+      )}
+
+      {previewImage && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 p-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-secondary">Payment screenshot</p>
+                <h3 className="text-lg font-black text-slate-950">{previewImage.name}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+                aria-label="Close payment screenshot"
+              >
+                <FiX size={22} />
+              </button>
+            </div>
+            <div className="bg-slate-50 p-4">
+              <img
+                src={previewImage.src}
+                alt={`${previewImage.name} payment screenshot`}
+                className="mx-auto max-h-[70vh] w-full rounded-xl object-contain"
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

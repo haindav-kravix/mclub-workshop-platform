@@ -16,6 +16,10 @@ const registrationSchema = new mongoose.Schema({
     of: String,
     required: true
   },
+  paymentScreenshot: {
+    type: String,
+    default: ''
+  },
   status: {
     type: String,
     enum: ['confirmed', 'pending', 'cancelled', 'rejected'],

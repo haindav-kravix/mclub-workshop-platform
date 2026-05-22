@@ -35,9 +35,11 @@ const getOptionLabel = (index) => {
 export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal' }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState(() => getInitialFormData(workshop, user));
+  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const isModal = variant === 'modal';
+  const requiresPaymentScreenshot = Boolean(workshop.qrImage);
 
   useEffect(() => {
     if (!isModal) return undefined;
@@ -90,8 +92,14 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
     setLoading(true);
     setError('');
 
+    if (requiresPaymentScreenshot && !paymentScreenshot) {
+      setError('Please upload your payment screenshot');
+      setLoading(false);
+      return;
+    }
+
     try {
-      await onSubmit(formData);
+      await onSubmit(formData, paymentScreenshot);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -303,6 +311,29 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
             ))
         ) : (
           <p className="text-gray-500 text-center py-8">No form fields configured for this workshop</p>
+        )}
+
+        {workshop.qrImage && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+            <label className="block text-sm font-black text-slate-800 mb-2">
+              Upload Payment Screenshot <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              required
+              onChange={(event) => setPaymentScreenshot(event.target.files?.[0] || null)}
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            {paymentScreenshot && (
+              <p className="mt-2 text-xs font-bold text-emerald-700">
+                Selected: {paymentScreenshot.name}
+              </p>
+            )}
+            <p className="mt-2 text-xs font-semibold text-slate-500">
+              Upload the screenshot after completing payment through the QR shown above.
+            </p>
+          </div>
         )}
 
         {/* Buttons */}

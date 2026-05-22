@@ -1,11 +1,12 @@
 import express from 'express';
 import * as registrationController from '../controllers/registrationController.js';
 import { authenticateToken, adminOnly } from '../middleware/auth.js';
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
 // User routes
-router.post('/', authenticateToken, registrationController.registerForWorkshop);
+router.post('/', authenticateToken, upload.single('paymentScreenshot'), registrationController.registerForWorkshop);
 router.get('/my-registrations', authenticateToken, registrationController.getUserRegistrations);
 router.delete('/:registrationId', authenticateToken, registrationController.cancelRegistration);
 
