@@ -66,6 +66,11 @@ app.get('/api/health', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  if (err.name === 'MulterError' || err.message?.startsWith('Invalid file type')) {
+    return res.status(400).json({
+      message: err.message || 'Invalid uploaded file'
+    });
+  }
   res.status(500).json({ 
     message: 'Internal server error',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined

@@ -24,11 +24,24 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  if (allowedMimes.includes(file.mimetype)) {
+  const allowedMimes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/avif',
+    'image/heic',
+    'image/heif',
+    'application/octet-stream'
+  ];
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.heic', '.heif'];
+  const extension = path.extname(file.originalname || '').toLowerCase();
+
+  if (allowedMimes.includes(file.mimetype) && allowedExtensions.includes(extension)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'));
+    cb(new Error('Invalid file type. Please upload JPG, PNG, GIF, WebP, AVIF, HEIC, or HEIF image files.'));
   }
 };
 

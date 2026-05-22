@@ -320,7 +320,7 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
             </label>
             <input
               type="file"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.gif,.webp,.avif,.heic,.heif,image/*"
               required
               onChange={(event) => setPaymentScreenshot(event.target.files?.[0] || null)}
               className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary"

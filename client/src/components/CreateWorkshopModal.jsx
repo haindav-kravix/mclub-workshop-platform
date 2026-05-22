@@ -315,18 +315,18 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
             </label>
             <input
               type="file"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.gif,.webp,.avif,.heic,.heif,image/*"
               onChange={handleFileChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               required={!initialData}
             />
-            <p className="text-xs text-gray-500 mt-1">Max 10MB. Supported formats: JPG, PNG, GIF, WebP</p>
+            <p className="text-xs text-gray-500 mt-1">Max 10MB. Supported formats: JPG, PNG, GIF, WebP, AVIF, HEIC, HEIF</p>
           </div>
 
           {/* QR Image */}
           <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 p-4">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Display QR Image (optional)
+              Payment QR Image (optional)
             </label>
             {initialData?.qrImage && !formData.qrImage && (
               <div className="mb-3 flex flex-col gap-3 rounded-lg border border-emerald-100 bg-white p-3 sm:flex-row sm:items-center">
@@ -342,11 +342,11 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
             )}
             <input
               type="file"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.gif,.webp,.avif,.heic,.heif,image/*"
               onChange={handleQrFileChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary"
             />
-            <p className="text-xs text-gray-500 mt-1">Upload a payment, entry, or information QR image to show on the workshop pages.</p>
+            <p className="text-xs text-gray-500 mt-1">Upload the payment QR here. Students will see the screenshot upload field during registration after this QR is added.</p>
           </div>
 
           {/* Form Builder */}
