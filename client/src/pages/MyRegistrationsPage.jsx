@@ -67,10 +67,12 @@ export const MyRegistrationsPage = () => {
                         <FiCalendar size={16} />
                         <span>{new Date(registration.workshopId.date).toLocaleDateString()}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <FiClock size={16} />
-                        <span>{formatWorkshopTime(registration.workshopId)}</span>
-                      </div>
+                      {formatWorkshopTime(registration.workshopId) && (
+                        <div className="flex items-center space-x-2">
+                          <FiClock size={16} />
+                          <span>{formatWorkshopTime(registration.workshopId)}</span>
+                        </div>
+                      )}
                       <div className="flex items-center space-x-2">
                         <FiMapPin size={16} />
                         <span>{registration.workshopId.venue}</span>

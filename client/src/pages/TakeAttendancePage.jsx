@@ -6,6 +6,27 @@ import { FiArrowLeft, FiCheck, FiCopy, FiX } from 'react-icons/fi';
 
 const toDateInput = (value) => value ? new Date(value).toISOString().split('T')[0] : '';
 
+const addDaysToDateInput = (dateString, days) => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  date.setDate(date.getDate() + days);
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0')
+  ].join('-');
+};
+
+const getDatesBetween = (startDate, endDate) => {
+  if (!startDate) return [];
+  const dates = [];
+  const finalDate = endDate || startDate;
+  for (let current = startDate; current <= finalDate; current = addDaysToDateInput(current, 1)) {
+    dates.push(current);
+  }
+  return dates;
+};
+
 export const TakeAttendancePage = () => {
   const { workshopId } = useParams();
   const [searchParams] = useSearchParams();
@@ -66,7 +87,10 @@ export const TakeAttendancePage = () => {
     if (workshop?.dailyTimings?.length) {
       return workshop.dailyTimings.map(item => toDateInput(item.date));
     }
-    return [toDateInput(workshop?.startDate || workshop?.date)].filter(Boolean);
+    return getDatesBetween(
+      toDateInput(workshop?.startDate || workshop?.date),
+      toDateInput(workshop?.endDate || workshop?.startDate || workshop?.date)
+    );
   }, [workshop]);
 
   const setStatus = (userId, status) => {

@@ -48,13 +48,23 @@ const buildInitialTimings = (initialData) => {
   return [];
 };
 
+const hasConfiguredTimings = (initialData) => {
+  if (!initialData) return false;
+  return Boolean(
+    initialData.dailyTimings?.some(item => item.startTime || item.endTime) ||
+    initialData.time
+  );
+};
+
 export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, layout = 'modal' }) => {
+  const initialHasTimings = hasConfiguredTimings(initialData);
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     description: initialData?.description || '',
     startDate: toDateInput(initialData?.startDate || initialData?.date) || '',
     endDate: toDateInput(initialData?.endDate || initialData?.startDate || initialData?.date) || '',
-    dailyTimings: buildInitialTimings(initialData),
+    hasTimings: initialHasTimings,
+    dailyTimings: initialHasTimings ? buildInitialTimings(initialData) : [],
     telegramLink: initialData?.telegramLink || '',
     venue: initialData?.venue || '',
     duration: initialData?.duration || '',
@@ -74,7 +84,7 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
         [name]: value
       };
 
-      if (name === 'startDate' || name === 'endDate') {
+      if ((name === 'startDate' || name === 'endDate') && next.hasTimings) {
         const dates = getDatesBetween(name === 'startDate' ? value : next.startDate, name === 'endDate' ? value : next.endDate);
         const existing = new Map(prev.dailyTimings.map(item => [item.date, item]));
         next.dailyTimings = dates.map(date => existing.get(date) || { date, startTime: '', endTime: '' });
@@ -114,6 +124,20 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
     }));
   };
 
+  const handleTimingsToggle = (enabled) => {
+    setFormData(prev => {
+      const dates = getDatesBetween(prev.startDate, prev.endDate);
+      const existing = new Map(prev.dailyTimings.map(item => [item.date, item]));
+      return {
+        ...prev,
+        hasTimings: enabled,
+        dailyTimings: enabled
+          ? dates.map(date => existing.get(date) || { date, startTime: '', endTime: '' })
+          : []
+      };
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -123,7 +147,7 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
       return;
     }
 
-    if (formData.dailyTimings.length === 0 || formData.dailyTimings.some(item => !item.startTime || !item.endTime)) {
+    if (formData.hasTimings && (formData.dailyTimings.length === 0 || formData.dailyTimings.some(item => !item.startTime || !item.endTime))) {
       setError('Please add start and end timings for every workshop date');
       return;
     }
@@ -135,7 +159,10 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
 
     setLoading(true);
     try {
-      await onCreate(formData);
+      await onCreate({
+        ...formData,
+        dailyTimings: formData.hasTimings ? formData.dailyTimings : []
+      });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -224,7 +251,29 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
           </div>
 
           {/* Daily Timings */}
-          {formData.dailyTimings.length > 0 && (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-slate-900">Set workshop timings</p>
+                <p className="text-xs font-semibold text-slate-500">
+                  Keep this off when the workshop dates are enough. Turn it on only if every date needs a start and end time.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleTimingsToggle(!formData.hasTimings)}
+                className={`inline-flex h-11 min-w-28 items-center justify-center rounded-lg px-4 text-sm font-black transition ${
+                  formData.hasTimings
+                    ? 'bg-primary text-secondary shadow-sm'
+                    : 'bg-white text-slate-700 border border-slate-200'
+                }`}
+              >
+                {formData.hasTimings ? 'Timings On' : 'Timings Off'}
+              </button>
+            </div>
+          </div>
+
+          {formData.hasTimings && formData.dailyTimings.length > 0 && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">Timings for all dates *</label>
               <div className="space-y-3">

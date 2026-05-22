@@ -126,10 +126,9 @@ export const WorkshopDetailPage = () => {
             <div className="flex items-center space-x-3 rounded-lg bg-slate-50 p-4 soft-border">
               <FiClock className="text-primary text-2xl" />
               <div>
-                <p className="text-gray-600 text-sm">Time & Duration</p>
+                <p className="text-gray-600 text-sm">{formatWorkshopTime(workshop) ? 'Time & Duration' : 'Duration'}</p>
                 <p className="font-semibold text-gray-900">
-                  {formatWorkshopTime(workshop)}
-                  {' '}({workshop.duration})
+                  {formatWorkshopTime(workshop) ? `${formatWorkshopTime(workshop)} (${workshop.duration})` : workshop.duration}
                 </p>
               </div>
             </div>
@@ -159,11 +158,11 @@ export const WorkshopDetailPage = () => {
             <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{workshop.description}</p>
           </div>
 
-          {workshop.dailyTimings?.length > 0 && (
+          {workshop.dailyTimings?.some(timing => timing.startTime || timing.endTime) && (
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Schedule</h2>
               <div className="grid sm:grid-cols-2 gap-3">
-                {workshop.dailyTimings.map((timing) => (
+                {workshop.dailyTimings.filter(timing => timing.startTime || timing.endTime).map((timing) => (
                   <div key={`${timing.date}-${timing.startTime}`} className="rounded-lg bg-slate-50 p-4 soft-border">
                     <p className="font-semibold text-slate-900">{new Date(timing.date).toLocaleDateString()}</p>
                     <p className="text-slate-600">{formatTimeRange12Hour(timing.startTime, timing.endTime)}</p>

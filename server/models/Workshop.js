@@ -39,11 +39,11 @@ const dailyTimingSchema = new mongoose.Schema({
   },
   startTime: {
     type: String,
-    required: true
+    default: ''
   },
   endTime: {
     type: String,
-    required: true
+    default: ''
   }
 }, { _id: false });
 
@@ -76,7 +76,7 @@ const workshopSchema = new mongoose.Schema({
   },
   time: {
     type: String,
-    required: true
+    default: ''
   },
   dailyTimings: {
     type: [dailyTimingSchema],

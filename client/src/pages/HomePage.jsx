@@ -176,10 +176,17 @@ export const HomePage = () => {
                         <FiCalendar className="mb-2 text-primary" />
                         <p className="text-sm font-bold">{new Date(featuredWorkshop.startDate || featuredWorkshop.date).toLocaleDateString()}</p>
                       </div>
-                      <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
-                        <FiClock className="mb-2 text-primary" />
-                        <p className="text-sm font-bold">{formatWorkshopTime(featuredWorkshop)}</p>
-                      </div>
+                      {formatWorkshopTime(featuredWorkshop) ? (
+                        <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
+                          <FiClock className="mb-2 text-primary" />
+                          <p className="text-sm font-bold">{formatWorkshopTime(featuredWorkshop)}</p>
+                        </div>
+                      ) : (
+                        <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
+                          <FiClock className="mb-2 text-primary" />
+                          <p className="text-sm font-bold">{featuredWorkshop.duration}</p>
+                        </div>
+                      )}
                       <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
                         <FiMapPin className="mb-2 text-primary" />
                         <p className="truncate text-sm font-bold">{featuredWorkshop.venue}</p>

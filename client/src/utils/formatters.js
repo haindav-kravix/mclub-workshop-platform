@@ -21,7 +21,7 @@ export const formatTimeRange12Hour = (startTime, endTime) => {
 };
 
 export const formatWorkshopTime = (workshop) => {
-  const firstTiming = workshop?.dailyTimings?.[0];
+  const firstTiming = workshop?.dailyTimings?.find(item => item.startTime || item.endTime);
   if (firstTiming) {
     return formatTimeRange12Hour(firstTiming.startTime, firstTiming.endTime);
   }

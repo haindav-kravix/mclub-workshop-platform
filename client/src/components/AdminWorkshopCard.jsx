@@ -76,7 +76,10 @@ export const AdminWorkshopCard = ({
         </div>
 
         <div className="text-sm text-slate-600 mb-5 grid gap-2">
-          <p className="flex items-center gap-2"><FiCalendar className="text-primary" /> {new Date(workshop.date).toLocaleDateString()} at {formatWorkshopTime(workshop)}</p>
+          <p className="flex items-center gap-2">
+            <FiCalendar className="text-primary" />
+            {new Date(workshop.date).toLocaleDateString()}{formatWorkshopTime(workshop) ? ` at ${formatWorkshopTime(workshop)}` : ''}
+          </p>
           <p className="flex items-center gap-2"><FiMapPin className="text-primary" /> {workshop.venue}</p>
           <p className="flex items-center gap-2"><FiClock className="text-primary" /> {workshop.duration}</p>
           {workshop.capacity && <p className="flex items-center gap-2"><FiUsers className="text-primary" /> Capacity: {workshop.capacity}</p>}

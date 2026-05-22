@@ -54,10 +54,12 @@ export const WorkshopCard = ({ workshop, onClick }) => {
               {workshop.endDate && workshop.endDate !== (workshop.startDate || workshop.date) ? ` - ${new Date(workshop.endDate).toLocaleDateString()}` : ''}
             </span>
           </div>
-          <div className="flex items-center space-x-2">
-            <FiClock size={16} />
-            <span>{formatWorkshopTime(workshop)}</span>
-          </div>
+          {formatWorkshopTime(workshop) && (
+            <div className="flex items-center space-x-2">
+              <FiClock size={16} />
+              <span>{formatWorkshopTime(workshop)}</span>
+            </div>
+          )}
           <div className="flex items-center space-x-2">
             <FiMapPin size={16} />
             <span>{workshop.venue}</span>

@@ -354,7 +354,7 @@ const buildWorkshopReportDocx = async ({ workshop, registrations, attendanceRepo
     ['Workshop Dates', workshopDates],
     ['Venue / Mode', workshop.venue],
     ['Duration', workshop.duration],
-    ['Timing', workshop.time],
+    ['Timing', workshop.time || 'Not specified'],
     ['Registration Status', workshop.registrationsOpen !== false && !workshop.isStopped ? 'Open' : 'Closed'],
     ['Workshop Status', workshop.isStopped ? 'Stopped' : 'Running'],
     ['Report Generated On', submissionDate],
@@ -365,9 +365,9 @@ const buildWorkshopReportDocx = async ({ workshop, registrations, attendanceRepo
     ['Date', 'Start Time', 'End Time'],
     ...(workshop.dailyTimings?.length ? workshop.dailyTimings.map(item => [
       formatDate(item.date),
-      item.startTime,
-      item.endTime
-    ]) : [[formatDate(workshop.date), workshop.time, '-']])
+      item.startTime || 'Not specified',
+      item.endTime || 'Not specified'
+    ]) : [[formatDate(workshop.date), workshop.time || 'Not specified', '-']])
   ];
 
   const analyticsRows = [
@@ -495,7 +495,13 @@ export const createWorkshop = async (req, res) => {
       dailyTimings,
       telegramLink
     } = req.body;
-    const parsedTimings = parseDailyTimings(dailyTimings);
+    const parsedTimings = parseDailyTimings(dailyTimings)
+      .filter(item => item?.date)
+      .map(item => ({
+        date: item.date,
+        startTime: item.startTime || '',
+        endTime: item.endTime || ''
+      }));
     const firstTiming = parsedTimings[0];
 
     const coverImageFile = getUploadedFile(req, 'coverImage');
@@ -516,7 +522,7 @@ export const createWorkshop = async (req, res) => {
       date: startDate || date,
       startDate: startDate || date,
       endDate: endDate || startDate || date,
-      time: firstTiming?.startTime || time,
+      time: firstTiming?.startTime || time || '',
       dailyTimings: parsedTimings,
       telegramLink: telegramLink || '',
       venue,
@@ -578,7 +584,13 @@ export const updateWorkshop = async (req, res) => {
       dailyTimings,
       telegramLink
     } = req.body;
-    const parsedTimings = parseDailyTimings(dailyTimings);
+    const parsedTimings = parseDailyTimings(dailyTimings)
+      .filter(item => item?.date)
+      .map(item => ({
+        date: item.date,
+        startTime: item.startTime || '',
+        endTime: item.endTime || ''
+      }));
     const firstTiming = parsedTimings[0];
 
     const updateData = {
@@ -587,7 +599,7 @@ export const updateWorkshop = async (req, res) => {
       date: startDate || date,
       startDate: startDate || date,
       endDate: endDate || startDate || date,
-      time: firstTiming?.startTime || time,
+      time: firstTiming?.startTime || time || '',
       dailyTimings: parsedTimings,
       telegramLink: telegramLink || '',
       venue,
