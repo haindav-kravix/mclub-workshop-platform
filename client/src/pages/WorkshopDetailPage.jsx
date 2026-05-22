@@ -173,20 +173,6 @@ export const WorkshopDetailPage = () => {
             </div>
           )}
 
-          {workshop.qrImage && (
-            <div className="mb-8 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 sm:p-5">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Workshop QR</h2>
-              <p className="mb-4 text-sm font-semibold text-slate-600">Scan or save this QR if it is required for this workshop.</p>
-              <div className="flex justify-center rounded-xl border border-white bg-white p-4 shadow-sm">
-                <img
-                  src={resolveMediaUrl(workshop.qrImage)}
-                  alt={`${workshop.title} QR`}
-                  className="max-h-80 w-full max-w-xs object-contain"
-                />
-              </div>
-            </div>
-          )}
-
           {/* Registration Button */}
           {registrationStatus === 'confirmed' ? (
             <div className="grid gap-3">

@@ -102,8 +102,8 @@ export const WorkshopRegistrationPage = () => {
           <>
             {workshop.qrImage && (
               <div className="mb-5 rounded-2xl border border-emerald-200 bg-white p-5 text-center shadow-xl">
-                <h2 className="text-xl font-black text-slate-950">Workshop QR</h2>
-                <p className="mt-1 text-sm font-semibold text-slate-600">Scan or save this QR before submitting if it is required.</p>
+                <h2 className="text-xl font-black text-slate-950">Payment QR</h2>
+                <p className="mt-1 text-sm font-semibold text-slate-600">Complete the payment here, then upload the screenshot below.</p>
                 <img
                   src={resolveMediaUrl(workshop.qrImage)}
                   alt={`${workshop.title} QR`}
