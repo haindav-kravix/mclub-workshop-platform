@@ -36,24 +36,46 @@ const cleanupUploadedFile = (file) => {
   });
 };
 
+const getUploadedFile = (req, fieldName) => {
+  if (req.file?.fieldname === fieldName) return req.file;
+  return (req.files || []).find(file => file.fieldname === fieldName) || null;
+};
+
+const cleanupUploadedFiles = (req) => {
+  cleanupUploadedFile(req.file);
+  (req.files || []).forEach(cleanupUploadedFile);
+};
+
+const attachRegistrationImages = (formData, files = []) => {
+  const nextFormData = { ...formData };
+  files
+    .filter(file => file.fieldname !== 'paymentScreenshot')
+    .forEach(file => {
+      nextFormData[file.fieldname] = uploadedFileToDataUrl(file);
+    });
+  return nextFormData;
+};
+
 export const registerForWorkshop = async (req, res) => {
   try {
     const { workshopId, formData } = req.body;
-    const parsedFormData = parseFormData(formData);
+    let parsedFormData = parseFormData(formData);
+    const paymentScreenshotFile = getUploadedFile(req, 'paymentScreenshot');
 
     // Check if workshop exists
     const workshop = await Workshop.findById(workshopId);
     if (!workshop) {
-      cleanupUploadedFile(req.file);
+      cleanupUploadedFiles(req);
       return res.status(404).json({ message: 'Workshop not found' });
     }
 
     if (workshop.isStopped || !workshop.registrationsOpen) {
-      cleanupUploadedFile(req.file);
+      cleanupUploadedFiles(req);
       return res.status(400).json({ message: 'Registrations are closed for this workshop' });
     }
 
-    if (workshop.qrImage && !req.file) {
+    if (workshop.qrImage && !paymentScreenshotFile) {
+      cleanupUploadedFiles(req);
       return res.status(400).json({ message: 'Payment screenshot is required for this workshop' });
     }
 
@@ -70,7 +92,7 @@ export const registerForWorkshop = async (req, res) => {
         rejected: 'Your registration was rejected. Please contact guidance for help.',
         cancelled: 'This registration was cancelled. Please contact guidance if you need help.'
       };
-      cleanupUploadedFile(req.file);
+      cleanupUploadedFiles(req);
       return res.status(400).json({ message: statusMessages[existingRegistration.status] || 'You are already registered for this workshop' });
     }
 
@@ -82,16 +104,18 @@ export const registerForWorkshop = async (req, res) => {
       });
 
       if (registrationCount >= workshop.capacity) {
-        cleanupUploadedFile(req.file);
+        cleanupUploadedFiles(req);
         return res.status(400).json({ message: 'Workshop is full' });
       }
     }
+
+    parsedFormData = attachRegistrationImages(parsedFormData, req.files || []);
 
     const registration = new Registration({
       workshopId,
       userId: req.user.id,
       formData: parsedFormData,
-      paymentScreenshot: req.file ? uploadedFileToDataUrl(req.file) : '',
+      paymentScreenshot: paymentScreenshotFile ? uploadedFileToDataUrl(paymentScreenshotFile) : '',
       status: 'pending'
     });
 
@@ -103,7 +127,7 @@ export const registerForWorkshop = async (req, res) => {
       registration
     });
   } catch (error) {
-    cleanupUploadedFile(req.file);
+    cleanupUploadedFiles(req);
     res.status(500).json({ message: 'Error registering for workshop', error: error.message });
   }
 };

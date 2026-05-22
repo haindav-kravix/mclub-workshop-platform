@@ -191,7 +191,7 @@ export const RegistrationsPage = () => {
           formFields={workshop?.registrationFormFields || []}
           onDeleteRegistration={handleDeleteRegistration}
           onUpdateRegistrationStatus={handleUpdateRegistrationStatus}
-          onViewPaymentScreenshot={(registrationId) => navigate(`/admin/registrations/${workshopId}/payment/${registrationId}`)}
+          onViewPaymentScreenshot={(registrationId, imageKey = 'paymentScreenshot') => navigate(`/admin/registrations/${workshopId}/image/${registrationId}/${imageKey}`)}
           loading={deleting}
           emptyMessage={activeStatus === 'all' ? 'No registrations yet' : `No ${activeCard.label.toLowerCase()} registrations`}
         />

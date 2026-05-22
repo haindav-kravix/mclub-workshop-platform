@@ -36,6 +36,7 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
   const { user } = useAuth();
   const [formData, setFormData] = useState(() => getInitialFormData(workshop, user));
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
+  const [imageFiles, setImageFiles] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const isModal = variant === 'modal';
@@ -98,8 +99,17 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
       return;
     }
 
+    const missingRequiredImageField = (workshop.registrationFormFields || []).find(field =>
+      field.type === 'image' && field.required && !imageFiles[field.fieldId]
+    );
+    if (missingRequiredImageField) {
+      setError(`Please upload ${missingRequiredImageField.label}`);
+      setLoading(false);
+      return;
+    }
+
     try {
-      await onSubmit(formData, paymentScreenshot);
+      await onSubmit(formData, paymentScreenshot, imageFiles);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -184,6 +194,32 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
                     placeholder={field.label}
                     rows="4"
                   />
+                )}
+
+                {field.type === 'image' && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.gif,.webp,.avif,.heic,.heif,image/*"
+                      required={field.required}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] || null;
+                        setImageFiles(prev => ({
+                          ...prev,
+                          [field.fieldId]: file
+                        }));
+                      }}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    {imageFiles[field.fieldId] && (
+                      <p className="mt-2 text-xs font-bold text-emerald-700">
+                        Selected: {imageFiles[field.fieldId].name}
+                      </p>
+                    )}
+                    <p className="mt-2 text-xs font-semibold text-slate-500">
+                      Upload JPG, PNG, GIF, WebP, AVIF, HEIC, or HEIF.
+                    </p>
+                  </div>
                 )}
 
                 {field.type === 'select' && (

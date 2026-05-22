@@ -5,7 +5,7 @@ import { ErrorMessage, LoadingSpinner } from '../components/UI';
 import { registrationAPI, resolveMediaUrl, workshopAPI } from '../utils/api';
 
 export const PaymentScreenshotPage = () => {
-  const { workshopId, registrationId } = useParams();
+  const { workshopId, registrationId, imageKey = 'paymentScreenshot' } = useParams();
   const navigate = useNavigate();
   const [workshop, setWorkshop] = useState(null);
   const [registration, setRegistration] = useState(null);
@@ -22,12 +22,12 @@ export const PaymentScreenshotPage = () => {
         setWorkshop(workshopResponse.data);
         const found = registrationsResponse.data.find(item => item._id === registrationId);
         if (!found) {
-          setError('Payment screenshot not found');
+          setError('Image not found');
         } else {
           setRegistration(found);
         }
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load payment screenshot');
+        setError(err.response?.data?.message || 'Failed to load image');
       } finally {
         setLoading(false);
       }
@@ -38,7 +38,11 @@ export const PaymentScreenshotPage = () => {
 
   if (loading) return <LoadingSpinner />;
 
-  const screenshot = registration?.paymentScreenshot ? resolveMediaUrl(registration.paymentScreenshot) : '';
+  const imageField = (workshop?.registrationFormFields || []).find(field => field.fieldId === imageKey);
+  const isPaymentScreenshot = imageKey === 'paymentScreenshot';
+  const imageTitle = isPaymentScreenshot ? 'Payment screenshot' : (imageField?.label || 'Uploaded image');
+  const imageValue = isPaymentScreenshot ? registration?.paymentScreenshot : registration?.formData?.[imageKey];
+  const screenshot = imageValue ? resolveMediaUrl(imageValue) : '';
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -50,7 +54,7 @@ export const PaymentScreenshotPage = () => {
           >
             <FiArrowLeft /> Back to Registrations
           </button>
-          <p className="mt-5 text-xs font-black uppercase tracking-wide text-secondary">Payment screenshot</p>
+          <p className="mt-5 text-xs font-black uppercase tracking-wide text-secondary">{imageTitle}</p>
           <h1 className="mt-2 break-words text-3xl font-black text-slate-950">{registration?.userId?.name || 'Student'}</h1>
           <p className="mt-1 break-words text-sm font-semibold text-slate-500">{workshop?.title}</p>
         </div>
@@ -69,13 +73,13 @@ export const PaymentScreenshotPage = () => {
             </div>
             <img
               src={screenshot}
-              alt={`${registration?.userId?.name || 'Student'} payment screenshot`}
+              alt={`${registration?.userId?.name || 'Student'} ${imageTitle}`}
               className="mx-auto max-h-[75vh] w-full rounded-xl border border-slate-100 object-contain"
             />
           </div>
         ) : !error ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center font-black text-slate-600">
-            No payment screenshot uploaded.
+            No image uploaded.
           </div>
         ) : null}
       </div>

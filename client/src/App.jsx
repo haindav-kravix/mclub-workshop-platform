@@ -141,6 +141,14 @@ const AppContent = () => {
             }
           />
           <Route
+            path="/admin/registrations/:workshopId/image/:registrationId/:imageKey"
+            element={
+              <PrivateRoute requireAdmin={true}>
+                <PaymentScreenshotPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/admin/workshops/new"
             element={
               <PrivateRoute requireAdmin={true}>

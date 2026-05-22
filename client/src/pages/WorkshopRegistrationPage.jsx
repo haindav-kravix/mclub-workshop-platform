@@ -39,7 +39,7 @@ export const WorkshopRegistrationPage = () => {
     loadData();
   }, [id, isAuthenticated]);
 
-  const handleRegistration = async (formData, paymentScreenshot) => {
+  const handleRegistration = async (formData, paymentScreenshot, imageFiles = {}) => {
     try {
       const payload = new FormData();
       payload.append('workshopId', id);
@@ -47,6 +47,9 @@ export const WorkshopRegistrationPage = () => {
       if (paymentScreenshot) {
         payload.append('paymentScreenshot', paymentScreenshot);
       }
+      Object.entries(imageFiles).forEach(([fieldId, file]) => {
+        if (file) payload.append(fieldId, file);
+      });
 
       await registrationAPI.registerForWorkshop(payload);
       setRegistrationStatus('pending');

@@ -13,7 +13,8 @@ const buildFields = (registrations, formFields = []) => {
   const orderedFields = [...formFields].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const fields = orderedFields.map(field => ({
     id: field.fieldId,
-    label: field.label || field.fieldId
+    label: field.label || field.fieldId,
+    type: field.type || 'text'
   }));
   const knownIds = new Set(fields.map(field => field.id));
 
@@ -21,7 +22,7 @@ const buildFields = (registrations, formFields = []) => {
     Object.keys(reg.formData || {}).forEach((fieldId) => {
       if (!knownIds.has(fieldId)) {
         knownIds.add(fieldId);
-        fields.push({ id: fieldId, label: fieldId });
+        fields.push({ id: fieldId, label: fieldId, type: 'text' });
       }
     });
   });
@@ -144,9 +145,26 @@ export const RegistrationsTable = ({
                     {fields.map(field => (
                       <div key={field.id} className="min-w-0 rounded-lg border border-slate-100 bg-slate-50 p-3">
                         <dt className="text-[11px] font-black uppercase tracking-wide text-slate-500">{field.label}</dt>
-                        <dd className="mt-1 whitespace-pre-wrap break-words text-sm font-semibold leading-relaxed text-slate-900">
-                          {getFormValue(reg.formData, field.id) || '-'}
-                        </dd>
+                        {field.type === 'image' && getFormValue(reg.formData, field.id) ? (
+                          <dd className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() => onViewPaymentScreenshot?.(reg._id, field.id)}
+                              className="inline-flex items-center gap-3 rounded-lg border border-emerald-200 bg-white p-2 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
+                            >
+                              <img
+                                src={resolveMediaUrl(getFormValue(reg.formData, field.id))}
+                                alt={`${field.label} upload`}
+                                className="h-16 w-16 rounded-md object-cover"
+                              />
+                              <span className="text-sm font-black text-secondary">View image</span>
+                            </button>
+                          </dd>
+                        ) : (
+                          <dd className="mt-1 whitespace-pre-wrap break-words text-sm font-semibold leading-relaxed text-slate-900">
+                            {getFormValue(reg.formData, field.id) || '-'}
+                          </dd>
+                        )}
                       </div>
                     ))}
                   </dl>
@@ -157,7 +175,7 @@ export const RegistrationsTable = ({
                   {reg.paymentScreenshot ? (
                     <button
                       type="button"
-                      onClick={() => onViewPaymentScreenshot?.(reg._id)}
+                      onClick={() => onViewPaymentScreenshot?.(reg._id, 'paymentScreenshot')}
                       className="mt-2 inline-flex items-center gap-3 rounded-lg border border-emerald-200 bg-white p-2 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
                     >
                       <img

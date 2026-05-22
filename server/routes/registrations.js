@@ -6,7 +6,7 @@ import upload from '../middleware/upload.js';
 const router = express.Router();
 
 // User routes
-router.post('/', authenticateToken, upload.single('paymentScreenshot'), registrationController.registerForWorkshop);
+router.post('/', authenticateToken, upload.any(), registrationController.registerForWorkshop);
 router.get('/my-registrations', authenticateToken, registrationController.getUserRegistrations);
 router.delete('/:registrationId', authenticateToken, registrationController.cancelRegistration);
 
