@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { FiCalendar, FiClock, FiMapPin, FiArrowLeft, FiSend } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { formatTimeRange12Hour, formatWorkshopTime } from '../utils/formatters';
+import { getEventLabel } from '../utils/eventLabels';
 
 export const WorkshopDetailPage = () => {
   const { id } = useParams();
@@ -46,18 +47,20 @@ export const WorkshopDetailPage = () => {
   if (!workshop) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Workshop Not Found</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Event Not Found</h2>
         <button
           onClick={() => navigate('/workshops')}
           className="text-primary hover:underline"
         >
-          Back to Workshops
+          Back to Events
         </button>
       </div>
     </div>
   );
 
   const registrationsOpen = workshop.registrationsOpen !== false && !workshop.isStopped;
+  const eventLabel = getEventLabel(workshop);
+  const eventLower = getEventLabel(workshop, 'lower');
 
   return (
     <div className="min-h-screen app-shell">
@@ -68,7 +71,7 @@ export const WorkshopDetailPage = () => {
             onClick={() => navigate('/workshops')}
             className="flex items-center space-x-2 text-primary hover:text-primary/80 transition font-medium"
           >
-            <FiArrowLeft /> <span>Back to Workshops</span>
+            <FiArrowLeft /> <span>Back to Events</span>
           </button>
         </div>
       </div>
@@ -96,13 +99,13 @@ export const WorkshopDetailPage = () => {
           )}
         </div>
 
-        {/* Workshop Details */}
+        {/* Event Details */}
         <div className="panel rounded-lg p-4 sm:p-8 mb-8">
           <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4 break-words">{workshop.title}</h1>
           <div className={`inline-flex mb-5 rounded-lg px-3 py-1 text-sm font-bold ${
             registrationsOpen ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
           }`}>
-            Registrations {registrationsOpen ? 'Open' : 'Closed'}
+            {eventLabel} Registrations {registrationsOpen ? 'Open' : 'Closed'}
           </div>
 
           {/* Meta Information */}
@@ -154,7 +157,7 @@ export const WorkshopDetailPage = () => {
 
           {/* Description */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Workshop</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">About This {eventLabel}</h2>
             <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{workshop.description}</p>
           </div>
 
@@ -212,7 +215,7 @@ export const WorkshopDetailPage = () => {
           ) : (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
               <p className="text-blue-900 font-medium">
-                Please <a href="/login" className="underline hover:no-underline">sign in</a> to register for this workshop
+                Please <a href="/login" className="underline hover:no-underline">sign in</a> to register for this {eventLower}
               </p>
             </div>
           )}

@@ -48,6 +48,11 @@ const dailyTimingSchema = new mongoose.Schema({
 }, { _id: false });
 
 const workshopSchema = new mongoose.Schema({
+  eventType: {
+    type: String,
+    enum: ['workshop', 'internship'],
+    default: 'workshop'
+  },
   title: {
     type: String,
     required: true

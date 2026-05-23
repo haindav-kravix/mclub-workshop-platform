@@ -4,6 +4,7 @@ import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
 import { AdminWorkshopCard } from '../components/AdminWorkshopCard';
 import { FiCalendar, FiCheckCircle, FiMail, FiPlus, FiUsers, FiX, FiXCircle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { getEventLabel } from '../utils/eventLabels';
 
 export const AdminDashboard = () => {
   const [workshops, setWorkshops] = useState([]);
@@ -32,11 +33,13 @@ export const AdminDashboard = () => {
   };
 
   const handleDeleteWorkshop = async (workshopId) => {
-    if (window.confirm('Are you sure you want to delete this workshop? This action cannot be undone.')) {
+    const item = workshops.find(w => w._id === workshopId);
+    const label = getEventLabel(item, 'lower');
+    if (window.confirm(`Are you sure you want to delete this ${label}? This action cannot be undone.`)) {
       try {
         await workshopAPI.deleteWorkshop(workshopId);
         setWorkshops(workshops.filter(w => w._id !== workshopId));
-        setSuccess('Workshop deleted successfully');
+        setSuccess(`${getEventLabel(item)} deleted successfully`);
       } catch (err) {
         setError('Failed to delete workshop');
         console.error(err);
@@ -71,12 +74,12 @@ export const AdminDashboard = () => {
       const link = document.createElement('a');
       link.href = url;
       const workshop = workshops.find(w => w._id === workshopId);
-      link.setAttribute('download', `${workshop.title}-workshop-report.docx`);
+      link.setAttribute('download', `${workshop.title}-${getEventLabel(workshop, 'lower')}-report.docx`);
       document.body.appendChild(link);
       link.click();
       link.parentElement.removeChild(link);
       window.URL.revokeObjectURL(url);
-      setSuccess('Workshop report downloaded successfully');
+      setSuccess(`${getEventLabel(workshop)} report downloaded successfully`);
     } catch (err) {
       setError('Failed to generate workshop report');
       console.error(err);
@@ -104,7 +107,7 @@ export const AdminDashboard = () => {
     try {
       const response = await workshopAPI.toggleStoppedStatus(workshopId);
       updateWorkshopInState(response.data.workshop);
-      setSuccess(`Workshop ${response.data.workshop.isStopped ? 'stopped' : 'resumed'}`);
+      setSuccess(`${getEventLabel(response.data.workshop)} ${response.data.workshop.isStopped ? 'stopped' : 'resumed'}`);
     } catch (err) {
       setError('Failed to update workshop status');
       console.error(err);
@@ -159,7 +162,7 @@ export const AdminDashboard = () => {
   const confirmedRegistrations = workshops.reduce((total, workshop) => total + (workshop.confirmedRegistrationCount ?? workshop.registrationStats?.confirmed ?? workshop.registrationCount ?? 0), 0);
   const rejectedRegistrations = workshops.reduce((total, workshop) => total + (workshop.rejectedRegistrationCount ?? workshop.registrationStats?.rejected ?? 0), 0);
   const statCards = [
-    { label: 'Total Workshops', value: workshops.length, icon: FiCalendar },
+    { label: 'Total Events', value: workshops.length, icon: FiCalendar },
     { label: 'Registrations', value: totalRegistrations, icon: FiUsers },
     { label: 'Confirmed', value: confirmedRegistrations, icon: FiCheckCircle },
     { label: 'Rejected', value: rejectedRegistrations, icon: FiXCircle }
@@ -174,13 +177,13 @@ export const AdminDashboard = () => {
             <div>
               <p className="text-sm font-semibold text-secondary uppercase tracking-wide mb-2">Shared admin portal</p>
               <h1 className="text-3xl sm:text-4xl font-bold">Admin Dashboard</h1>
-              <p className="text-slate-300 mt-2">Every admin can manage every workshop, registration, and export.</p>
+              <p className="text-slate-300 mt-2">Every admin can manage workshops, internships, registrations, and exports.</p>
             </div>
             <button
               onClick={() => navigate('/admin/workshops/new')}
               className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-primary text-slate-950 rounded-lg hover:bg-primary/80 transition font-bold"
             >
-              <FiPlus /> <span>Create Workshop</span>
+              <FiPlus /> <span>Create Event</span>
             </button>
           </div>
 
@@ -209,12 +212,12 @@ export const AdminDashboard = () => {
 
         {workshops.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <p className="text-gray-600 text-lg mb-4">You haven't created any workshops yet</p>
+            <p className="text-gray-600 text-lg mb-4">You haven't created any workshops or internships yet</p>
             <button
               onClick={() => navigate('/admin/workshops/new')}
               className="inline-flex items-center space-x-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-bold"
             >
-              <FiPlus /> <span>Create Your First Workshop</span>
+              <FiPlus /> <span>Create Your First Event</span>
             </button>
           </div>
         ) : (

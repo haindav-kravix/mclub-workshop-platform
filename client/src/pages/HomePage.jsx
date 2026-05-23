@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { workshopAPI, resolveMediaUrl } from '../utils/api';
 import { formatWorkshopTime } from '../utils/formatters';
 import { FiArrowRight, FiAward, FiBriefcase, FiCalendar, FiClock, FiMapPin } from 'react-icons/fi';
+import { getEventLabel } from '../utils/eventLabels';
 
 export const HomePage = () => {
   const { isAuthenticated } = useAuth();
@@ -31,6 +32,7 @@ export const HomePage = () => {
   }, []);
 
   const featuredWorkshop = workshops[0];
+  const featuredLabel = getEventLabel(featuredWorkshop);
 
   return (
     <div className="min-h-screen app-shell">
@@ -39,13 +41,13 @@ export const HomePage = () => {
         <div className="max-w-7xl mx-auto px-4 py-10 sm:py-16 lg:py-20 grid lg:grid-cols-[1.05fr_0.95fr] gap-6 sm:gap-10 items-center">
           <div>
             <div className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-sm font-semibold text-secondary mb-6">
-              <FiCalendar /> Live workshops and technical sessions
+              <FiCalendar /> Live workshops, internships, and technical sessions
             </div>
             <h1 className="text-3xl min-[380px]:text-4xl sm:text-6xl font-bold mb-6 leading-tight">
               MongoDB Technical Club
             </h1>
             <p className="text-lg sm:text-xl text-slate-300 mb-8 max-w-2xl">
-              Discover practical workshops, register in seconds, and build stronger database skills with a focused technical community.
+              Discover practical workshops and internship registrations, register in seconds, and build stronger database skills with a focused technical community.
             </p>
             <div className="grid sm:grid-cols-2 gap-3 mb-8 max-w-2xl">
               <div className="rounded-lg border border-white/10 bg-white/10 p-4">
@@ -64,7 +66,7 @@ export const HomePage = () => {
                 to="/workshops"
                 className="inline-flex items-center justify-center space-x-2 px-8 py-3 bg-primary text-slate-950 rounded-lg font-bold hover:bg-primary/80 transition"
               >
-                <span>Browse Workshops</span>
+                <span>Browse Events</span>
                 <FiArrowRight />
               </Link>
             ) : (
@@ -112,13 +114,13 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* Upcoming Workshop Section */}
+      {/* Upcoming Event Section */}
       {(workshopsLoading || featuredWorkshop) && (
         <div className="py-12 sm:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
               <div>
-                <h2 className="text-3xl sm:text-4xl font-bold text-slate-950">Upcoming Workshop</h2>
+                <h2 className="text-3xl sm:text-4xl font-bold text-slate-950">Upcoming {featuredWorkshop ? featuredLabel : 'Event'}</h2>
               </div>
               <Link
                 to="/workshops"
@@ -165,7 +167,7 @@ export const HomePage = () => {
                       </div>
                     )}
                     <div className="absolute left-4 top-4 rounded-lg bg-white/90 px-3 py-1 text-xs font-black text-emerald-700 shadow-sm">
-                      Registrations {featuredWorkshop.registrationsOpen !== false ? 'Open' : 'Closed'}
+                      {featuredLabel} Registrations {featuredWorkshop.registrationsOpen !== false ? 'Open' : 'Closed'}
                     </div>
                   </div>
                   <div className="flex flex-col justify-center p-5 sm:p-8">

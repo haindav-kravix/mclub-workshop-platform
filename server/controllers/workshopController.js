@@ -483,6 +483,7 @@ export const createWorkshop = async (req, res) => {
   try {
     const {
       title,
+      eventType,
       description,
       date,
       startDate,
@@ -515,6 +516,7 @@ export const createWorkshop = async (req, res) => {
     const qrImage = qrImageFile ? uploadedFileToDataUrl(qrImageFile) : '';
 
     const workshop = new Workshop({
+      eventType: eventType === 'internship' ? 'internship' : 'workshop',
       title,
       description,
       coverImage,
@@ -543,7 +545,7 @@ export const createWorkshop = async (req, res) => {
 export const getAllWorkshops = async (req, res) => {
   try {
     const workshops = await Workshop.find({ isActive: true, isStopped: { $ne: true } })
-      .select('title description coverImage date startDate endDate time duration dailyTimings venue registrationsOpen isStopped isActive')
+      .select('title eventType description coverImage date startDate endDate time duration dailyTimings venue registrationsOpen isStopped isActive')
       .sort({ date: 1 })
       .lean();
     res.json(workshops);
@@ -572,6 +574,7 @@ export const updateWorkshop = async (req, res) => {
     const { id } = req.params;
     const {
       title,
+      eventType,
       description,
       date,
       startDate,
@@ -595,6 +598,7 @@ export const updateWorkshop = async (req, res) => {
 
     const updateData = {
       title,
+      eventType: eventType === 'internship' ? 'internship' : 'workshop',
       description,
       date: startDate || date,
       startDate: startDate || date,

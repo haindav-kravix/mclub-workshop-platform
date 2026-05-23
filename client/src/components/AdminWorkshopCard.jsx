@@ -2,6 +2,7 @@ import React from 'react';
 import { FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiFileText, FiList, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
 import { formatWorkshopTime } from '../utils/formatters';
+import { getEventLabel } from '../utils/eventLabels';
 
 export const AdminWorkshopCard = ({
   workshop,
@@ -20,6 +21,7 @@ export const AdminWorkshopCard = ({
   const totalRegistrations = workshop.totalRegistrationCount ?? workshop.registrationStats?.total ?? workshop.registrationCount ?? 0;
   const confirmedRegistrations = workshop.confirmedRegistrationCount ?? workshop.registrationStats?.confirmed ?? workshop.registrationCount ?? 0;
   const rejectedRegistrations = workshop.rejectedRegistrationCount ?? workshop.registrationStats?.rejected ?? 0;
+  const eventLabel = getEventLabel(workshop);
 
   return (
     <div className="panel rounded-lg overflow-hidden transition hover:-translate-y-1 hover:shadow-xl">
@@ -46,7 +48,7 @@ export const AdminWorkshopCard = ({
         <div className={`absolute left-3 top-3 px-3 py-1 rounded-lg text-xs font-semibold ${
           workshop.isStopped ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'
         }`}>
-          {workshop.isStopped ? 'Stopped' : 'Running'}
+          {workshop.isStopped ? 'Stopped' : 'Running'} {eventLabel}
         </div>
         <div className={`absolute left-3 bottom-3 px-3 py-1 rounded-lg text-xs font-semibold ${
           registrationsOpen ? 'bg-secondary text-white' : 'bg-amber-500 text-white'

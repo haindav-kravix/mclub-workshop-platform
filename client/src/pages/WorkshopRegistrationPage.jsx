@@ -5,6 +5,7 @@ import { registrationAPI, resolveMediaUrl, workshopAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { RegistrationForm } from '../components/RegistrationForm';
 import { useAuth } from '../context/AuthContext';
+import { getEventLabel } from '../utils/eventLabels';
 
 export const WorkshopRegistrationPage = () => {
   const { id } = useParams();
@@ -71,23 +72,25 @@ export const WorkshopRegistrationPage = () => {
   }
 
   const registrationsOpen = workshop?.registrationsOpen !== false && !workshop?.isStopped;
+  const eventLabel = getEventLabel(workshop);
+  const eventLower = getEventLabel(workshop, 'lower');
 
   return (
     <div className="min-h-screen app-shell">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:py-10">
         <button onClick={() => navigate(`/workshop/${id}`)} className="mb-5 flex items-center gap-2 font-semibold text-primary">
-          <FiArrowLeft /> Back to Workshop
+          <FiArrowLeft /> Back to {eventLabel}
         </button>
 
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
         {success && <SuccessMessage message={success} onDismiss={() => setSuccess('')} />}
 
         {!workshop ? (
-          <div className="panel rounded-lg p-10 text-center font-semibold text-slate-700">Workshop not found</div>
+          <div className="panel rounded-lg p-10 text-center font-semibold text-slate-700">Event not found</div>
         ) : registrationStatus === 'confirmed' ? (
           <div className="rounded-2xl border border-emerald-200 bg-white p-8 text-center shadow-xl">
             <h1 className="text-2xl font-black text-emerald-800">Registration confirmed</h1>
-            <p className="mt-2 text-slate-600">You are already approved for this workshop.</p>
+            <p className="mt-2 text-slate-600">You are already approved for this {eventLower}.</p>
           </div>
         ) : registrationStatus === 'pending' ? (
           <div className="rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-xl">
@@ -102,7 +105,7 @@ export const WorkshopRegistrationPage = () => {
         ) : !registrationsOpen ? (
           <div className="rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-xl">
             <h1 className="text-2xl font-black text-amber-800">Registrations closed</h1>
-            <p className="mt-2 text-slate-600">This workshop is not accepting new registrations right now.</p>
+            <p className="mt-2 text-slate-600">This {eventLower} is not accepting new registrations right now.</p>
           </div>
         ) : (
           <>

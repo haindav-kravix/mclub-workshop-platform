@@ -63,9 +63,9 @@ export const WorkshopsPage = () => {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-6">
             <div>
               <p className="text-sm font-semibold text-primary uppercase tracking-wide mb-2">MongoDB Club Events</p>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Upcoming Workshops</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Upcoming Events</h1>
               <p className="text-gray-600 text-base sm:text-lg mt-3">
-                Explore live sessions, hands-on events, and technical workshops.
+                Explore live workshops, internship registrations, and technical sessions.
               </p>
             </div>
             <div className="text-sm text-gray-600">
@@ -78,7 +78,7 @@ export const WorkshopsPage = () => {
             <FiSearch className="absolute left-4 top-3 text-gray-400 text-xl" />
             <input
               type="text"
-              placeholder="Search workshops by title, description, or venue..."
+              placeholder="Search events by title, description, or venue..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-lg focus-ring bg-white"
@@ -88,7 +88,7 @@ export const WorkshopsPage = () => {
 
         {error && <ErrorMessage message={error} />}
 
-        {/* Workshops Grid */}
+        {/* Events Grid */}
         {filteredWorkshops.length > 0 ? (
           <WorkshopGrid
             workshops={filteredWorkshops}
@@ -97,7 +97,7 @@ export const WorkshopsPage = () => {
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-600 text-lg">
-              {searchTerm ? 'No workshops found matching your search' : 'No workshops available'}
+              {searchTerm ? 'No events found matching your search' : 'No events available'}
             </p>
           </div>
         )}

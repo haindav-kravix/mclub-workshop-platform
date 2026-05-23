@@ -4,6 +4,7 @@ import { FiArrowLeft } from 'react-icons/fi';
 import { CreateWorkshopModal } from '../components/CreateWorkshopModal';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { workshopAPI } from '../utils/api';
+import { getEventLabel } from '../utils/eventLabels';
 
 export const WorkshopFormPage = () => {
   const { workshopId } = useParams();
@@ -53,13 +54,14 @@ export const WorkshopFormPage = () => {
 
   const handleSubmit = async (workshopData) => {
     setError('');
+    const submittedLabel = getEventLabel(workshopData);
     try {
       if (isEditing) {
         await workshopAPI.updateWorkshop(workshopId, buildFormData(workshopData));
-        setSuccess('Workshop updated successfully');
+        setSuccess(`${submittedLabel} updated successfully`);
       } else {
         await workshopAPI.createWorkshop(buildFormData(workshopData));
-        setSuccess('Workshop created successfully');
+        setSuccess(`${submittedLabel} created successfully`);
       }
 
       setTimeout(() => navigate('/admin'), 600);
@@ -71,6 +73,8 @@ export const WorkshopFormPage = () => {
   };
 
   if (loading) return <LoadingSpinner />;
+  const eventLabel = getEventLabel(workshop);
+  const eventLower = getEventLabel(workshop, 'lower');
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -83,13 +87,13 @@ export const WorkshopFormPage = () => {
             <FiArrowLeft /> Back to Dashboard
           </button>
           <p className="text-xs font-black uppercase tracking-wide text-secondary">
-            {isEditing ? 'Workshop management' : 'Create workshop'}
+            {isEditing ? `${eventLabel} management` : 'Create event'}
           </p>
           <h1 className="mt-2 text-3xl font-black text-slate-950 sm:text-4xl">
-            {isEditing ? 'Edit Workshop' : 'Create New Workshop'}
+            {isEditing ? `Edit ${eventLabel}` : 'Create New Event'}
           </h1>
           <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-600 sm:text-base">
-            {isEditing ? 'Update workshop details, optional timings, images, and registration questions.' : 'Add workshop details, optional timings, images, and registration questions.'}
+            {isEditing ? `Update ${eventLower} details, optional timings, images, and registration questions.` : 'Choose workshop or internship, then add details, optional timings, images, and registration questions.'}
           </p>
         </div>
       </div>

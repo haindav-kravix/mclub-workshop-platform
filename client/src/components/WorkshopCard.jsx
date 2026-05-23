@@ -4,10 +4,12 @@ import { LoadingSpinner, ErrorMessage } from './UI';
 import { FiCalendar, FiMapPin, FiClock } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { formatWorkshopTime } from '../utils/formatters';
+import { getEventLabel } from '../utils/eventLabels';
 
 export const WorkshopCard = ({ workshop, onClick }) => {
   const isRegistered = Boolean(workshop.isRegistered);
   const registrationsOpen = workshop.registrationsOpen !== false && !workshop.isStopped;
+  const eventLabel = getEventLabel(workshop);
 
   return (
     <div
@@ -41,7 +43,7 @@ export const WorkshopCard = ({ workshop, onClick }) => {
         <div className={`inline-flex mb-3 rounded-lg px-3 py-1 text-xs font-bold ${
           registrationsOpen ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
         }`}>
-          Registrations {registrationsOpen ? 'Open' : 'Closed'}
+          {eventLabel} Registrations {registrationsOpen ? 'Open' : 'Closed'}
         </div>
         <p className="text-slate-600 text-sm mb-4 line-clamp-2">{workshop.description}</p>
 

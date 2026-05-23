@@ -9,6 +9,11 @@ const safeExportFileName = (value = 'registrations') => String(value)
   .replace(/^-+|-+$/g, '')
   .toLowerCase() || 'registrations';
 
+const eventLabel = (workshop, lower = false) => {
+  const label = workshop?.eventType === 'internship' ? 'Internship' : 'Workshop';
+  return lower ? label.toLowerCase() : label;
+};
+
 const parseFormData = (formData) => {
   if (!formData) return {};
   if (typeof formData !== 'string') return formData;
@@ -77,12 +82,12 @@ export const registerForWorkshop = async (req, res) => {
     const workshop = await Workshop.findById(workshopId);
     if (!workshop) {
       cleanupUploadedFiles(req);
-      return res.status(404).json({ message: 'Workshop not found' });
+      return res.status(404).json({ message: 'Event not found' });
     }
 
     if (workshop.isStopped || !workshop.registrationsOpen) {
       cleanupUploadedFiles(req);
-      return res.status(400).json({ message: 'Registrations are closed for this workshop' });
+      return res.status(400).json({ message: `Registrations are closed for this ${eventLabel(workshop, true)}` });
     }
 
     if (workshop.qrImage && !paymentScreenshotFile) {
@@ -99,7 +104,7 @@ export const registerForWorkshop = async (req, res) => {
     if (existingRegistration) {
       const statusMessages = {
         pending: 'Your registration is already under review',
-        confirmed: 'You are already confirmed for this workshop',
+        confirmed: `You are already confirmed for this ${eventLabel(workshop, true)}`,
         rejected: 'Your registration was rejected. Please contact guidance for help.',
         cancelled: 'This registration was cancelled. Please contact guidance if you need help.'
       };
@@ -116,7 +121,7 @@ export const registerForWorkshop = async (req, res) => {
 
       if (registrationCount >= workshop.capacity) {
         cleanupUploadedFiles(req);
-        return res.status(400).json({ message: 'Workshop is full' });
+      return res.status(400).json({ message: `${eventLabel(workshop)} is full` });
       }
     }
 

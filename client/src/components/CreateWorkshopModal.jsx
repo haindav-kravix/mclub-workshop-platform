@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FiX } from 'react-icons/fi';
 import { FormBuilder } from './FormBuilder';
+import { getEventLabelByType } from '../utils/eventLabels';
 
 const toDateInput = (value) => value ? value.split('T')[0] : '';
 
@@ -59,6 +60,7 @@ const hasConfiguredTimings = (initialData) => {
 export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, layout = 'modal' }) => {
   const initialHasTimings = hasConfiguredTimings(initialData);
   const [formData, setFormData] = useState({
+    eventType: initialData?.eventType || 'workshop',
     title: initialData?.title || '',
     description: initialData?.description || '',
     startDate: toDateInput(initialData?.startDate || initialData?.date) || '',
@@ -75,6 +77,8 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const eventLabel = getEventLabelByType(formData.eventType);
+  const eventLower = getEventLabelByType(formData.eventType, 'lower');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -148,7 +152,7 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
     }
 
     if (formData.hasTimings && (formData.dailyTimings.length === 0 || formData.dailyTimings.some(item => !item.startTime || !item.endTime))) {
-      setError('Please add start and end timings for every workshop date');
+      setError(`Please add start and end timings for every ${eventLower} date`);
       return;
     }
 
@@ -176,10 +180,10 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
         <div className="flex justify-between items-center gap-3 p-5 sm:p-6 border-b sticky top-0 bg-white z-10">
           <div>
             <p className="text-xs font-black uppercase tracking-wide text-secondary">
-              {initialData ? 'Edit workshop details' : 'New workshop setup'}
+              {initialData ? `Edit ${eventLower} details` : 'New event setup'}
             </p>
             <h2 className="mt-1 text-2xl font-black text-slate-950">
-            {initialData ? 'Edit Workshop' : 'Create New Workshop'}
+            {initialData ? `Edit ${eventLabel}` : 'Create New Event'}
             </h2>
           </div>
           <button onClick={onClose} className="flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-slate-200 text-gray-500 hover:text-gray-700">
@@ -195,16 +199,37 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
             </div>
           )}
 
-          {/* Workshop Title */}
+          {/* Event Type */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Workshop Title *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Creation Type *</label>
+            <div className="grid grid-cols-2 gap-3">
+              {['workshop', 'internship'].map(type => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, eventType: type }))}
+                  className={`rounded-lg border px-4 py-3 text-sm font-black transition ${
+                    formData.eventType === type
+                      ? 'border-emerald-400 bg-emerald-50 text-secondary shadow-sm'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-200'
+                  }`}
+                >
+                  {getEventLabelByType(type)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Event Title */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">{eventLabel} Title *</label>
             <input
               type="text"
               name="title"
               value={formData.title}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="e.g., MongoDB Aggregation Pipeline Mastery"
+              placeholder={formData.eventType === 'internship' ? 'e.g., MongoDB Campus Internship Program' : 'e.g., MongoDB Aggregation Pipeline Mastery'}
               required
             />
           </div>
@@ -218,7 +243,7 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
               onChange={handleChange}
               rows="4"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Describe your workshop in detail..."
+              placeholder={`Describe your ${eventLower} in detail...`}
               required
             />
           </div>
@@ -254,9 +279,9 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-black text-slate-900">Set workshop timings</p>
+                <p className="text-sm font-black text-slate-900">Set {eventLower} timings</p>
                 <p className="text-xs font-semibold text-slate-500">
-                  Keep this off when the workshop dates are enough. Turn it on only if every date needs a start and end time.
+                  Keep this off when the dates are enough. Turn it on only if every date needs a start and end time.
                 </p>
               </div>
               <button
@@ -381,11 +406,11 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
               <div className="mb-3 flex flex-col gap-3 rounded-lg border border-emerald-100 bg-white p-3 sm:flex-row sm:items-center">
                 <img
                   src={initialData.qrImage}
-                  alt="Current workshop QR"
+                  alt={`Current ${eventLower} QR`}
                   className="h-24 w-24 rounded-lg border border-slate-200 object-contain"
                 />
                 <p className="text-sm font-semibold text-slate-600">
-                  Current QR is already visible on the workshop page. Upload a new image only if you want to replace it.
+                  Current QR is already visible on the {eventLower} page. Upload a new image only if you want to replace it.
                 </p>
               </div>
             )}
@@ -418,7 +443,7 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
               disabled={loading}
               className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-medium disabled:opacity-50"
             >
-              {loading ? (initialData ? 'Updating...' : 'Creating...') : initialData ? 'Update Workshop' : 'Create Workshop'}
+              {loading ? (initialData ? 'Updating...' : 'Creating...') : initialData ? `Update ${eventLabel}` : `Create ${eventLabel}`}
             </button>
           </div>
         </form>
