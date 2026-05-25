@@ -32,7 +32,7 @@ export const TakeAttendancePage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const requestedDate = searchParams.get('date');
-  const freshRetake = searchParams.get('fresh') === '1';
+  const retakeMode = searchParams.get('retake');
   const [workshop, setWorkshop] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [roster, setRoster] = useState([]);
@@ -67,10 +67,7 @@ export const TakeAttendancePage = () => {
       setLoading(true);
       try {
         const response = await attendanceAPI.getRoster(workshopId, selectedDate);
-        setRoster(freshRetake
-          ? response.data.roster.map(item => ({ ...item, status: 'absent', source: 'manual' }))
-          : response.data.roster
-        );
+        setRoster(response.data.roster);
         const sessionResponse = await attendanceAPI.getQrSession(workshopId, selectedDate);
         setQrEnabled(sessionResponse.data.qrEnabled);
         setManualEnabled(sessionResponse.data.manualEnabled);
@@ -81,7 +78,24 @@ export const TakeAttendancePage = () => {
       }
     };
     loadRoster();
-  }, [workshopId, selectedDate, freshRetake]);
+  }, [workshopId, selectedDate]);
+
+  useEffect(() => {
+    if (!qrEnabled || !selectedDate) return undefined;
+    const refreshQrConfirmations = async () => {
+      try {
+        const response = await attendanceAPI.getRoster(workshopId, selectedDate);
+        setRoster(currentRoster => response.data.roster.map(latest => {
+          const current = currentRoster.find(item => item.user._id === latest.user._id);
+          return latest.status === 'present' && latest.source === 'qr' ? latest : (current || latest);
+        }));
+      } catch {
+        // Keep the current roster visible if a background refresh briefly fails.
+      }
+    };
+    const intervalId = window.setInterval(refreshQrConfirmations, 3000);
+    return () => window.clearInterval(intervalId);
+  }, [qrEnabled, selectedDate, workshopId]);
 
   const dateOptions = useMemo(() => {
     if (workshop?.dailyTimings?.length) {
@@ -163,6 +177,7 @@ export const TakeAttendancePage = () => {
   const qrImageUrl = qrCheckInUrl
     ? `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(qrCheckInUrl)}`
     : '';
+  const qrConfirmedStudents = roster.filter(item => item.status === 'present' && item.source === 'qr');
 
   if (loading && !workshop) return <LoadingSpinner />;
 
@@ -180,9 +195,14 @@ export const TakeAttendancePage = () => {
             <div>
               <p className="text-sm font-bold uppercase tracking-wide text-emerald-600 mb-2">Take attendance</p>
               <h1 className="text-3xl font-bold text-slate-950">{workshop?.title}</h1>
-              {freshRetake && (
+              {retakeMode === 'fresh' && (
                 <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-                  Retake mode starts fresh. Previous attendance stays unchanged until you submit again.
+                  Retake from start is active. Attendance for this day has been cleared and will be recorded again.
+                </div>
+              )}
+              {retakeMode === 'continue' && (
+                <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+                  Retake from now is active. Previously marked attendance is kept while you continue.
                 </div>
               )}
               <div className="mt-5 max-w-xs">
@@ -318,6 +338,38 @@ export const TakeAttendancePage = () => {
         >
           {saving ? 'Submitting...' : manualEnabled ? 'Submit Attendance' : 'Submit QR Attendance'}
         </button>
+
+        {!manualEnabled && (
+          <div className="panel mt-5 rounded-lg p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-bold text-slate-950">QR Confirmed Attendance</h2>
+              <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-black text-emerald-700">
+                {qrConfirmedStudents.length}
+              </span>
+            </div>
+            <p className="mt-1 text-sm font-semibold text-slate-500">
+              Confirmed scans appear here automatically while QR attendance is on.
+            </p>
+            <div className="mt-4 space-y-2">
+              {qrConfirmedStudents.map(item => (
+                <div key={item.user._id} className="flex items-center justify-between gap-3 rounded-lg border border-emerald-100 bg-emerald-50 p-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-bold text-slate-950">{item.user.name}</p>
+                    <p className="break-all text-xs font-semibold text-slate-600">{item.user.email}</p>
+                  </div>
+                  <span className="flex-none rounded-full bg-emerald-600 px-3 py-1 text-xs font-black text-white">
+                    Present
+                  </span>
+                </div>
+              ))}
+              {qrConfirmedStudents.length === 0 && (
+                <p className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-sm font-semibold text-slate-500">
+                  No QR attendance confirmed yet.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -110,7 +110,7 @@ export const AdminWorkshopCard = ({
             className="px-3 py-2 bg-zinc-100 text-zinc-800 rounded-lg hover:bg-zinc-200 transition text-sm font-semibold flex items-center justify-center space-x-1"
           >
             <FiList size={16} />
-            <span>Absentees</span>
+            <span>Attendance Report</span>
           </button>
 
           <button

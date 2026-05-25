@@ -2,11 +2,34 @@ import Attendance from '../models/Attendance.js';
 import AttendanceSession from '../models/AttendanceSession.js';
 import Registration from '../models/Registration.js';
 import Workshop from '../models/Workshop.js';
+import ExcelJS from 'exceljs';
 
 const normalizeDate = (date) => {
   const value = new Date(date);
   value.setHours(0, 0, 0, 0);
   return value;
+};
+
+const formatDate = (date) => new Date(date).toLocaleDateString('en-IN');
+
+const safeFileName = (value = 'attendance-report') => String(value)
+  .replace(/[^a-z0-9]+/gi, '-')
+  .replace(/^-+|-+$/g, '')
+  .toLowerCase() || 'attendance-report';
+
+const percentage = (present, total) => total ? Number(((present / total) * 100).toFixed(2)) : 0;
+
+const styleWorksheet = (worksheet) => {
+  worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF00684A' } };
+  worksheet.getRow(1).alignment = { horizontal: 'center' };
+  worksheet.columns.forEach(column => {
+    let longest = 12;
+    column.eachCell({ includeEmpty: true }, cell => {
+      longest = Math.max(longest, String(cell.value || '').length + 2);
+    });
+    column.width = Math.min(longest, 42);
+  });
 };
 
 export const getAttendanceRoster = async (req, res) => {
@@ -127,12 +150,125 @@ export const getAttendanceReports = async (req, res) => {
         updatedAt: report.updatedAt,
         presentCount: present.length,
         absentCount: absent.length,
+        totalCount: report.entries.length,
+        percentage: percentage(present.length, report.entries.length),
         present,
         absent
       };
     }));
   } catch (error) {
     res.status(500).json({ message: 'Error loading attendance reports', error: error.message });
+  }
+};
+
+export const resetAttendanceDay = async (req, res) => {
+  try {
+    const { workshopId } = req.params;
+    const { date } = req.body;
+    if (!date) return res.status(400).json({ message: 'Date is required' });
+
+    const workshop = await Workshop.findById(workshopId);
+    if (!workshop) return res.status(404).json({ message: 'Event not found' });
+
+    await Attendance.deleteOne({ workshopId, date: normalizeDate(date) });
+    res.json({ success: true, message: 'Attendance cleared. Retake can begin from start.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error resetting attendance', error: error.message });
+  }
+};
+
+export const exportDailyAttendance = async (req, res) => {
+  try {
+    const { workshopId } = req.params;
+    const { date } = req.query;
+    if (!date) return res.status(400).json({ message: 'Date is required' });
+
+    const workshop = await Workshop.findById(workshopId);
+    const attendance = await Attendance.findOne({ workshopId, date: normalizeDate(date) })
+      .populate('entries.userId', 'name email');
+    if (!workshop || !attendance) return res.status(404).json({ message: 'Attendance report not found' });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Daily Attendance');
+    sheet.addRow(['Name', 'Email', 'Status', 'Marked Through']);
+    attendance.entries.forEach(entry => {
+      sheet.addRow([
+        entry.userId?.name || '',
+        entry.userId?.email || '',
+        entry.status,
+        entry.source === 'qr' ? 'QR' : 'Manual'
+      ]);
+    });
+    styleWorksheet(sheet);
+
+    const dateLabel = new Date(date).toISOString().split('T')[0];
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName(workshop.title)}-attendance-${dateLabel}.xlsx"`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    res.status(500).json({ message: 'Error exporting daily attendance', error: error.message });
+  }
+};
+
+export const exportOverallAttendance = async (req, res) => {
+  try {
+    const { workshopId } = req.params;
+    const workshop = await Workshop.findById(workshopId);
+    if (!workshop) return res.status(404).json({ message: 'Event not found' });
+
+    const reports = await Attendance.find({ workshopId })
+      .populate('entries.userId', 'name email')
+      .sort({ date: 1 });
+    const totalSessions = reports.length;
+    const students = new Map();
+
+    reports.forEach(report => {
+      report.entries.forEach(entry => {
+        const id = entry.userId?._id?.toString();
+        if (!id) return;
+        const item = students.get(id) || {
+          name: entry.userId.name,
+          email: entry.userId.email,
+          present: 0,
+          absent: 0
+        };
+        if (entry.status === 'present') item.present += 1;
+        else item.absent += 1;
+        students.set(id, item);
+      });
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const summary = workbook.addWorksheet('Overall Percentage');
+    summary.addRow(['Name', 'Email', 'Sessions Held', 'Present', 'Absent', 'Attendance Percentage']);
+    Array.from(students.values()).forEach(student => {
+      summary.addRow([
+        student.name,
+        student.email,
+        totalSessions,
+        student.present,
+        student.absent,
+        `${percentage(student.present, totalSessions)}%`
+      ]);
+    });
+    styleWorksheet(summary);
+
+    const days = workbook.addWorksheet('Day Wise');
+    days.addRow(['Date', 'Present', 'Absent', 'Attendance Percentage']);
+    reports.forEach(report => {
+      const present = report.entries.filter(entry => entry.status === 'present').length;
+      const absent = report.entries.filter(entry => entry.status === 'absent').length;
+      days.addRow([formatDate(report.date), present, absent, `${percentage(present, present + absent)}%`]);
+    });
+    styleWorksheet(days);
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName(workshop.title)}-overall-attendance.xlsx"`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    res.status(500).json({ message: 'Error exporting overall attendance', error: error.message });
   }
 };
 

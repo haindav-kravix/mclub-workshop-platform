@@ -87,6 +87,19 @@ export const attendanceAPI = {
   getReports: (workshopId) => axios.get(`${API_URL}/attendance/workshop/${workshopId}/reports`, {
     headers: getAuthHeaders()
   }),
+  resetDay: (workshopId, date) => axios.delete(`${API_URL}/attendance/workshop/${workshopId}/reports/day`, {
+    headers: getAuthHeaders(),
+    data: { date }
+  }),
+  exportDay: (workshopId, date) => axios.get(`${API_URL}/attendance/workshop/${workshopId}/reports/day/export`, {
+    headers: getAuthHeaders(),
+    params: { date },
+    responseType: 'blob'
+  }),
+  exportOverall: (workshopId) => axios.get(`${API_URL}/attendance/workshop/${workshopId}/reports/export`, {
+    headers: getAuthHeaders(),
+    responseType: 'blob'
+  }),
   getQrSession: (workshopId, date) => axios.get(`${API_URL}/attendance/workshop/${workshopId}/qr-session`, {
     headers: getAuthHeaders(),
     params: { date }
