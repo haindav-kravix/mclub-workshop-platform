@@ -20,7 +20,7 @@ export const WorkshopFormPage = () => {
 
     const fetchWorkshop = async () => {
       try {
-        const response = await workshopAPI.getWorkshopById(workshopId);
+        const response = await workshopAPI.getAdminWorkshopById(workshopId);
         setWorkshop(response.data);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load workshop');

@@ -19,6 +19,9 @@ const getAuthHeaders = () => {
 export const workshopAPI = {
   getAllWorkshops: () => axios.get(`${API_URL}/workshops`),
   getWorkshopById: (id) => axios.get(`${API_URL}/workshops/${id}`),
+  getAdminWorkshopById: (id) => axios.get(`${API_URL}/workshops/admin/${id}`, {
+    headers: getAuthHeaders()
+  }),
   createWorkshop: (data) => axios.post(`${API_URL}/workshops`, data, { 
     headers: getAuthHeaders()
   }),

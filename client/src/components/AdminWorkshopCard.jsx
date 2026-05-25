@@ -17,7 +17,7 @@ export const AdminWorkshopCard = ({
   onTakeAttendance,
   onAttendanceReports
 }) => {
-  const registrationsOpen = workshop.registrationsOpen !== false && !workshop.isStopped;
+  const registrationsOpen = workshop.registrationsOpen !== false;
   const totalRegistrations = workshop.totalRegistrationCount ?? workshop.registrationStats?.total ?? workshop.registrationCount ?? 0;
   const confirmedRegistrations = workshop.confirmedRegistrationCount ?? workshop.registrationStats?.confirmed ?? workshop.registrationCount ?? 0;
   const rejectedRegistrations = workshop.rejectedRegistrationCount ?? workshop.registrationStats?.rejected ?? 0;
@@ -149,8 +149,7 @@ export const AdminWorkshopCard = ({
 
           <button
             onClick={() => onToggleRegistrations(workshop._id)}
-            disabled={workshop.isStopped}
-            className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition text-sm font-semibold"
           >
             {registrationsOpen ? 'Close Reg.' : 'Open Reg.'}
           </button>

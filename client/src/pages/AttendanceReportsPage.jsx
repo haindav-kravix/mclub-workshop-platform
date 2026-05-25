@@ -33,7 +33,7 @@ export const AttendanceReportsPage = () => {
     const loadReports = async () => {
       try {
         const [workshopResponse, reportsResponse] = await Promise.all([
-          workshopAPI.getWorkshopById(workshopId),
+          workshopAPI.getAdminWorkshopById(workshopId),
           attendanceAPI.getReports(workshopId)
         ]);
         setWorkshop(workshopResponse.data);

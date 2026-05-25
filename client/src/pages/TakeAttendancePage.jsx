@@ -48,7 +48,7 @@ export const TakeAttendancePage = () => {
   useEffect(() => {
     const loadWorkshop = async () => {
       try {
-        const response = await workshopAPI.getWorkshopById(workshopId);
+        const response = await workshopAPI.getAdminWorkshopById(workshopId);
         setWorkshop(response.data);
         const firstDate = response.data.dailyTimings?.[0]?.date || response.data.startDate || response.data.date;
         setSelectedDate(requestedDate || toDateInput(firstDate));

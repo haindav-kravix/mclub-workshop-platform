@@ -16,7 +16,7 @@ export const PaymentScreenshotPage = () => {
     const fetchData = async () => {
       try {
         const [workshopResponse, registrationsResponse] = await Promise.all([
-          workshopAPI.getWorkshopById(workshopId),
+          workshopAPI.getAdminWorkshopById(workshopId),
           registrationAPI.getWorkshopRegistrations(workshopId)
         ]);
         setWorkshop(workshopResponse.data);

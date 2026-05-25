@@ -36,7 +36,7 @@ export const RegistrationsPage = () => {
     const fetchData = async () => {
       try {
         const [workshopRes, regsRes] = await Promise.all([
-          workshopAPI.getWorkshopById(workshopId),
+          workshopAPI.getAdminWorkshopById(workshopId),
           registrationAPI.getWorkshopRegistrations(workshopId)
         ]);
         setWorkshop(workshopRes.data);
