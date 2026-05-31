@@ -152,7 +152,8 @@ export const getUserRegistrations = async (req, res) => {
   try {
     const registrations = await Registration.find({ userId: req.user.id })
       .populate('workshopId')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .allowDiskUse(true);
 
     res.json(registrations);
   } catch (error) {
@@ -172,7 +173,8 @@ export const getWorkshopRegistrations = async (req, res) => {
 
     const registrations = await Registration.find({ workshopId })
       .populate('userId', 'name email profilePhoto')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .allowDiskUse(true);
 
     res.json(registrations);
   } catch (error) {
@@ -221,7 +223,8 @@ export const exportRegistrationsToExcel = async (req, res) => {
 
     const registrations = await Registration.find({ workshopId })
       .populate('userId', 'name email')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .allowDiskUse(true);
 
     const workbook = await generateExcelReport(registrations, workshop.title, workshop.registrationFormFields);
     const fileName = `${safeExportFileName(workshop.title)}-registrations.xlsx`;

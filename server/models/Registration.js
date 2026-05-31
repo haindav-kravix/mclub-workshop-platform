@@ -37,5 +37,8 @@ const registrationSchema = new mongoose.Schema({
 
 // Compound unique index to prevent duplicate registrations
 registrationSchema.index({ workshopId: 1, userId: 1 }, { unique: true });
+registrationSchema.index({ workshopId: 1, createdAt: -1 });
+registrationSchema.index({ userId: 1, createdAt: -1 });
+registrationSchema.index({ workshopId: 1, status: 1 });
 
 export default mongoose.model('Registration', registrationSchema);
