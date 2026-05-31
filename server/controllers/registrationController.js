@@ -58,6 +58,51 @@ const serializeUploadedDocument = (file) => JSON.stringify({
   size: file.size || 0
 });
 
+const formDataToObject = (formData) => {
+  if (!formData) return {};
+  if (formData instanceof Map) return Object.fromEntries(formData.entries());
+  if (typeof formData.toObject === 'function') return formData.toObject();
+  return { ...formData };
+};
+
+const summarizeUploadValue = (value, type) => {
+  if (!value) return '';
+  if (type === 'file') {
+    try {
+      const parsed = JSON.parse(value);
+      return JSON.stringify({
+        name: parsed?.name || 'uploaded-file',
+        mimeType: parsed?.mimeType || 'application/octet-stream',
+        size: parsed?.size || 0,
+        uploaded: Boolean(parsed?.dataUrl || value)
+      });
+    } catch {
+      return JSON.stringify({ name: 'uploaded-file', uploaded: true });
+    }
+  }
+  if (type === 'image') return 'uploaded';
+  return value;
+};
+
+const summarizeRegistrationUploads = (registration, formFields = []) => {
+  const data = typeof registration.toObject === 'function' ? registration.toObject() : registration;
+  const fieldTypes = new Map(formFields.map(field => [field.fieldId, field.type]));
+  const formData = formDataToObject(data.formData);
+
+  Object.keys(formData).forEach(fieldId => {
+    const fieldType = fieldTypes.get(fieldId);
+    if (fieldType === 'image' || fieldType === 'file') {
+      formData[fieldId] = summarizeUploadValue(formData[fieldId], fieldType);
+    }
+  });
+
+  return {
+    ...data,
+    formData,
+    paymentScreenshot: data.paymentScreenshot ? 'uploaded' : ''
+  };
+};
+
 const attachRegistrationUploads = (formData, files = [], formFields = []) => {
   const nextFormData = { ...formData };
   const fieldsById = new Map(formFields.map(field => [field.fieldId, field]));
@@ -176,9 +221,57 @@ export const getWorkshopRegistrations = async (req, res) => {
       .sort({ createdAt: -1 })
       .allowDiskUse(true);
 
-    res.json(registrations);
+    res.json(registrations.map(registration => summarizeRegistrationUploads(registration, workshop.registrationFormFields || [])));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching registrations', error: error.message });
+  }
+};
+
+export const getRegistrationUpload = async (req, res) => {
+  try {
+    const { workshopId, registrationId, imageKey } = req.params;
+
+    const workshop = await Workshop.findById(workshopId).select('title registrationFormFields');
+    if (!workshop) {
+      return res.status(404).json({ message: 'Workshop not found' });
+    }
+
+    const registration = await Registration.findOne({ _id: registrationId, workshopId })
+      .populate('userId', 'name email profilePhoto');
+
+    if (!registration) {
+      return res.status(404).json({ message: 'Registration not found' });
+    }
+
+    const field = imageKey === 'paymentScreenshot'
+      ? null
+      : (workshop.registrationFormFields || []).find(item => item.fieldId === imageKey);
+    const rawValue = imageKey === 'paymentScreenshot'
+      ? registration.paymentScreenshot
+      : registration.formData?.get?.(imageKey);
+
+    if (!rawValue) {
+      return res.status(404).json({ message: 'Upload not found' });
+    }
+
+    res.json({
+      workshop: {
+        _id: workshop._id,
+        title: workshop.title,
+        registrationFormFields: workshop.registrationFormFields || []
+      },
+      registration: {
+        _id: registration._id,
+        userId: registration.userId,
+        status: registration.status,
+        createdAt: registration.createdAt
+      },
+      imageKey,
+      field,
+      value: rawValue
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error loading upload', error: error.message });
   }
 };
 

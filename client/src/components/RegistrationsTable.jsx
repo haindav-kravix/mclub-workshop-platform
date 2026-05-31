@@ -13,11 +13,13 @@ const getUploadedFileMeta = (value) => {
   if (!value) return null;
   try {
     const parsed = JSON.parse(value);
-    return parsed?.dataUrl ? parsed : null;
+    return parsed?.dataUrl || parsed?.uploaded ? parsed : null;
   } catch {
     return null;
   }
 };
+
+const isInlineImage = (value) => typeof value === 'string' && value.startsWith('data:image/');
 
 const buildFields = (registrations, formFields = []) => {
   const orderedFields = [...formFields].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -162,11 +164,17 @@ export const RegistrationsTable = ({
                               onClick={() => onViewPaymentScreenshot?.(reg._id, field.id)}
                               className="inline-flex items-center gap-3 rounded-lg border border-emerald-200 bg-white p-2 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
                             >
-                              <img
-                                src={resolveMediaUrl(getFormValue(reg.formData, field.id))}
-                                alt={`${field.label} upload`}
-                                className="h-16 w-16 rounded-md object-cover"
-                              />
+                              {isInlineImage(getFormValue(reg.formData, field.id)) ? (
+                                <img
+                                  src={resolveMediaUrl(getFormValue(reg.formData, field.id))}
+                                  alt={`${field.label} upload`}
+                                  className="h-16 w-16 rounded-md object-cover"
+                                />
+                              ) : (
+                                <span className="flex h-16 w-16 items-center justify-center rounded-md bg-emerald-50 text-secondary">
+                                  <FiFileText size={22} />
+                                </span>
+                              )}
                               <span className="text-sm font-black text-secondary">View image</span>
                             </button>
                           </dd>
@@ -206,11 +214,17 @@ export const RegistrationsTable = ({
                       onClick={() => onViewPaymentScreenshot?.(reg._id, 'paymentScreenshot')}
                       className="mt-2 inline-flex items-center gap-3 rounded-lg border border-emerald-200 bg-white p-2 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
                     >
-                      <img
-                        src={resolveMediaUrl(reg.paymentScreenshot)}
-                        alt={`${reg.userId?.name || 'Student'} payment screenshot`}
-                        className="h-16 w-16 rounded-md object-cover"
-                      />
+                      {isInlineImage(reg.paymentScreenshot) ? (
+                        <img
+                          src={resolveMediaUrl(reg.paymentScreenshot)}
+                          alt={`${reg.userId?.name || 'Student'} payment screenshot`}
+                          className="h-16 w-16 rounded-md object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-16 w-16 items-center justify-center rounded-md bg-emerald-50 text-secondary">
+                          <FiFileText size={22} />
+                        </span>
+                      )}
                       <span className="text-sm font-black text-secondary">View screenshot</span>
                     </button>
                   ) : (

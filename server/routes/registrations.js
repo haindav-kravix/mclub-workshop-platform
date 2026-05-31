@@ -13,6 +13,7 @@ router.delete('/:registrationId', authenticateToken, registrationController.canc
 // Admin routes
 router.get('/workshop/:workshopId', authenticateToken, adminOnly, registrationController.getWorkshopRegistrations);
 router.get('/workshop/:workshopId/export', authenticateToken, adminOnly, registrationController.exportRegistrationsToExcel);
+router.get('/workshop/:workshopId/upload/:registrationId/:imageKey', authenticateToken, adminOnly, registrationController.getRegistrationUpload);
 router.patch('/admin/:registrationId/status', authenticateToken, adminOnly, registrationController.updateRegistrationStatus);
 router.delete('/admin/:registrationId', authenticateToken, adminOnly, registrationController.deleteRegistration);
 

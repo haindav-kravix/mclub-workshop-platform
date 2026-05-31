@@ -60,6 +60,9 @@ export const registrationAPI = {
   getWorkshopRegistrations: (workshopId) => axios.get(`${API_URL}/registrations/workshop/${workshopId}`, {
     headers: getAuthHeaders()
   }),
+  getRegistrationUpload: (workshopId, registrationId, imageKey) => axios.get(`${API_URL}/registrations/workshop/${workshopId}/upload/${registrationId}/${imageKey}`, {
+    headers: getAuthHeaders()
+  }),
   cancelRegistration: (registrationId) => axios.delete(`${API_URL}/registrations/${registrationId}`, {
     headers: getAuthHeaders()
   }),

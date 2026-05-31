@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiDownload, FiFileText } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner } from '../components/UI';
-import { registrationAPI, resolveMediaUrl, workshopAPI } from '../utils/api';
+import { registrationAPI, resolveMediaUrl } from '../utils/api';
 
 export const PaymentScreenshotPage = () => {
   const { workshopId, registrationId, imageKey = 'paymentScreenshot' } = useParams();
@@ -15,17 +15,13 @@ export const PaymentScreenshotPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [workshopResponse, registrationsResponse] = await Promise.all([
-          workshopAPI.getAdminWorkshopById(workshopId),
-          registrationAPI.getWorkshopRegistrations(workshopId)
-        ]);
-        setWorkshop(workshopResponse.data);
-        const found = registrationsResponse.data.find(item => item._id === registrationId);
-        if (!found) {
-          setError('Image not found');
-        } else {
-          setRegistration(found);
-        }
+        const response = await registrationAPI.getRegistrationUpload(workshopId, registrationId, imageKey);
+        setWorkshop(response.data.workshop);
+        setRegistration({
+          ...response.data.registration,
+          paymentScreenshot: imageKey === 'paymentScreenshot' ? response.data.value : '',
+          formData: imageKey === 'paymentScreenshot' ? {} : { [imageKey]: response.data.value }
+        });
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load image');
       } finally {
