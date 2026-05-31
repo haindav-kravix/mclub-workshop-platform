@@ -27,6 +27,10 @@ const allowedOrigins = [
   'http://localhost:8000',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:8000',
+  'https://mongodbtcklh.club',
+  'https://www.mongodbtcklh.club',
+  'https://client-lac-eight-57.vercel.app',
+  'https://client-darenanigamer-6336s-projects.vercel.app',
   ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim()) : [])
 ];
 
