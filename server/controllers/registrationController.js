@@ -3,6 +3,7 @@ import Workshop from '../models/Workshop.js';
 import User from '../models/User.js';
 import { generateExcelReport } from '../utils/excelExport.js';
 import fs from 'fs';
+import mongoose from 'mongoose';
 
 const safeExportFileName = (value = 'registrations') => String(value)
   .replace(/[^a-z0-9]+/gi, '-')
@@ -100,6 +101,48 @@ const summarizeRegistrationUploads = (registration, formFields = []) => {
     ...data,
     formData,
     paymentScreenshot: data.paymentScreenshot ? 'uploaded' : ''
+  };
+};
+
+const hasStringValueExpression = (path) => ({
+  $gt: [
+    { $strLenBytes: { $ifNull: [path, ''] } },
+    0
+  ]
+});
+
+const buildRegistrationListProjection = (formFields = []) => {
+  const formDataProjection = {};
+
+  formFields.forEach(field => {
+    if (!field.fieldId) return;
+    const fieldPath = `$formData.${field.fieldId}`;
+    if (field.type === 'image') {
+      formDataProjection[field.fieldId] = {
+        $cond: [hasStringValueExpression(fieldPath), 'uploaded', '']
+      };
+      return;
+    }
+    if (field.type === 'file') {
+      formDataProjection[field.fieldId] = {
+        $cond: [hasStringValueExpression(fieldPath), JSON.stringify({ name: 'View file', uploaded: true }), '']
+      };
+      return;
+    }
+    formDataProjection[field.fieldId] = fieldPath;
+  });
+
+  return {
+    _id: 1,
+    workshopId: 1,
+    userId: 1,
+    status: 1,
+    createdAt: 1,
+    updatedAt: 1,
+    formData: formDataProjection,
+    paymentScreenshot: {
+      $cond: [hasStringValueExpression('$paymentScreenshot'), 'uploaded', '']
+    }
   };
 };
 
@@ -216,12 +259,21 @@ export const getWorkshopRegistrations = async (req, res) => {
       return res.status(404).json({ message: 'Workshop not found' });
     }
 
-    const registrations = await Registration.find({ workshopId })
-      .populate('userId', 'name email profilePhoto')
-      .sort({ createdAt: -1 })
-      .allowDiskUse(true);
+    const registrations = await Registration.aggregate([
+      { $match: { workshopId: new mongoose.Types.ObjectId(workshopId) } },
+      { $sort: { createdAt: -1 } },
+      { $project: buildRegistrationListProjection(workshop.registrationFormFields || []) }
+    ]).allowDiskUse(true);
+    const userIds = registrations.map(registration => registration.userId).filter(Boolean);
+    const users = await User.find({ _id: { $in: userIds } })
+      .select('name email profilePhoto')
+      .lean();
+    const usersById = new Map(users.map(user => [String(user._id), user]));
 
-    res.json(registrations.map(registration => summarizeRegistrationUploads(registration, workshop.registrationFormFields || [])));
+    res.json(registrations.map(registration => ({
+      ...registration,
+      userId: usersById.get(String(registration.userId)) || registration.userId
+    })));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching registrations', error: error.message });
   }
