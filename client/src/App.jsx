@@ -48,7 +48,7 @@ const AppContent = () => {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       {!hideGlobalNavbar && <Navbar />}
-      <main className="flex-1">
+      <main className={`flex-1 ${!hideGlobalNavbar ? 'pt-16 sm:pt-20' : ''}`}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />

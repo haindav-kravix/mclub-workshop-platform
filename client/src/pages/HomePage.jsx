@@ -7,13 +7,13 @@ import { FiArrowRight, FiAward, FiBriefcase, FiCalendar, FiClock, FiMapPin, FiUs
 import { getEventLabel } from '../utils/eventLabels';
 import { HomeAchievementsCarousel } from '../components/HomeAchievementsCarousel';
 import { ScrollReveal } from '../components/ScrollReveal';
-import { BrandMark } from '../components/BrandMark';
 
 export const HomePage = () => {
   const { isAuthenticated } = useAuth();
   const [workshops, setWorkshops] = useState([]);
   const [workshopsLoading, setWorkshopsLoading] = useState(true);
   const [achievements, setAchievements] = useState([]);
+  const [achievementsLoading, setAchievementsLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -39,7 +39,8 @@ export const HomePage = () => {
     let mounted = true;
     achievementAPI.getPublished()
       .then(response => { if (mounted) setAchievements((response.data || []).slice(0, 3)); })
-      .catch(() => { if (mounted) setAchievements([]); });
+      .catch(() => { if (mounted) setAchievements([]); })
+      .finally(() => { if (mounted) setAchievementsLoading(false); });
     return () => { mounted = false; };
   }, []);
 
@@ -48,7 +49,7 @@ export const HomePage = () => {
 
   return (
     <div className="home-motion min-h-screen app-shell">
-      {achievements.length > 0 && (
+      {(achievementsLoading || achievements.length > 0) && (
         <section className="home-achievements-prime py-12 sm:py-16">
           <div className="mx-auto max-w-7xl px-4">
             <ScrollReveal className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -61,7 +62,19 @@ export const HomePage = () => {
             </ScrollReveal>
             <ScrollReveal delay={120}>
               <div className="home-achievement-stage rounded-lg p-3 sm:p-5">
-                <HomeAchievementsCarousel achievements={achievements} />
+                {achievementsLoading ? (
+                  <div className="home-achievement-skeleton rounded-lg">
+                    <div className="home-skeleton-media" />
+                    <div className="home-skeleton-copy">
+                      <div className="home-skeleton-pill" />
+                      <div className="home-skeleton-title" />
+                      <div className="home-skeleton-line" />
+                      <div className="home-skeleton-line short" />
+                    </div>
+                  </div>
+                ) : (
+                  <HomeAchievementsCarousel achievements={achievements} />
+                )}
               </div>
             </ScrollReveal>
           </div>
@@ -71,11 +84,8 @@ export const HomePage = () => {
       <div className="home-official-hero">
         <div className="home-hero-stage max-w-7xl mx-auto px-4 py-8 sm:py-12 lg:py-14 grid lg:grid-cols-[1.08fr_0.92fr] gap-6 sm:gap-10 items-center">
           <div className="home-hero-copy">
-            <div className="mb-7">
-              <BrandMark compact />
-            </div>
             <div className="home-eyebrow inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-black text-secondary mb-5">
-              <FiCalendar /> Upcoming workshop
+              <FiCalendar /> Student learning hub
             </div>
             <h1 className="home-hero-title text-4xl min-[380px]:text-5xl sm:text-6xl font-black mb-6 leading-none">
               Build database skills with MongoDB Technical Club
