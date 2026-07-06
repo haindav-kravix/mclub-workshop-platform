@@ -35,6 +35,7 @@ export const BlogsPage = () => {
   const [myPosts, setMyPosts] = useState([]);
   const [users, setUsers] = useState([]);
   const [query, setQuery] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
   const [feedSection, setFeedSection] = useState('all');
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -85,6 +86,17 @@ export const BlogsPage = () => {
       document.body.style.overflow = originalOverflow;
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!query.trim()) return undefined;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [query]);
 
   const visiblePosts = useMemo(() => {
     const published = posts.filter(post => post.status === 'published');
@@ -147,15 +159,19 @@ export const BlogsPage = () => {
     const searchTerm = value.trim();
     if (!searchTerm) {
       setUsers([]);
+      setSearchLoading(false);
       return;
     }
     try {
+      setSearchLoading(true);
       const response = await blogAPI.searchUsers(searchTerm);
       setUsers(response.data || []);
     } catch (error) {
       console.error('Search error:', error);
       setUsers([]);
       setError('Failed to search users');
+    } finally {
+      setSearchLoading(false);
     }
   };
 
@@ -238,52 +254,73 @@ export const BlogsPage = () => {
             <input
               value={query}
               onChange={(e) => handleUserSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setQuery('');
+                  setUsers([]);
+                  setSearchLoading(false);
+                }
+              }}
               placeholder="Search users"
               className="w-full h-11 pl-12 pr-4 border border-emerald-200 rounded-lg focus-ring !bg-white shadow-sm"
             />
-            {users.length > 0 && (
-              <div className="absolute left-0 right-0 top-12 !bg-white rounded-lg border border-emerald-200 shadow-2xl overflow-hidden z-50">
-                {users.map(foundUser => (
-                  <button
-                    key={foundUser._id}
-                    onClick={() => {
-                      setQuery('');
-                      setUsers([]);
-                      navigate(`/user/${foundUser._id}`);
-                    }}
-                    className="w-full flex items-center justify-between gap-3 p-4 border-b last:border-b-0 border-green-100 hover:bg-green-100 transition text-left"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      {foundUser.profilePhoto && <img src={resolveMediaUrl(foundUser.profilePhoto)} alt={foundUser.name} className="w-10 h-10 rounded-full border-2 border-green-500" />}
+            {query.trim() && (
+              <div
+                className="blog-search-panel absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-lg border border-emerald-200 shadow-2xl"
+                onWheel={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+              >
+                <div className="max-h-[min(24rem,calc(100vh-9rem))] overflow-y-auto overscroll-contain">
+                {searchLoading && (
+                  <div className="p-4 text-sm font-black text-slate-600">Searching...</div>
+                )}
+                {!searchLoading && users.length === 0 && (
+                  <div className="p-4 text-sm font-black text-slate-600">No users found</div>
+                )}
+                {!searchLoading && users.length > 0 && users.map(foundUser => (
+                  <div key={foundUser._id} className="flex w-full items-center justify-between gap-3 border-b border-green-100 p-4 last:border-b-0 hover:bg-green-50">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuery('');
+                        setUsers([]);
+                        navigate(`/user/${foundUser._id}`);
+                      }}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    >
+                      {foundUser.profilePhoto && <img src={resolveMediaUrl(foundUser.profilePhoto)} alt={foundUser.name} className="h-10 w-10 flex-none rounded-full border-2 border-green-500 object-cover" />}
                       <div className="min-w-0">
-                        <p className="font-bold text-sm truncate text-slate-900">{foundUser.name}</p>
+                        <p className="truncate text-sm font-bold text-slate-900">{foundUser.name}</p>
                         <p className="text-xs text-slate-600">{foundUser.followerCount} followers</p>
                       </div>
-                    </div>
+                    </button>
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleFollow(foundUser._id);
                       }}
-                      className="px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-bold flex items-center gap-1 whitespace-nowrap shadow-md"
+                      className="flex items-center gap-1 whitespace-nowrap rounded-lg bg-green-600 px-3 py-2 text-sm font-bold text-white shadow-md hover:bg-green-700"
                     >
                       {foundUser.isFollowing ? <FiUserCheck /> : <FiUserPlus />}
                       {foundUser.isFollowing ? 'Following' : 'Follow'}
                     </button>
                     {isAdmin && (
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteUser(foundUser._id);
                         }}
-                        className="p-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100"
+                        className="rounded-lg bg-rose-50 p-2 text-rose-700 hover:bg-rose-100"
                         title="Delete user"
                       >
                         <FiTrash2 />
                       </button>
                     )}
-                  </button>
+                  </div>
                 ))}
+                </div>
               </div>
             )}
           </div>

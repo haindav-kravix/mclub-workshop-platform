@@ -707,6 +707,51 @@ button, [role="button"], input, textarea, select {
   background: #00b159 !important;
 }
 
+.blog-search-panel {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overscroll-behavior: contain;
+}
+
+.blog-search-panel * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.certificate-preview-backdrop {
+  background: rgba(15, 23, 42, 0.82) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.certificate-preview-dialog {
+  height: min(92vh, 56rem);
+  background: #ffffff !important;
+  border: 1px solid rgba(226, 232, 240, 0.95) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.certificate-preview-header {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.certificate-preview-close {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.certificate-preview-frame {
+  min-height: 0;
+  flex: 1 1 auto;
+  width: 100%;
+  border: 0;
+  background: #f8fafc !important;
+}
+
 .home-upcoming-card {
   animation: homeBorderPulse 4.4s ease-in-out infinite;
 }

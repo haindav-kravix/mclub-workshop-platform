@@ -24,7 +24,7 @@ export const HomeAchievementsCarousel = ({ achievements }) => {
     const timer = window.setInterval(() => {
       setDirection('next');
       setActiveIndex(index => (index + 1) % count);
-    }, 6500);
+    }, 2000);
     return () => window.clearInterval(timer);
   }, [count, paused]);
 
@@ -38,10 +38,6 @@ export const HomeAchievementsCarousel = ({ achievements }) => {
   return (
     <div
       className="achievement-carousel"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
       onPointerDown={(event) => {
         if (isControlTarget(event.target)) return;
         pointerStart.current = event.clientX;

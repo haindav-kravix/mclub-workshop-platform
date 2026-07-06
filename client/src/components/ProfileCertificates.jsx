@@ -15,6 +15,15 @@ export const ProfileCertificates = ({ onError }) => {
     return () => { if (preview?.url) URL.revokeObjectURL(preview.url); };
   }, []);
 
+  useEffect(() => {
+    if (!preview) return undefined;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [preview]);
+
   const openPreview = async (certificate) => {
     try {
       const response = await certificateAPI.getFile(certificate._id);
@@ -57,10 +66,13 @@ export const ProfileCertificates = ({ onError }) => {
         </div>
       )}
       {preview && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-3 sm:p-6">
-          <div className="flex h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 p-3"><p className="truncate font-black">{preview.certificate.title}</p><button onClick={() => { URL.revokeObjectURL(preview.url); setPreview(null); }} className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100" title="Close"><FiX /></button></div>
-            <iframe title="Certificate preview" src={preview.url} className="min-h-0 flex-1 bg-slate-100" />
+        <div className="certificate-preview-backdrop fixed inset-0 z-[1200] flex items-center justify-center p-3 sm:p-6">
+          <div className="certificate-preview-dialog flex w-full max-w-6xl flex-col overflow-hidden rounded-lg shadow-2xl">
+            <div className="certificate-preview-header flex items-center justify-between gap-3 border-b border-slate-200 px-3 py-2 sm:px-4 sm:py-3">
+              <p className="min-w-0 truncate text-sm font-black text-slate-950 sm:text-base">{preview.certificate.title}</p>
+              <button onClick={() => { URL.revokeObjectURL(preview.url); setPreview(null); }} className="certificate-preview-close flex h-10 w-10 flex-none items-center justify-center rounded-lg" title="Close" aria-label="Close certificate preview"><FiX /></button>
+            </div>
+            <iframe title="Certificate preview" src={preview.url} className="certificate-preview-frame" />
           </div>
         </div>
       )}
