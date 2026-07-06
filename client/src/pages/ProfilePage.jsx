@@ -4,6 +4,7 @@ import { blogAPI, resolveMediaUrl } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import { FiCamera, FiEdit3, FiLogOut, FiMail, FiSave, FiUserCheck, FiUsers } from 'react-icons/fi';
+import { ProfileCertificates } from '../components/ProfileCertificates';
 
 export const ProfilePage = () => {
   const { user, refreshProfile, logout } = useAuth();
@@ -188,6 +189,8 @@ export const ProfilePage = () => {
               View Public Profile
             </Link>
           </section>
+
+          <ProfileCertificates onError={setError} />
         </main>
       </div>
     </div>

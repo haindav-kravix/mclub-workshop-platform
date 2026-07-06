@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiFileText, FiList, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
+import { FiAward, FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiFileText, FiList, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
 import { formatWorkshopTime } from '../utils/formatters';
 import { getEventLabel } from '../utils/eventLabels';
@@ -15,7 +15,8 @@ export const AdminWorkshopCard = ({
   onToggleRegistrations,
   onToggleStopped,
   onTakeAttendance,
-  onAttendanceReports
+  onAttendanceReports,
+  onCertificates
 }) => {
   const registrationsOpen = workshop.registrationsOpen !== false;
   const totalRegistrations = workshop.totalRegistrationCount ?? workshop.registrationStats?.total ?? workshop.registrationCount ?? 0;
@@ -135,6 +136,14 @@ export const AdminWorkshopCard = ({
           >
             <FiFileText size={16} />
             <span>Generate Report</span>
+          </button>
+
+          <button
+            onClick={() => onCertificates(workshop._id)}
+            className="col-span-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition text-sm font-semibold flex items-center justify-center space-x-1"
+          >
+            <FiAward size={16} />
+            <span>Certificates</span>
           </button>
 
           {workshop.isActive && (

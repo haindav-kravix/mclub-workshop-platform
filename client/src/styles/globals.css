@@ -519,3 +519,44 @@ button, [role="button"], input, textarea, select {
 .button-group button:not(:last-child) {
   border-right: 1px solid rgba(255, 255, 255, 0.3);
 }
+
+@keyframes achievementRise {
+  from { opacity: 0; transform: translateY(46px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes achievementHalo {
+  0%, 100% { transform: scale(1) rotate(0deg); box-shadow: 0 0 0 0 rgba(0, 177, 89, 0.16); }
+  50% { transform: scale(1.08) rotate(5deg); box-shadow: 0 0 0 18px rgba(0, 177, 89, 0); }
+}
+
+.achievement-card {
+  opacity: 0;
+  transform: translateY(46px) scale(0.985);
+}
+
+.achievement-card-visible {
+  animation: achievementRise 720ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.achievement-loader-icon {
+  animation: achievementHalo 1.35s ease-in-out infinite;
+}
+
+.achievement-card .bg-black\/55,
+.achievement-card .bg-black\/55 * {
+  color: #ffffff !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .achievement-card,
+  .achievement-card-visible {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .achievement-loader-icon {
+    animation: none;
+  }
+}

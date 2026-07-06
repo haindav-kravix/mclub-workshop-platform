@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { workshopAPI, registrationAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
 import { AdminWorkshopCard } from '../components/AdminWorkshopCard';
-import { FiCalendar, FiCheckCircle, FiMail, FiPlus, FiUsers, FiX, FiXCircle } from 'react-icons/fi';
+import { FiAward, FiCalendar, FiCheckCircle, FiMail, FiPlus, FiUsers, FiX, FiXCircle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { getEventLabel } from '../utils/eventLabels';
 
@@ -179,12 +179,15 @@ export const AdminDashboard = () => {
               <h1 className="text-3xl sm:text-4xl font-bold">Admin Dashboard</h1>
               <p className="text-slate-300 mt-2">Every admin can manage workshops, internships, registrations, and exports.</p>
             </div>
-            <button
-              onClick={() => navigate('/admin/workshops/new')}
-              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-primary text-slate-950 rounded-lg hover:bg-primary/80 transition font-bold"
-            >
-              <FiPlus /> <span>Create Event</span>
-            </button>
+            <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-2">
+              <button onClick={() => navigate('/admin/achievements')} className="flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-white px-5 py-3 font-bold text-secondary"><FiAward /> Achievements</button>
+              <button
+                onClick={() => navigate('/admin/workshops/new')}
+                className="flex items-center justify-center space-x-2 px-6 py-3 bg-primary text-slate-950 rounded-lg hover:bg-primary/80 transition font-bold"
+              >
+                <FiPlus /> <span>Create Event</span>
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-8">
@@ -236,6 +239,7 @@ export const AdminDashboard = () => {
                 onToggleStopped={handleToggleStopped}
                 onTakeAttendance={(workshopId) => navigate(`/admin/attendance/${workshopId}`)}
                 onAttendanceReports={(workshopId) => navigate(`/admin/attendance/${workshopId}/reports`)}
+                onCertificates={(workshopId) => navigate(`/admin/certificates/${workshopId}`)}
               />
             ))}
           </div>

@@ -14,6 +14,8 @@ import workshopRoutes from './routes/workshops.js';
 import registrationRoutes from './routes/registrations.js';
 import attendanceRoutes from './routes/attendance.js';
 import blogRoutes from './routes/blogs.js';
+import achievementRoutes from './routes/achievements.js';
+import certificateRoutes from './routes/certificates.js';
 
 const app = express();
 
@@ -61,6 +63,8 @@ app.use('/api/workshops', workshopRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/blogs', blogRoutes);
+app.use('/api/achievements', achievementRoutes);
+app.use('/api/certificates', certificateRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

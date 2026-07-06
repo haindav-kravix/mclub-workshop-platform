@@ -4,8 +4,9 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/ap
 export const API_ORIGIN = API_URL.replace(/\/api\/?$/, '');
 
 export const resolveMediaUrl = (url) => {
-  if (!url || !url.startsWith('/uploads')) return url;
-  return `${API_ORIGIN}${url}`;
+  if (!url) return url;
+  if (url.startsWith('/uploads') || url.startsWith('/api/')) return `${API_ORIGIN}${url}`;
+  return url;
 };
 
 const getAuthHeaders = () => {
@@ -138,4 +139,25 @@ export const blogAPI = {
   deleteUser: (userId) => axios.delete(`${API_URL}/blogs/users/${userId}`, { headers: getAuthHeaders() }),
   getUserProfile: (userId) => axios.get(`${API_URL}/blogs/users/${userId}/profile`, { headers: getAuthHeaders() }),
   getUserPosts: (userId) => axios.get(`${API_URL}/blogs/users/${userId}/posts`, { headers: getAuthHeaders() })
+};
+
+export const achievementAPI = {
+  getPublished: () => axios.get(`${API_URL}/achievements`),
+  getAdmin: () => axios.get(`${API_URL}/achievements/admin/all`, { headers: getAuthHeaders() }),
+  create: (data) => axios.post(`${API_URL}/achievements`, data, { headers: getAuthHeaders() }),
+  update: (id, data) => axios.put(`${API_URL}/achievements/${id}`, data, { headers: getAuthHeaders() }),
+  remove: (id) => axios.delete(`${API_URL}/achievements/${id}`, { headers: getAuthHeaders() })
+};
+
+export const certificateAPI = {
+  getSetup: (workshopId) => axios.get(`${API_URL}/certificates/admin/workshop/${workshopId}/setup`, { headers: getAuthHeaders() }),
+  saveSetup: (workshopId, data) => axios.put(`${API_URL}/certificates/admin/workshop/${workshopId}/setup`, data, { headers: getAuthHeaders() }),
+  getEligible: (workshopId) => axios.get(`${API_URL}/certificates/admin/workshop/${workshopId}/eligible`, { headers: getAuthHeaders() }),
+  generate: (workshopId, userIds) => axios.post(`${API_URL}/certificates/admin/workshop/${workshopId}/generate`, { userIds }, { headers: getAuthHeaders() }),
+  getMy: () => axios.get(`${API_URL}/certificates/my`, { headers: getAuthHeaders() }),
+  getFile: (id, download = false) => axios.get(`${API_URL}/certificates/${id}/file`, {
+    headers: getAuthHeaders(),
+    params: download ? { download: 1 } : {},
+    responseType: 'blob'
+  })
 };

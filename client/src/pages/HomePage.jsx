@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { workshopAPI, resolveMediaUrl } from '../utils/api';
+import { achievementAPI, workshopAPI, resolveMediaUrl } from '../utils/api';
 import { formatWorkshopTime } from '../utils/formatters';
 import { FiArrowRight, FiAward, FiBriefcase, FiCalendar, FiClock, FiMapPin } from 'react-icons/fi';
 import { getEventLabel } from '../utils/eventLabels';
+import { AchievementCard } from '../components/AchievementCard';
 
 export const HomePage = () => {
   const { isAuthenticated } = useAuth();
   const [workshops, setWorkshops] = useState([]);
   const [workshopsLoading, setWorkshopsLoading] = useState(true);
+  const [achievements, setAchievements] = useState([]);
 
   useEffect(() => {
     let mounted = true;
@@ -29,6 +31,14 @@ export const HomePage = () => {
     return () => {
       mounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    achievementAPI.getPublished()
+      .then(response => { if (mounted) setAchievements((response.data || []).slice(0, 3)); })
+      .catch(() => { if (mounted) setAchievements([]); });
+    return () => { mounted = false; };
   }, []);
 
   const featuredWorkshop = workshops[0];
@@ -203,6 +213,24 @@ export const HomePage = () => {
             )}
           </div>
         </div>
+      )}
+
+      {achievements.length > 0 && (
+        <section className="border-y border-emerald-100 bg-slate-50 py-14 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4">
+            <div className="mb-9 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-sm font-black uppercase tracking-wide text-secondary">Club milestones</p>
+                <h2 className="mt-2 text-3xl font-black text-slate-950 sm:text-5xl">Achievements that move us forward</h2>
+                <p className="mt-3 max-w-2xl text-slate-600">Recognitions, partnerships, and student successes, with the newest achievement first.</p>
+              </div>
+              {isAuthenticated && <Link to="/achievements" className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-white px-5 py-3 font-black text-secondary">See all achievements <FiArrowRight /></Link>}
+            </div>
+            <div className="space-y-7">
+              {achievements.map((achievement, index) => <AchievementCard key={achievement._id} achievement={achievement} featured={index === 0} />)}
+            </div>
+          </div>
+        </section>
       )}
 
       {/* Features Section */}
