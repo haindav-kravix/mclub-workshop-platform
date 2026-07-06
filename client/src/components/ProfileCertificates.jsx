@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FiAward, FiDownload, FiEye, FiX } from 'react-icons/fi';
 import { certificateAPI } from '../utils/api';
 
@@ -65,8 +66,8 @@ export const ProfileCertificates = ({ onError }) => {
           ))}
         </div>
       )}
-      {preview && (
-        <div className="certificate-preview-backdrop fixed inset-0 z-[1200] flex items-center justify-center p-3 sm:p-6">
+      {preview && createPortal(
+        <div className="certificate-preview-backdrop fixed inset-0 z-[2147483000] flex items-center justify-center p-3 sm:p-6">
           <div className="certificate-preview-dialog flex w-full max-w-6xl flex-col overflow-hidden rounded-lg shadow-2xl">
             <div className="certificate-preview-header flex items-center justify-between gap-3 border-b border-slate-200 px-3 py-2 sm:px-4 sm:py-3">
               <p className="min-w-0 truncate text-sm font-black text-slate-950 sm:text-base">{preview.certificate.title}</p>
@@ -74,7 +75,8 @@ export const ProfileCertificates = ({ onError }) => {
             </div>
             <iframe title="Certificate preview" src={preview.url} className="certificate-preview-frame" />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );

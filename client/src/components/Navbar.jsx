@@ -20,7 +20,7 @@ export const Navbar = () => {
   }`;
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-[900] bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+    <nav className="app-fixed-header fixed left-0 right-0 top-0 z-[1000] bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
       <div className="max-w-[1680px] mx-auto px-3 sm:px-6">
         <div className="flex justify-between items-center min-h-16 sm:min-h-20 py-2 gap-2 sm:gap-4">
           {/* Logo */}

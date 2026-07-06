@@ -39,7 +39,6 @@ import './styles/globals.css';
 const AppContent = () => {
   const { loading } = useAuth();
   const location = useLocation();
-  const hideGlobalNavbar = location.pathname.startsWith('/blogs');
   const hideGlobalFooter = location.pathname.startsWith('/admin') || location.pathname.startsWith('/attendance/check-in');
 
   if (loading) {
@@ -48,8 +47,8 @@ const AppContent = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      {!hideGlobalNavbar && <Navbar />}
-      <main className={`flex-1 ${!hideGlobalNavbar ? 'pt-16 sm:pt-20' : ''}`}>
+      <Navbar />
+      <main className="flex-1 pt-16 sm:pt-20">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
