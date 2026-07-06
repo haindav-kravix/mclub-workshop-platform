@@ -661,9 +661,34 @@ button, [role="button"], input, textarea, select {
 }
 
 .achievement-carousel {
+  display: flex;
+  min-height: 49rem;
+  flex-direction: column;
+  justify-content: space-between;
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
+}
+
+.achievement-carousel-slide {
+  display: flex;
+  min-height: 42.5rem;
+}
+
+.achievement-carousel-slide .achievement-card {
+  width: 100%;
+  min-height: 42.5rem;
+}
+
+.achievement-carousel-slide .achievement-card > div {
+  min-height: 42.5rem;
+}
+
+.achievement-carousel .achievement-card .whitespace-pre-wrap {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
 }
 
 .achievement-carousel-slide-next {
@@ -705,6 +730,22 @@ button, [role="button"], input, textarea, select {
 .achievement-carousel-dot-active {
   width: 1.8rem;
   background: #00b159 !important;
+}
+
+@media (min-width: 1024px) {
+  .achievement-carousel {
+    min-height: 34rem;
+  }
+
+  .achievement-carousel-slide,
+  .achievement-carousel-slide .achievement-card,
+  .achievement-carousel-slide .achievement-card > div {
+    min-height: 28rem;
+  }
+
+  .achievement-carousel .achievement-card .whitespace-pre-wrap {
+    -webkit-line-clamp: 5;
+  }
 }
 
 .blog-search-panel {
