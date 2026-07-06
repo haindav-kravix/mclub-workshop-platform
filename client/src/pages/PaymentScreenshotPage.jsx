@@ -75,7 +75,7 @@ export const PaymentScreenshotPage = () => {
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
 
         {!error && mediaUrl ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:p-6">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:p-6">
             <div className="mb-4 rounded-lg bg-slate-50 p-4">
               <p className="text-sm font-black text-slate-950">{registration?.userId?.email}</p>
               <p className="mt-1 text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -83,11 +83,13 @@ export const PaymentScreenshotPage = () => {
               </p>
             </div>
             {isPreviewImage ? (
-              <img
-                src={mediaUrl}
-                alt={`${registration?.userId?.name || 'Student'} ${imageTitle}`}
-                className="mx-auto max-h-[75vh] w-full rounded-xl border border-slate-100 object-contain"
-              />
+              <div className="flex max-h-[76vh] items-start justify-center overflow-auto rounded-xl border border-slate-100 bg-slate-50 p-2">
+                <img
+                  src={mediaUrl}
+                  alt={`${registration?.userId?.name || 'Student'} ${imageTitle}`}
+                  className="block h-auto max-h-[72vh] w-auto max-w-full object-contain"
+                />
+              </div>
             ) : isPdf ? (
               <iframe
                 title={`${registration?.userId?.name || 'Student'} ${imageTitle}`}

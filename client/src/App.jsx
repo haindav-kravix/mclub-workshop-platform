@@ -40,6 +40,7 @@ const AppContent = () => {
   const { loading } = useAuth();
   const location = useLocation();
   const hideGlobalNavbar = location.pathname.startsWith('/blogs');
+  const hideGlobalFooter = location.pathname.startsWith('/admin') || location.pathname.startsWith('/attendance/check-in');
 
   if (loading) {
     return <LoadingSpinner />;
@@ -205,7 +206,7 @@ const AppContent = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <Footer />
+      {!hideGlobalFooter && <Footer />}
       <SupportMailButton />
     </div>
   );

@@ -93,12 +93,6 @@ export const HomePage = () => {
             <p className="home-hero-subtitle text-lg sm:text-xl mb-8 max-w-2xl leading-8">
               A focused student community for hands-on workshops, guided learning, technical achievements, and career-ready MongoDB practice.
             </p>
-            <div className="home-impact-row grid grid-cols-3 gap-3 mb-8 max-w-2xl">
-              <div><strong>{workshops.length || '01'}</strong><span>Events</span></div>
-              <div><strong>{achievements.length || '01'}</strong><span>Highlights</span></div>
-              <div><strong>KLH</strong><span>Community</span></div>
-            </div>
-
             <div className="flex flex-col sm:flex-row gap-3">
             {isAuthenticated ? (
               <Link
