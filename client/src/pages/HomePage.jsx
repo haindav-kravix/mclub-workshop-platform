@@ -227,7 +227,7 @@ export const HomePage = () => {
                 <h2 className="mt-2 text-3xl font-black text-slate-950 sm:text-5xl">Achievements that move us forward</h2>
                 <p className="mt-3 max-w-2xl text-slate-600">Recognitions, partnerships, and student successes, with the newest achievement first.</p>
               </div>
-              {isAuthenticated && <Link to="/achievements" className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-white px-5 py-3 font-black text-secondary">See all achievements <FiArrowRight /></Link>}
+              <Link to="/achievements" className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-white px-5 py-3 font-black text-secondary">See all achievements <FiArrowRight /></Link>
             </ScrollReveal>
             <ScrollReveal delay={120}>
               <HomeAchievementsCarousel achievements={achievements} />

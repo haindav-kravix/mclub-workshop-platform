@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FiChevronLeft, FiChevronRight, FiMove } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { AchievementCard } from './AchievementCard';
 
 export const HomeAchievementsCarousel = ({ achievements }) => {
@@ -8,6 +8,7 @@ export const HomeAchievementsCarousel = ({ achievements }) => {
   const [paused, setPaused] = useState(false);
   const pointerStart = useRef(null);
   const count = achievements.length;
+  const isControlTarget = (target) => target.closest?.('button, a, input, textarea, select, [role="button"]');
 
   const moveTo = (nextIndex, nextDirection = 'next') => {
     if (!count) return;
@@ -42,11 +43,13 @@ export const HomeAchievementsCarousel = ({ achievements }) => {
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
       onPointerDown={(event) => {
+        if (isControlTarget(event.target)) return;
         pointerStart.current = event.clientX;
         event.currentTarget.setPointerCapture?.(event.pointerId);
         setPaused(true);
       }}
       onPointerUp={(event) => {
+        if (isControlTarget(event.target)) return;
         if (pointerStart.current !== null) {
           const distance = event.clientX - pointerStart.current;
           if (Math.abs(distance) > 45) distance > 0 ? previous() : next();
@@ -63,11 +66,7 @@ export const HomeAchievementsCarousel = ({ achievements }) => {
       </div>
 
       {count > 1 && (
-        <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="inline-flex items-center gap-2 text-sm font-black text-slate-500">
-            <FiMove className="text-secondary" /> Swipe to explore achievements
-          </div>
-          <div className="flex items-center justify-between gap-3 sm:justify-end">
+        <div className="mt-5 flex items-center justify-center gap-3 sm:justify-end">
             <button type="button" onClick={previous} className="achievement-carousel-arrow" title="Previous achievement" aria-label="Previous achievement"><FiChevronLeft size={22} /></button>
             <div className="flex items-center gap-2" role="tablist" aria-label="Choose achievement">
               {achievements.map((achievement, index) => (
@@ -83,7 +82,6 @@ export const HomeAchievementsCarousel = ({ achievements }) => {
               ))}
             </div>
             <button type="button" onClick={next} className="achievement-carousel-arrow" title="Next achievement" aria-label="Next achievement"><FiChevronRight size={22} /></button>
-          </div>
         </div>
       )}
     </div>

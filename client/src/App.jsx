@@ -107,14 +107,7 @@ const AppContent = () => {
             }
           />
           <Route path="/attendance/check-in/:workshopId" element={<QRCheckInPage />} />
-          <Route
-            path="/achievements"
-            element={
-              <PrivateRoute>
-                <AchievementsPage />
-              </PrivateRoute>
-            }
-          />
+          <Route path="/achievements" element={<AchievementsPage />} />
 
           {/* Protected Routes */}
           <Route
