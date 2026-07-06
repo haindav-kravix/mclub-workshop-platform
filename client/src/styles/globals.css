@@ -560,3 +560,374 @@ button, [role="button"], input, textarea, select {
     animation: none;
   }
 }
+
+@keyframes homeHeroEnter {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes homePanelEnter {
+  from { opacity: 0; transform: translateX(34px) scale(0.98); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes homeTitleFocus {
+  0%, 100% { text-shadow: 0 0 0 rgba(0, 177, 89, 0); }
+  50% { text-shadow: 0 12px 34px rgba(0, 177, 89, 0.2); }
+}
+
+@keyframes homeImageFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-7px) scale(1.015); }
+}
+
+@keyframes homeIconMove {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-6px) rotate(4deg); }
+}
+
+@keyframes homeListEnter {
+  from { opacity: 0; transform: translateX(-22px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes homeBorderPulse {
+  0%, 100% { box-shadow: 0 12px 30px rgba(0, 104, 74, 0.08); }
+  50% { box-shadow: 0 18px 45px rgba(0, 177, 89, 0.18); }
+}
+
+@keyframes homeRevealEnter {
+  from { opacity: 0; transform: translateY(42px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes carouselNext {
+  from { opacity: 0; transform: translateX(48px) scale(0.985); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes carouselPrevious {
+  from { opacity: 0; transform: translateX(-48px) scale(0.985); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.home-hero-copy > * {
+  opacity: 0;
+  animation: homeHeroEnter 720ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.home-hero-copy > *:nth-child(1) { animation-delay: 80ms; }
+.home-hero-copy > *:nth-child(2) { animation-delay: 170ms; }
+.home-hero-copy > *:nth-child(3) { animation-delay: 260ms; }
+.home-hero-copy > *:nth-child(4) { animation-delay: 350ms; }
+.home-hero-copy > *:nth-child(5) { animation-delay: 440ms; }
+
+.home-hero-panel {
+  opacity: 0;
+  animation: homePanelEnter 880ms 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.home-hero-copy h1 {
+  animation: homeHeroEnter 720ms 170ms cubic-bezier(0.22, 1, 0.36, 1) forwards, homeTitleFocus 4s 1.2s ease-in-out infinite;
+}
+
+.home-hero-copy a svg,
+.home-motion .inline-flex svg {
+  transition: transform 280ms ease;
+}
+
+.home-hero-copy a:hover svg,
+.home-motion a:hover > svg:last-child {
+  transform: translateX(5px);
+}
+
+.home-hero-panel > div,
+.home-hero-panel .grid > div {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 320ms ease;
+}
+
+.home-hero-panel .grid > div:hover {
+  transform: translateX(7px);
+  box-shadow: 0 10px 24px rgba(0, 177, 89, 0.12);
+}
+
+.home-scroll-reveal {
+  opacity: 0;
+  transform: translateY(42px);
+}
+
+.home-scroll-reveal-visible {
+  animation: homeRevealEnter 760ms var(--reveal-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.achievement-carousel {
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.achievement-carousel-slide-next {
+  animation: carouselNext 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.achievement-carousel-slide-previous {
+  animation: carouselPrevious 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.achievement-carousel-arrow {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 177, 89, 0.28) !important;
+  border-radius: 0.5rem;
+  background: #ffffff !important;
+  color: #00684a !important;
+  box-shadow: 0 6px 18px rgba(0, 104, 74, 0.1);
+}
+
+.achievement-carousel-arrow:hover {
+  background: #eaf8f1 !important;
+  transform: translateY(-2px);
+}
+
+.achievement-carousel-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 9999px;
+  background: #a7c8bb !important;
+  box-shadow: none !important;
+}
+
+.achievement-carousel-dot-active {
+  width: 1.8rem;
+  background: #00b159 !important;
+}
+
+.home-upcoming-card {
+  animation: homeBorderPulse 4.4s ease-in-out infinite;
+}
+
+.home-upcoming-image {
+  animation: homeImageFloat 5.5s ease-in-out infinite;
+}
+
+.home-upcoming-card:hover .home-upcoming-image {
+  animation-play-state: paused;
+  transform: scale(1.035);
+}
+
+.home-feature-icon {
+  animation: homeIconMove 3.2s ease-in-out infinite;
+}
+
+.home-scroll-reveal:nth-child(2) .home-feature-icon { animation-delay: 220ms; }
+.home-scroll-reveal:nth-child(3) .home-feature-icon { animation-delay: 440ms; }
+
+.home-scroll-reveal-visible .home-about-list li {
+  opacity: 0;
+  animation: homeListEnter 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.home-scroll-reveal-visible .home-about-list li:nth-child(1) { animation-delay: 120ms; }
+.home-scroll-reveal-visible .home-about-list li:nth-child(2) { animation-delay: 210ms; }
+.home-scroll-reveal-visible .home-about-list li:nth-child(3) { animation-delay: 300ms; }
+.home-scroll-reveal-visible .home-about-list li:nth-child(4) { animation-delay: 390ms; }
+
+@keyframes loaderTrackOne {
+  0% { transform: translateX(-120%); opacity: 0; }
+  25% { opacity: 0.65; }
+  100% { transform: translateX(220%); opacity: 0; }
+}
+
+@keyframes loaderTrackTwo {
+  0% { transform: translateY(150%); opacity: 0; }
+  30% { opacity: 0.4; }
+  100% { transform: translateY(-220%); opacity: 0; }
+}
+
+@keyframes loaderEmblem {
+  0%, 100% { transform: scale(1); border-color: rgba(52, 211, 153, 0.55); }
+  50% { transform: scale(1.08); border-color: rgba(110, 231, 183, 1); }
+}
+
+@keyframes loaderFrameSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes loaderWord {
+  from { opacity: 0; transform: translateY(22px); filter: blur(8px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes loaderProgress {
+  0% { transform: translateX(-105%); }
+  55% { transform: translateX(-18%); }
+  100% { transform: translateX(105%); }
+}
+
+@keyframes loaderCopyPulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+.achievement-loader-stage {
+  background: #020617 !important;
+  isolation: isolate;
+}
+
+.achievement-loader-stage,
+.achievement-loader-stage h1,
+.achievement-loader-stage span,
+.achievement-loader-stage p,
+.achievement-loader-stage div {
+  color: #f8fafc !important;
+}
+
+.achievement-loader-grid {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  opacity: 0.16;
+  background-image:
+    linear-gradient(rgba(52, 211, 153, 0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(52, 211, 153, 0.22) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+.achievement-loader-track {
+  position: absolute;
+  z-index: -1;
+  background: #34d399;
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.75);
+}
+
+.achievement-loader-track-one {
+  left: 0;
+  top: 22%;
+  width: 42%;
+  height: 1px;
+  animation: loaderTrackOne 2.4s ease-in-out infinite;
+}
+
+.achievement-loader-track-two {
+  right: 16%;
+  bottom: 0;
+  width: 1px;
+  height: 34%;
+  animation: loaderTrackTwo 2.8s 450ms ease-in-out infinite;
+}
+
+.achievement-loader-kicker {
+  color: #6ee7b7 !important;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  animation: loaderCopyPulse 1.7s ease-in-out infinite;
+}
+
+.achievement-loader-emblem {
+  position: relative;
+  border-radius: 0.5rem;
+  animation: loaderEmblem 1.7s ease-in-out infinite;
+}
+
+.achievement-loader-emblem::before {
+  content: '';
+  position: absolute;
+  inset: -11px;
+  border: 1px solid rgba(52, 211, 153, 0.18);
+  border-top-color: #34d399;
+  border-radius: 0.5rem;
+  animation: loaderFrameSpin 3s linear infinite;
+}
+
+.achievement-loader-emblem svg {
+  color: #6ee7b7 !important;
+  filter: drop-shadow(0 0 13px rgba(52, 211, 153, 0.55));
+}
+
+.achievement-loader-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: #6ee7b7;
+}
+
+.achievement-loader-corner-one {
+  left: -5px;
+  top: -5px;
+  border-left: 2px solid;
+  border-top: 2px solid;
+}
+
+.achievement-loader-corner-two {
+  right: -5px;
+  bottom: -5px;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+}
+
+.achievement-loader-title span {
+  display: inline-block;
+  opacity: 0;
+  animation: loaderWord 620ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.achievement-loader-title span:nth-child(1) { animation-delay: 100ms; }
+.achievement-loader-title span:nth-child(2) { animation-delay: 260ms; }
+.achievement-loader-title span:nth-child(3) { animation-delay: 420ms; }
+
+.achievement-loader-copy,
+.achievement-loader-count {
+  animation: loaderCopyPulse 1.7s 500ms ease-in-out infinite;
+  letter-spacing: 0;
+}
+
+.achievement-loader-copy { color: #94a3b8 !important; }
+.achievement-loader-count { color: #6ee7b7 !important; }
+
+.achievement-loader-progress span {
+  display: block;
+  width: 55%;
+  height: 100%;
+  background: #34d399;
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.8);
+  animation: loaderProgress 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-copy > *,
+  .home-hero-panel,
+  .home-scroll-reveal,
+  .home-scroll-reveal-visible,
+  .achievement-carousel-slide-next,
+  .achievement-carousel-slide-previous,
+  .achievement-loader-track,
+  .achievement-loader-emblem,
+  .achievement-loader-emblem::before,
+  .achievement-loader-title span,
+  .achievement-loader-copy,
+  .achievement-loader-count,
+  .achievement-loader-progress span {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  .home-upcoming-card,
+  .home-upcoming-image,
+  .home-feature-icon,
+  .home-scroll-reveal-visible .home-about-list li,
+  .home-hero-copy h1 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

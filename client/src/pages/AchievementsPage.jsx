@@ -13,16 +13,28 @@ export const AchievementsPage = () => {
     achievementAPI.getPublished()
       .then(response => setAchievements(response.data || []))
       .catch(err => setError(err.response?.data?.message || 'Unable to load achievements'))
-      .finally(() => setTimeout(() => setLoading(false), 650));
+      .finally(() => setTimeout(() => setLoading(false), 1650));
   }, []);
 
   if (loading) {
     return (
-      <div className="achievement-loader min-h-[70vh] flex items-center justify-center px-4">
-        <div className="text-center">
-          <div className="achievement-loader-icon mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-secondary"><FiAward size={38} /></div>
-          <h1 className="mt-5 text-2xl font-black text-slate-950">Loading club achievements</h1>
-          <p className="mt-2 text-slate-500">Gathering our newest milestones...</p>
+      <div className="achievement-loader-stage fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-slate-950 px-5 text-white">
+        <div className="achievement-loader-grid" aria-hidden="true" />
+        <div className="achievement-loader-track achievement-loader-track-one" aria-hidden="true" />
+        <div className="achievement-loader-track achievement-loader-track-two" aria-hidden="true" />
+        <div className="relative z-10 w-full max-w-xl text-center">
+          <div className="achievement-loader-kicker">MongoDB Technical Club</div>
+          <div className="achievement-loader-emblem mx-auto mt-7 flex h-24 w-24 items-center justify-center border border-emerald-400 text-emerald-300">
+            <FiAward size={46} />
+            <span className="achievement-loader-corner achievement-loader-corner-one" />
+            <span className="achievement-loader-corner achievement-loader-corner-two" />
+          </div>
+          <h1 className="achievement-loader-title mt-8 text-3xl font-black sm:text-5xl">
+            <span>Loading</span> <span>club</span> <span>achievements</span>
+          </h1>
+          <p className="achievement-loader-copy mt-4 text-sm font-bold uppercase text-slate-400">Preparing our newest milestones</p>
+          <div className="achievement-loader-progress mx-auto mt-8 h-1 w-full max-w-sm overflow-hidden bg-slate-800"><span /></div>
+          <div className="achievement-loader-count mt-3 text-xs font-black text-emerald-300">DISCOVER • CELEBRATE • INSPIRE</div>
         </div>
       </div>
     );

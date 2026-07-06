@@ -5,7 +5,8 @@ import { achievementAPI, workshopAPI, resolveMediaUrl } from '../utils/api';
 import { formatWorkshopTime } from '../utils/formatters';
 import { FiArrowRight, FiAward, FiBriefcase, FiCalendar, FiClock, FiMapPin } from 'react-icons/fi';
 import { getEventLabel } from '../utils/eventLabels';
-import { AchievementCard } from '../components/AchievementCard';
+import { HomeAchievementsCarousel } from '../components/HomeAchievementsCarousel';
+import { ScrollReveal } from '../components/ScrollReveal';
 
 export const HomePage = () => {
   const { isAuthenticated } = useAuth();
@@ -45,11 +46,11 @@ export const HomePage = () => {
   const featuredLabel = getEventLabel(featuredWorkshop);
 
   return (
-    <div className="min-h-screen app-shell">
+    <div className="home-motion min-h-screen app-shell">
       {/* Hero Section */}
       <div className="bg-slate-950 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-10 sm:py-16 lg:py-20 grid lg:grid-cols-[1.05fr_0.95fr] gap-6 sm:gap-10 items-center">
-          <div>
+        <div className="home-hero-stage max-w-7xl mx-auto px-4 py-10 sm:py-16 lg:py-20 grid lg:grid-cols-[1.05fr_0.95fr] gap-6 sm:gap-10 items-center">
+          <div className="home-hero-copy">
             <div className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-sm font-semibold text-secondary mb-6">
               <FiCalendar /> Live workshops, internships, and technical sessions
             </div>
@@ -99,7 +100,7 @@ export const HomePage = () => {
             </div>
           </div>
 
-          <div className="panel rounded-lg p-5 bg-white text-slate-950">
+          <div className="home-hero-panel panel rounded-lg p-5 bg-white text-slate-950">
             <div className="rounded-lg bg-slate-950 text-white p-6 mb-4">
               <p className="text-sm text-secondary font-semibold mb-2">Community focus</p>
               <h2 className="text-2xl font-bold">Learn, certify, and grow through hands-on workshop participation.</h2>
@@ -128,7 +129,7 @@ export const HomePage = () => {
       {(workshopsLoading || featuredWorkshop) && (
         <div className="py-12 sm:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+            <ScrollReveal className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
               <div>
                 <h2 className="text-3xl sm:text-4xl font-bold text-slate-950">Upcoming {featuredWorkshop ? featuredLabel : 'Event'}</h2>
               </div>
@@ -138,10 +139,11 @@ export const HomePage = () => {
               >
                 View All <FiArrowRight />
               </Link>
-            </div>
+            </ScrollReveal>
 
+            <ScrollReveal delay={110}>
             {workshopsLoading ? (
-              <div className="grid overflow-hidden rounded-lg border border-emerald-100 bg-white shadow-sm lg:grid-cols-[0.95fr_1.05fr]">
+              <div className="home-upcoming-card grid overflow-hidden rounded-lg border border-emerald-100 bg-white shadow-sm lg:grid-cols-[0.95fr_1.05fr]">
                 <div className="h-56 animate-pulse bg-emerald-50 sm:h-72" />
                 <div className="space-y-4 p-5 sm:p-8">
                   <div className="h-7 w-2/3 animate-pulse rounded bg-emerald-100" />
@@ -158,14 +160,14 @@ export const HomePage = () => {
               featuredWorkshop && (
                 <Link
                   to={`/workshop/${featuredWorkshop._id}`}
-                  className="grid overflow-hidden rounded-lg border border-emerald-100 bg-white text-slate-950 shadow-lg transition hover:-translate-y-1 hover:border-primary hover:shadow-2xl lg:grid-cols-[0.95fr_1.05fr]"
+                  className="home-upcoming-card grid overflow-hidden rounded-lg border border-emerald-100 bg-white text-slate-950 shadow-lg transition hover:-translate-y-1 hover:border-primary hover:shadow-2xl lg:grid-cols-[0.95fr_1.05fr]"
                 >
                   <div className="relative h-56 overflow-hidden bg-emerald-50 sm:h-72 lg:h-auto">
                     {featuredWorkshop.coverImage ? (
                       <img
                         src={resolveMediaUrl(featuredWorkshop.coverImage)}
                         alt={featuredWorkshop.title}
-                        className="h-full w-full object-contain p-3 sm:p-5"
+                        className="home-upcoming-image h-full w-full object-contain p-3 sm:p-5"
                         onError={(event) => {
                           event.currentTarget.onerror = null;
                           event.currentTarget.src = '/brand/klh-head-banner.png';
@@ -211,6 +213,7 @@ export const HomePage = () => {
                 </Link>
               )
             )}
+            </ScrollReveal>
           </div>
         </div>
       )}
@@ -218,17 +221,17 @@ export const HomePage = () => {
       {achievements.length > 0 && (
         <section className="border-y border-emerald-100 bg-slate-50 py-14 sm:py-20">
           <div className="mx-auto max-w-7xl px-4">
-            <div className="mb-9 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <ScrollReveal className="mb-9 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-sm font-black uppercase tracking-wide text-secondary">Club milestones</p>
                 <h2 className="mt-2 text-3xl font-black text-slate-950 sm:text-5xl">Achievements that move us forward</h2>
                 <p className="mt-3 max-w-2xl text-slate-600">Recognitions, partnerships, and student successes, with the newest achievement first.</p>
               </div>
               {isAuthenticated && <Link to="/achievements" className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-white px-5 py-3 font-black text-secondary">See all achievements <FiArrowRight /></Link>}
-            </div>
-            <div className="space-y-7">
-              {achievements.map((achievement, index) => <AchievementCard key={achievement._id} achievement={achievement} featured={index === 0} />)}
-            </div>
+            </ScrollReveal>
+            <ScrollReveal delay={120}>
+              <HomeAchievementsCarousel achievements={achievements} />
+            </ScrollReveal>
           </div>
         </section>
       )}
@@ -236,47 +239,47 @@ export const HomePage = () => {
       {/* Features Section */}
       <div className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+          <ScrollReveal className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
             <div>
               <p className="text-sm uppercase tracking-wide text-primary font-bold mb-2">What you get</p>
               <h2 className="text-3xl sm:text-4xl font-bold">Built for practical learning</h2>
             </div>
             <p className="text-slate-600 max-w-xl">Every session is organized around real skills, clear registration, and a simple event experience.</p>
-          </div>
+          </ScrollReveal>
 
           <div className="grid md:grid-cols-3 gap-8">
             {/* Feature 1 */}
-            <div className="panel rounded-lg p-6">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-5">
+            <ScrollReveal className="panel rounded-lg p-6" delay={40}>
+              <div className="home-feature-icon w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-5">
                 <FiCalendar className="text-primary text-3xl" />
               </div>
               <h3 className="text-xl font-bold mb-2">Regular Events</h3>
               <p className="text-gray-600">
                 Attend workshops and events hosted by MongoDB experts and community members
               </p>
-            </div>
+            </ScrollReveal>
 
             {/* Feature 2 */}
-            <div className="panel rounded-lg p-6">
-              <div className="w-12 h-12 bg-cyan-50 rounded-lg flex items-center justify-center mb-5">
+            <ScrollReveal className="panel rounded-lg p-6" delay={130}>
+              <div className="home-feature-icon w-12 h-12 bg-cyan-50 rounded-lg flex items-center justify-center mb-5">
                 <FiAward className="text-primary text-3xl" />
               </div>
               <h3 className="text-xl font-bold mb-2">Certification Guidance</h3>
               <p className="text-gray-600">
                 Get guidance for MongoDB global certification preparation
               </p>
-            </div>
+            </ScrollReveal>
 
             {/* Feature 3 */}
-            <div className="panel rounded-lg p-6">
-              <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-5">
+            <ScrollReveal className="panel rounded-lg p-6" delay={220}>
+              <div className="home-feature-icon w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-5">
                 <FiBriefcase className="text-primary text-3xl" />
               </div>
               <h3 className="text-xl font-bold mb-2">Opportunities</h3>
               <p className="text-gray-600">
                 Registered workshop students may be considered for internships and future programs
               </p>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </div>
@@ -285,7 +288,7 @@ export const HomePage = () => {
       <div className="py-16 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
+            <ScrollReveal>
               <h2 className="text-3xl font-bold mb-4">About MongoDB Technical Club</h2>
               <p className="text-gray-600 mb-4">
                 We are a community-driven organization dedicated to learning, sharing, and advancing knowledge about MongoDB and modern NoSQL databases.
@@ -293,7 +296,7 @@ export const HomePage = () => {
               <p className="text-gray-600 mb-4">
                 Through our workshops, meetups, and guided learning activities, we help developers:
               </p>
-              <ul className="space-y-2 text-gray-600 mb-6">
+              <ul className="home-about-list space-y-2 text-gray-600 mb-6">
                 <li>✓ Master MongoDB concepts and best practices</li>
                 <li>✓ Build scalable database architectures</li>
                 <li>✓ Network with industry professionals</li>
@@ -308,22 +311,22 @@ export const HomePage = () => {
                   <FiArrowRight />
                 </Link>
               )}
-            </div>
-            <div className="bg-slate-950 rounded-lg p-8 text-white">
+            </ScrollReveal>
+            <ScrollReveal className="bg-slate-950 rounded-lg p-8 text-white" delay={150}>
               <h3 className="text-2xl font-bold mb-4">For Registered Students</h3>
               <div className="space-y-4 text-slate-200">
                 <p>Access workshop-specific Telegram groups after registration.</p>
                 <p>Receive updates about session schedules, resources, and opportunities.</p>
                 <p>Stay connected with the community while preparing for certification and career growth.</p>
               </div>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </div>
 
       {/* CTA Section */}
       <div className="bg-white border-t border-slate-200 py-12">
-        <div className="max-w-4xl mx-auto px-4 text-center">
+        <ScrollReveal className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4 text-slate-950">Ready to Get Started?</h2>
           <p className="text-lg text-slate-600 mb-6">
             Register now to discover our upcoming workshops and start your MongoDB journey
@@ -337,7 +340,7 @@ export const HomePage = () => {
               <FiArrowRight />
             </Link>
           )}
-        </div>
+        </ScrollReveal>
       </div>
     </div>
   );
