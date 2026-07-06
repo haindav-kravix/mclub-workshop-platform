@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { achievementAPI, workshopAPI, resolveMediaUrl } from '../utils/api';
 import { formatWorkshopTime } from '../utils/formatters';
-import { FiArrowRight, FiAward, FiBriefcase, FiCalendar, FiClock, FiMapPin } from 'react-icons/fi';
+import { FiArrowRight, FiAward, FiBriefcase, FiCalendar, FiClock, FiMapPin, FiUsers } from 'react-icons/fi';
 import { getEventLabel } from '../utils/eventLabels';
 import { HomeAchievementsCarousel } from '../components/HomeAchievementsCarousel';
 import { ScrollReveal } from '../components/ScrollReveal';
+import { BrandMark } from '../components/BrandMark';
 
 export const HomePage = () => {
   const { isAuthenticated } = useAuth();
@@ -47,28 +48,45 @@ export const HomePage = () => {
 
   return (
     <div className="home-motion min-h-screen app-shell">
-      {/* Hero Section */}
-      <div className="bg-slate-950 text-white">
-        <div className="home-hero-stage max-w-7xl mx-auto px-4 py-10 sm:py-16 lg:py-20 grid lg:grid-cols-[1.05fr_0.95fr] gap-6 sm:gap-10 items-center">
+      {achievements.length > 0 && (
+        <section className="home-achievements-prime py-12 sm:py-16">
+          <div className="mx-auto max-w-7xl px-4">
+            <ScrollReveal className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-sm font-black uppercase tracking-wide text-secondary">Club Achievements</p>
+                <h1 className="mt-2 text-3xl font-black text-slate-950 sm:text-5xl">Latest highlights from MongoDB Technical Club</h1>
+                <p className="mt-3 max-w-2xl text-slate-600">Explore recent recognitions, activities, and student milestones from the club.</p>
+              </div>
+              <Link to="/achievements" className="home-outline-action inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 font-black text-secondary">View All <FiArrowRight /></Link>
+            </ScrollReveal>
+            <ScrollReveal delay={120}>
+              <div className="home-achievement-stage rounded-lg p-3 sm:p-5">
+                <HomeAchievementsCarousel achievements={achievements} />
+              </div>
+            </ScrollReveal>
+          </div>
+        </section>
+      )}
+
+      <div className="home-official-hero">
+        <div className="home-hero-stage max-w-7xl mx-auto px-4 py-8 sm:py-12 lg:py-14 grid lg:grid-cols-[1.08fr_0.92fr] gap-6 sm:gap-10 items-center">
           <div className="home-hero-copy">
-            <div className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-3 py-2 text-sm font-semibold text-secondary mb-6">
-              <FiCalendar /> Live workshops, internships, and technical sessions
+            <div className="mb-7">
+              <BrandMark compact />
             </div>
-            <h1 className="text-3xl min-[380px]:text-4xl sm:text-6xl font-bold mb-6 leading-tight">
-              MongoDB Technical Club
+            <div className="home-eyebrow inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-black text-secondary mb-5">
+              <FiCalendar /> Upcoming workshop
+            </div>
+            <h1 className="home-hero-title text-4xl min-[380px]:text-5xl sm:text-6xl font-black mb-6 leading-none">
+              Build database skills with MongoDB Technical Club
             </h1>
-            <p className="text-lg sm:text-xl text-slate-300 mb-8 max-w-2xl">
-              Discover practical workshops and internship registrations, register in seconds, and build stronger database skills with a focused technical community.
+            <p className="home-hero-subtitle text-lg sm:text-xl mb-8 max-w-2xl leading-8">
+              A focused student community for hands-on workshops, guided learning, technical achievements, and career-ready MongoDB practice.
             </p>
-            <div className="grid sm:grid-cols-2 gap-3 mb-8 max-w-2xl">
-              <div className="rounded-lg border border-white/10 bg-white/10 p-4">
-                <p className="font-bold text-white">MongoDB Global Certification Guidance</p>
-                <p className="text-sm text-slate-300 mt-1">We help members prepare for globally recognized MongoDB certifications.</p>
-              </div>
-              <div className="rounded-lg border border-white/10 bg-white/10 p-4">
-                <p className="font-bold text-white">Opportunity Pathways</p>
-                <p className="text-sm text-slate-300 mt-1">Registered workshop students may be considered for internships and community opportunities.</p>
-              </div>
+            <div className="home-impact-row grid grid-cols-3 gap-3 mb-8 max-w-2xl">
+              <div><strong>{workshops.length || '01'}</strong><span>Events</span></div>
+              <div><strong>{achievements.length || '01'}</strong><span>Highlights</span></div>
+              <div><strong>KLH</strong><span>Community</span></div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -93,31 +111,31 @@ export const HomePage = () => {
             )}
               <Link
                 to="/workshops"
-                className="inline-flex items-center justify-center px-8 py-3 border border-white/20 text-white rounded-lg font-bold hover:bg-white/10 transition"
+                className="home-secondary-action inline-flex items-center justify-center px-8 py-3 rounded-lg font-bold transition"
               >
                 View Events
               </Link>
             </div>
           </div>
 
-          <div className="home-hero-panel panel rounded-lg p-5 bg-white text-slate-950">
-            <div className="rounded-lg bg-slate-950 text-white p-6 mb-4">
-              <p className="text-sm text-secondary font-semibold mb-2">Community focus</p>
-              <h2 className="text-2xl font-bold">Learn, certify, and grow through hands-on workshop participation.</h2>
+          <div className="home-hero-panel home-featured-panel rounded-lg p-5 text-slate-950">
+            <div className="home-panel-main rounded-lg p-6 mb-4">
+              <p className="text-sm text-secondary font-black uppercase tracking-wide mb-2">Club learning path</p>
+              <h2 className="text-2xl sm:text-3xl font-black leading-tight">Learn by attending. Grow by building. Share through achievements.</h2>
             </div>
             <div className="grid gap-3">
-              <div className="rounded-lg bg-slate-50 soft-border p-4 flex gap-3">
+              <div className="home-mini-card rounded-lg p-4 flex gap-3">
                 <FiAward className="text-primary text-2xl flex-none" />
                 <div>
                   <p className="font-bold text-slate-950">Certification Guidance</p>
-                  <p className="text-sm text-slate-600">Guidance for students preparing for MongoDB global certifications.</p>
+                  <p className="text-sm text-slate-600">Structured guidance for students preparing for MongoDB certifications.</p>
                 </div>
               </div>
-              <div className="rounded-lg bg-slate-50 soft-border p-4 flex gap-3">
-                <FiBriefcase className="text-primary text-2xl flex-none" />
+              <div className="home-mini-card rounded-lg p-4 flex gap-3">
+                <FiUsers className="text-primary text-2xl flex-none" />
                 <div>
-                  <p className="font-bold text-slate-950">Student Opportunities</p>
-                  <p className="text-sm text-slate-600">Workshop participation may help students become eligible for future internship opportunities.</p>
+                  <p className="font-bold text-slate-950">Community Practice</p>
+                  <p className="text-sm text-slate-600">Workshops, blogs, attendance, and certificates in one student-friendly hub.</p>
                 </div>
               </div>
             </div>
@@ -127,15 +145,17 @@ export const HomePage = () => {
 
       {/* Upcoming Event Section */}
       {(workshopsLoading || featuredWorkshop) && (
-        <div className="py-12 sm:py-16 bg-white">
+        <div className="home-section-white py-12 sm:py-16">
           <div className="max-w-7xl mx-auto px-4">
             <ScrollReveal className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
               <div>
-                <h2 className="text-3xl sm:text-4xl font-bold text-slate-950">Upcoming {featuredWorkshop ? featuredLabel : 'Event'}</h2>
+                <p className="text-sm font-black uppercase tracking-wide text-secondary">Registrations</p>
+                <h2 className="mt-2 text-3xl sm:text-5xl font-black text-slate-950">Upcoming Workshop</h2>
+                <p className="mt-3 max-w-2xl text-slate-600">Register for the latest session and check your status from My Events.</p>
               </div>
               <Link
                 to="/workshops"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-3 font-bold text-slate-950 transition hover:border-primary hover:bg-primary/10"
+                className="home-outline-action inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 font-bold transition"
               >
                 View All <FiArrowRight />
               </Link>
@@ -160,7 +180,7 @@ export const HomePage = () => {
               featuredWorkshop && (
                 <Link
                   to={`/workshop/${featuredWorkshop._id}`}
-                  className="home-upcoming-card grid overflow-hidden rounded-lg border border-emerald-100 bg-white text-slate-950 shadow-lg transition hover:-translate-y-1 hover:border-primary hover:shadow-2xl lg:grid-cols-[0.95fr_1.05fr]"
+                  className="home-upcoming-card home-solid-card grid overflow-hidden rounded-lg text-slate-950 shadow-lg transition hover:-translate-y-1 hover:border-primary hover:shadow-2xl lg:grid-cols-[0.95fr_1.05fr]"
                 >
                   <div className="relative h-56 overflow-hidden bg-emerald-50 sm:h-72 lg:h-auto">
                     {featuredWorkshop.coverImage ? (
@@ -218,26 +238,8 @@ export const HomePage = () => {
         </div>
       )}
 
-      {achievements.length > 0 && (
-        <section className="border-y border-emerald-100 bg-slate-50 py-14 sm:py-20">
-          <div className="mx-auto max-w-7xl px-4">
-            <ScrollReveal className="mb-9 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-sm font-black uppercase tracking-wide text-secondary">Club milestones</p>
-                <h2 className="mt-2 text-3xl font-black text-slate-950 sm:text-5xl">Achievements that move us forward</h2>
-                <p className="mt-3 max-w-2xl text-slate-600">Recognitions, partnerships, and student successes, with the newest achievement first.</p>
-              </div>
-              <Link to="/achievements" className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-white px-5 py-3 font-black text-secondary">See all achievements <FiArrowRight /></Link>
-            </ScrollReveal>
-            <ScrollReveal delay={120}>
-              <HomeAchievementsCarousel achievements={achievements} />
-            </ScrollReveal>
-          </div>
-        </section>
-      )}
-
       {/* Features Section */}
-      <div className="py-16 bg-white">
+      <div className="home-section-white py-16">
         <div className="max-w-7xl mx-auto px-4">
           <ScrollReveal className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
             <div>
@@ -249,7 +251,7 @@ export const HomePage = () => {
 
           <div className="grid md:grid-cols-3 gap-8">
             {/* Feature 1 */}
-            <ScrollReveal className="panel rounded-lg p-6" delay={40}>
+            <ScrollReveal className="home-solid-card rounded-lg p-6" delay={40}>
               <div className="home-feature-icon w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-5">
                 <FiCalendar className="text-primary text-3xl" />
               </div>
@@ -260,7 +262,7 @@ export const HomePage = () => {
             </ScrollReveal>
 
             {/* Feature 2 */}
-            <ScrollReveal className="panel rounded-lg p-6" delay={130}>
+            <ScrollReveal className="home-solid-card rounded-lg p-6" delay={130}>
               <div className="home-feature-icon w-12 h-12 bg-cyan-50 rounded-lg flex items-center justify-center mb-5">
                 <FiAward className="text-primary text-3xl" />
               </div>
@@ -271,7 +273,7 @@ export const HomePage = () => {
             </ScrollReveal>
 
             {/* Feature 3 */}
-            <ScrollReveal className="panel rounded-lg p-6" delay={220}>
+            <ScrollReveal className="home-solid-card rounded-lg p-6" delay={220}>
               <div className="home-feature-icon w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-5">
                 <FiBriefcase className="text-primary text-3xl" />
               </div>
@@ -285,7 +287,7 @@ export const HomePage = () => {
       </div>
 
       {/* About Club Section */}
-      <div className="py-16 bg-slate-50">
+      <div className="home-section-soft py-16">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <ScrollReveal>
@@ -312,7 +314,7 @@ export const HomePage = () => {
                 </Link>
               )}
             </ScrollReveal>
-            <ScrollReveal className="bg-slate-950 rounded-lg p-8 text-white" delay={150}>
+            <ScrollReveal className="home-dark-card rounded-lg p-8 text-white" delay={150}>
               <h3 className="text-2xl font-bold mb-4">For Registered Students</h3>
               <div className="space-y-4 text-slate-200">
                 <p>Access workshop-specific Telegram groups after registration.</p>
@@ -325,7 +327,7 @@ export const HomePage = () => {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-white border-t border-slate-200 py-12">
+      <div className="home-section-white border-t border-slate-200 py-12">
         <ScrollReveal className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4 text-slate-950">Ready to Get Started?</h2>
           <p className="text-lg text-slate-600 mb-6">

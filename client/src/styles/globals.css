@@ -660,9 +660,175 @@ button, [role="button"], input, textarea, select {
   animation: homeRevealEnter 760ms var(--reveal-delay, 0ms) cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+.home-official-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(0, 214, 106, 0.22), transparent 32%),
+    linear-gradient(135deg, #f8fffb 0%, #e7f7ee 42%, #c5efd7 100%) !important;
+}
+
+.home-official-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -8rem -10rem auto;
+  width: 28rem;
+  height: 28rem;
+  border: 1px solid rgba(0, 104, 74, 0.12);
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.home-official-hero > div {
+  position: relative;
+  z-index: 1;
+}
+
+.home-eyebrow,
+.home-secondary-action,
+.home-outline-action,
+.home-solid-card,
+.home-featured-panel,
+.home-mini-card,
+.home-section-white,
+.home-section-soft,
+.home-dark-card {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.home-eyebrow {
+  border: 1px solid rgba(0, 104, 74, 0.16) !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(0, 104, 74, 0.08);
+}
+
+.home-hero-title {
+  max-width: 54rem;
+  color: #001e2b !important;
+  letter-spacing: 0;
+}
+
+.home-hero-subtitle {
+  color: #285543 !important;
+}
+
+.home-impact-row > div {
+  border: 1px solid rgba(0, 104, 74, 0.14);
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.84) !important;
+  padding: 0.9rem;
+  box-shadow: 0 8px 22px rgba(0, 104, 74, 0.07);
+}
+
+.home-impact-row strong {
+  display: block;
+  color: #001e2b !important;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  line-height: 1;
+}
+
+.home-impact-row span {
+  display: block;
+  margin-top: 0.35rem;
+  color: #3f6f5e !important;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.home-secondary-action,
+.home-outline-action {
+  border: 1px solid rgba(0, 104, 74, 0.2) !important;
+  background: #ffffff !important;
+  color: #00684a !important;
+  box-shadow: 0 10px 24px rgba(0, 104, 74, 0.08);
+}
+
+.home-secondary-action:hover,
+.home-outline-action:hover {
+  background: #e8f8ef !important;
+  border-color: rgba(0, 177, 89, 0.45) !important;
+}
+
+.home-featured-panel,
+.home-solid-card,
+.home-upcoming-card.home-solid-card {
+  border: 1px solid rgba(0, 104, 74, 0.13) !important;
+  background: #ffffff !important;
+  box-shadow: 0 22px 55px rgba(0, 104, 74, 0.12) !important;
+}
+
+.home-panel-main {
+  border: 1px solid rgba(0, 177, 89, 0.18) !important;
+  background: linear-gradient(135deg, #f2fff8 0%, #dff8eb 100%) !important;
+}
+
+.home-mini-card {
+  border: 1px solid rgba(0, 104, 74, 0.12) !important;
+  background: #f8fffb !important;
+}
+
+.home-section-white {
+  background: #ffffff !important;
+}
+
+.home-section-soft {
+  background: #f3fbf6 !important;
+}
+
+.home-dark-card {
+  border: 1px solid rgba(0, 214, 106, 0.25) !important;
+  background: #001e2b !important;
+  color: #ffffff !important;
+  box-shadow: 0 22px 55px rgba(0, 30, 43, 0.16);
+}
+
+.home-dark-card,
+.home-dark-card * {
+  color: #ffffff !important;
+}
+
+.home-achievements-prime {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, #ffffff 0%, #eefbf4 46%, #d8f6e5 100%) !important;
+  border-bottom: 1px solid rgba(0, 104, 74, 0.12);
+}
+
+.home-achievements-prime::before {
+  content: "";
+  position: absolute;
+  left: -6rem;
+  top: -7rem;
+  width: 18rem;
+  height: 18rem;
+  border: 1px solid rgba(0, 177, 89, 0.2);
+  border-radius: 9999px;
+}
+
+.home-achievements-prime > div {
+  position: relative;
+  z-index: 1;
+}
+
+.home-achievement-stage {
+  border: 1px solid rgba(0, 104, 74, 0.14) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: 0 24px 70px rgba(0, 104, 74, 0.13);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.home-achievement-stage .achievement-card {
+  border-color: rgba(0, 177, 89, 0.18) !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
 .achievement-carousel {
   display: flex;
-  min-height: 49rem;
+  min-height: 34rem;
   flex-direction: column;
   justify-content: space-between;
   touch-action: pan-y;
@@ -672,23 +838,58 @@ button, [role="button"], input, textarea, select {
 
 .achievement-carousel-slide {
   display: flex;
-  min-height: 42.5rem;
+  min-height: 27.5rem;
 }
 
 .achievement-carousel-slide .achievement-card {
   width: 100%;
-  min-height: 42.5rem;
+  min-height: 27.5rem;
 }
 
 .achievement-carousel-slide .achievement-card > div {
-  min-height: 42.5rem;
+  min-height: 27.5rem;
 }
 
 .achievement-carousel .achievement-card .whitespace-pre-wrap {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 6;
+  -webkit-line-clamp: 3;
+}
+
+.home-achievement-stage .achievement-card .min-h-52 {
+  min-height: 10rem !important;
+}
+
+.home-achievement-stage .achievement-card img {
+  min-height: 10rem !important;
+}
+
+.home-achievement-stage .achievement-card h2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+@media (max-width: 640px) {
+  .home-achievements-prime {
+    padding-top: 2rem !important;
+    padding-bottom: 2.5rem !important;
+  }
+
+  .home-achievement-stage {
+    padding: 0.65rem !important;
+  }
+
+  .home-achievement-stage .achievement-card h2 {
+    font-size: 1.55rem !important;
+    line-height: 1.12 !important;
+  }
+
+  .home-achievement-stage .achievement-card .p-5 {
+    padding: 1rem !important;
+  }
 }
 
 .achievement-carousel-slide-next {
