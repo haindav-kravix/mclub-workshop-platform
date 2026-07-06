@@ -384,6 +384,7 @@ input::placeholder { color: rgba(0, 0, 0, 0.5) !important; }
   right: 0 !important;
   width: 100% !important;
   z-index: 1000 !important;
+  background: rgba(255, 255, 255, 0.97) !important;
 }
 
 nav, .navbar, header { 
@@ -391,6 +392,13 @@ nav, .navbar, header {
   backdrop-filter: blur(20px); 
   border-bottom: 2px solid rgba(0, 214, 106, 0.2); 
   box-shadow: 0 8px 32px rgba(0, 214, 106, 0.1);
+}
+
+.app-root {
+  transform: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Modal */
@@ -939,6 +947,8 @@ button, [role="button"], input, textarea, select {
 
 .home-achievement-stage .achievement-card img {
   min-height: 10rem !important;
+  object-fit: contain !important;
+  background: #ecfdf5 !important;
 }
 
 .home-achievement-stage .achievement-card h2 {
@@ -1048,13 +1058,17 @@ button, [role="button"], input, textarea, select {
 
 .certificate-preview-backdrop {
   isolation: isolate;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483000 !important;
   background: rgba(15, 23, 42, 0.92) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
 .certificate-preview-dialog {
-  height: min(92dvh, 56rem);
+  width: min(72rem, calc(100vw - 1.5rem)) !important;
+  height: min(52rem, calc(100dvh - 1.5rem));
   max-height: calc(100dvh - 1.5rem);
   background: #ffffff !important;
   border: 1px solid rgba(226, 232, 240, 0.95) !important;
@@ -1079,6 +1093,14 @@ button, [role="button"], input, textarea, select {
   width: 100%;
   border: 0;
   background: #f8fafc !important;
+}
+
+@media (min-width: 640px) {
+  .certificate-preview-dialog {
+    width: min(72rem, calc(100vw - 3rem)) !important;
+    height: min(52rem, calc(100dvh - 3rem));
+    max-height: calc(100dvh - 3rem);
+  }
 }
 
 .home-upcoming-card {

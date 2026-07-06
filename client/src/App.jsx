@@ -46,7 +46,7 @@ const AppContent = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="app-root flex min-h-screen flex-col bg-white">
       <Navbar />
       <main className="flex-1 pt-16 sm:pt-20">
         <Routes>
