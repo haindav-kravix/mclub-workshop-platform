@@ -50,6 +50,18 @@ export const AchievementsPage = () => {
     return () => window.clearTimeout(timer);
   }, [loading, location.search, achievements.length]);
 
+  useEffect(() => {
+    if (!selectedHighlight) return undefined;
+    const originalOverflow = document.body.style.overflow;
+    const originalOverscroll = document.body.style.overscrollBehavior;
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.overscrollBehavior = originalOverscroll;
+    };
+  }, [selectedHighlight]);
+
   const highlightedId = new URLSearchParams(location.search).get('highlight');
   const categories = useMemo(() => {
     const found = new Set(achievements.map(getHighlightCategory));
@@ -213,7 +225,14 @@ export const AchievementsPage = () => {
       </main>
 
       {selectedHighlight && (
-        <div className="highlight-detail-backdrop" role="dialog" aria-modal="true" aria-label={selectedHighlight.title}>
+        <div
+          className="highlight-detail-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label={selectedHighlight.title}
+          onWheel={event => event.stopPropagation()}
+          onTouchMove={event => event.stopPropagation()}
+        >
           <div className="highlight-detail-card">
             <button type="button" onClick={() => setSelectedHighlight(null)} className="highlight-detail-close" aria-label="Close highlight"><FiX /></button>
             <div className="highlight-detail-gallery">

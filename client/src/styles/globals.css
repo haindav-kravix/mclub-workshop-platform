@@ -913,6 +913,8 @@ button, [role="button"], input, textarea, select {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  overscroll-behavior: contain;
   background: rgba(2, 6, 23, 0.72) !important;
   padding: 1rem;
 }
@@ -921,8 +923,10 @@ button, [role="button"], input, textarea, select {
   position: relative;
   display: grid;
   width: min(68rem, 100%);
+  min-height: 0;
   max-height: min(48rem, calc(100dvh - 2rem));
   overflow: hidden;
+  overscroll-behavior: contain;
   border-radius: 1rem;
   background: #ffffff !important;
   box-shadow: 0 32px 90px rgba(0, 0, 0, 0.35);
@@ -947,6 +951,8 @@ button, [role="button"], input, textarea, select {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: contain;
   background: #ecfdf5 !important;
 }
 
@@ -972,6 +978,7 @@ button, [role="button"], input, textarea, select {
   display: flex;
   gap: 0.55rem;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   border-top: 1px solid rgba(0, 104, 74, 0.12);
   padding: 0.65rem;
   background: #ffffff !important;
@@ -1004,6 +1011,7 @@ button, [role="button"], input, textarea, select {
 
 .highlight-detail-copy {
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 1.35rem;
 }
 
@@ -1096,6 +1104,7 @@ button, [role="button"], input, textarea, select {
   }
 
   .highlight-detail-card {
+    overflow-y: auto;
     max-height: calc(100dvh - 1.5rem);
   }
 
