@@ -1166,6 +1166,42 @@ button, [role="button"], input, textarea, select {
     padding: 0.65rem !important;
   }
 
+  .home-achievement-stage,
+  .home-achievement-skeleton,
+  .achievement-carousel {
+    min-height: 42rem !important;
+  }
+
+  .achievement-carousel {
+    height: 42rem !important;
+  }
+
+  .achievement-carousel-slide {
+    height: 36rem !important;
+    min-height: 36rem !important;
+    overflow: hidden;
+  }
+
+  .achievement-carousel-slide .achievement-card,
+  .achievement-carousel-slide .achievement-card > div {
+    height: 100% !important;
+    min-height: 36rem !important;
+  }
+
+  .home-achievement-stage .achievement-card > div {
+    grid-template-rows: 12.5rem minmax(0, 1fr);
+  }
+
+  .home-achievement-stage .achievement-card > div > div:first-child {
+    min-height: 12.5rem !important;
+    max-height: 12.5rem !important;
+  }
+
+  .home-achievement-stage .achievement-card > div > div:last-child {
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .home-club-welcome {
     align-items: flex-start;
     gap: 0.9rem;
@@ -1200,6 +1236,10 @@ button, [role="button"], input, textarea, select {
   .home-achievement-stage .achievement-card h2 {
     font-size: 1.55rem !important;
     line-height: 1.12 !important;
+  }
+
+  .home-achievement-stage .achievement-card .whitespace-pre-wrap {
+    -webkit-line-clamp: 3;
   }
 
   .home-achievement-stage .achievement-card .p-5 {

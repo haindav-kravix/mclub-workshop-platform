@@ -40,6 +40,7 @@ const AppContent = () => {
   const { loading } = useAuth();
   const location = useLocation();
   const hideGlobalFooter = location.pathname.startsWith('/admin') || location.pathname.startsWith('/attendance/check-in');
+  const useBlogHeaderOnly = location.pathname === '/blogs';
 
   if (loading) {
     return <LoadingSpinner />;
@@ -47,8 +48,8 @@ const AppContent = () => {
 
   return (
     <div className="app-root flex min-h-screen flex-col bg-white">
-      <Navbar />
-      <main className="flex-1 pt-16 sm:pt-20">
+      {!useBlogHeaderOnly && <Navbar />}
+      <main className={`flex-1 ${useBlogHeaderOnly ? '' : 'pt-16 sm:pt-20'}`}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
