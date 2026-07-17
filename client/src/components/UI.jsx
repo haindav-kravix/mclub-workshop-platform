@@ -3,10 +3,17 @@ import { FiAlertCircle, FiCheckCircle, FiInfo, FiX } from 'react-icons/fi';
 
 export const LoadingSpinner = () => {
   return (
-    <div className="flex items-center justify-center py-12">
-      <div className="text-center">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading...</p>
+    <div className="app-loader-wrap">
+      <div className="app-loader-card" role="status" aria-live="polite">
+        <div className="app-loader-mark" aria-hidden="true">
+          <span className="app-loader-ring ring-one" />
+          <span className="app-loader-ring ring-two" />
+          <span className="app-loader-core" />
+        </div>
+        <p className="app-loader-title">Loading</p>
+        <div className="app-loader-dots" aria-hidden="true">
+          <span /><span /><span />
+        </div>
       </div>
     </div>
   );
