@@ -61,7 +61,7 @@ export const HighlightDetailPage = () => {
           >
             <FiArrowLeft /> Club Highlights
           </button>
-          <div className="mt-6 grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
+          <div className="mt-6 grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
             <div className="highlight-detail-cover">
               {images[0] ? (
                 <img src={resolveMediaUrl(images[0])} alt={highlight.title} />
