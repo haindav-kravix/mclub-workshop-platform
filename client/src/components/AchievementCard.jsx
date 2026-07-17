@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { FiArrowUpRight, FiAward, FiCalendar } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
 
-export const AchievementCard = ({ achievement, featured = false }) => {
+export const AchievementCard = ({ achievement, featured = false, showLinks = true }) => {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
 
@@ -53,7 +53,7 @@ export const AchievementCard = ({ achievement, featured = false }) => {
           </div>
           <h2 className={`${featured ? 'text-3xl sm:text-4xl' : 'text-2xl'} font-black leading-tight text-slate-950`}>{achievement.title}</h2>
           <p className="mt-4 whitespace-pre-wrap text-base leading-7 text-slate-600">{achievement.summary}</p>
-          {achievement.links?.length > 0 && (
+          {showLinks && achievement.links?.length > 0 && (
             <div className="mt-5 flex flex-wrap gap-2">
               {achievement.links.map(link => (
                 <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-black text-secondary transition hover:bg-emerald-50">
