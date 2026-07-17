@@ -20,6 +20,7 @@ import { getAchievementImage } from './controllers/achievementController.js';
 
 const app = express();
 app.disable('x-powered-by');
+app.set('trust proxy', 1);
 
 // File path setup for static files
 const __filename = fileURLToPath(import.meta.url);
@@ -36,6 +37,33 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+const rateBuckets = new Map();
+const rateLimit = ({ windowMs, max, message }) => (req, res, next) => {
+  const key = `${req.ip}:${req.baseUrl || ''}:${req.path.split('/').slice(0, 3).join('/')}`;
+  const now = Date.now();
+  const bucket = rateBuckets.get(key) || { count: 0, resetAt: now + windowMs };
+  if (bucket.resetAt <= now) {
+    bucket.count = 0;
+    bucket.resetAt = now + windowMs;
+  }
+  bucket.count += 1;
+  rateBuckets.set(key, bucket);
+  res.setHeader('RateLimit-Limit', String(max));
+  res.setHeader('RateLimit-Remaining', String(Math.max(0, max - bucket.count)));
+  res.setHeader('RateLimit-Reset', String(Math.ceil(bucket.resetAt / 1000)));
+  if (bucket.count > max) {
+    return res.status(429).json({ message });
+  }
+  next();
+};
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, bucket] of rateBuckets.entries()) {
+    if (bucket.resetAt <= now) rateBuckets.delete(key);
+  }
+}, 15 * 60 * 1000).unref();
 
 const allowedOrigins = [
   'http://localhost:3000',
@@ -69,10 +97,23 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.get('/media/highlights/:id/:index', getAchievementImage);
+app.get('/media/highlights/:id/:index', rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 800,
+  message: 'Too many media requests. Please try again shortly.'
+}), getAchievementImage);
 
 // API Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 160,
+  message: 'Too many login requests. Please try again later.'
+}), authRoutes);
+app.use('/api', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1400,
+  message: 'Too many requests. Please slow down.'
+}));
 app.use('/api/workshops', workshopRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/attendance', attendanceRoutes);

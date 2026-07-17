@@ -51,12 +51,20 @@ export const AdminAnalyticsPage = () => {
     return (
       <div className="analytics-loader">
         <div className="analytics-loader-grid" />
+        <div className="analytics-loader-scan" />
+        <div className="analytics-loader-orbit orbit-a" />
+        <div className="analytics-loader-orbit orbit-b" />
         <div className="analytics-loader-core">
           <div className="analytics-loader-ring" />
+          <div className="analytics-loader-ring ring-inner" />
           <FiBarChart2 />
         </div>
         <h1><span>Building</span> <span>analytics</span> <span>dashboard</span></h1>
         <p>Scanning registrations, confirmations, event status, and growth signals</p>
+        <div className="analytics-loader-dashboard" aria-hidden="true">
+          <span /><span /><span />
+          <i /><i /><i /><i />
+        </div>
         <div className="analytics-loader-bars">
           <span /><span /><span /><span /><span />
         </div>

@@ -5,12 +5,17 @@ export const LoadingSpinner = () => {
   return (
     <div className="app-loader-wrap">
       <div className="app-loader-card" role="status" aria-live="polite">
+        <div className="app-loader-brand">MC</div>
         <div className="app-loader-mark" aria-hidden="true">
           <span className="app-loader-ring ring-one" />
           <span className="app-loader-ring ring-two" />
           <span className="app-loader-core" />
         </div>
+        <div className="app-loader-signal" aria-hidden="true">
+          <span /><span /><span /><span />
+        </div>
         <p className="app-loader-title">Loading</p>
+        <p className="app-loader-copy">Preparing your MongoDB Club space</p>
         <div className="app-loader-dots" aria-hidden="true">
           <span /><span /><span />
         </div>
