@@ -54,13 +54,17 @@ export const HomePage = () => {
           <div className="mx-auto max-w-7xl px-4">
             <ScrollReveal className="mb-6">
               <div className="home-club-welcome">
+                <span className="home-club-welcome-line" />
                 <span className="home-club-welcome-badge">
                   <FiAward />
                 </span>
                 <div>
                   <p className="home-club-welcome-kicker">Welcome to</p>
                   <h2>MongoDB Club</h2>
+                  <p className="home-club-welcome-copy">Learn, build, celebrate achievements, and grow with a focused technical community.</p>
                 </div>
+                <span className="home-club-welcome-spark spark-one" />
+                <span className="home-club-welcome-spark spark-two" />
               </div>
             </ScrollReveal>
             <ScrollReveal className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

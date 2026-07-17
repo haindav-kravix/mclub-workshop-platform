@@ -619,13 +619,28 @@ button, [role="button"], input, textarea, select {
 }
 
 @keyframes clubWelcomeGlow {
-  0%, 100% { box-shadow: 0 18px 46px rgba(0, 104, 74, 0.12); transform: translateY(0); }
-  50% { box-shadow: 0 24px 64px rgba(0, 177, 89, 0.24); transform: translateY(-3px); }
+  0%, 100% { box-shadow: 0 22px 54px rgba(0, 104, 74, 0.14); transform: translateY(0) scale(1); }
+  50% { box-shadow: 0 30px 82px rgba(0, 177, 89, 0.28); transform: translateY(-4px) scale(1.006); }
 }
 
 @keyframes clubWelcomeBadge {
   0%, 100% { transform: rotate(0deg) scale(1); }
-  50% { transform: rotate(6deg) scale(1.06); }
+  50% { transform: rotate(7deg) scale(1.08); }
+}
+
+@keyframes clubWelcomeSweep {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(110%); }
+}
+
+@keyframes clubWelcomeSpark {
+  0%, 100% { opacity: 0.42; transform: translateY(0) scale(1); }
+  50% { opacity: 0.95; transform: translateY(-10px) scale(1.12); }
+}
+
+@keyframes clubWelcomeText {
+  from { opacity: 0; transform: translateX(22px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes carouselNext {
@@ -844,40 +859,62 @@ button, [role="button"], input, textarea, select {
 }
 
 .home-club-welcome {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  width: fit-content;
+  gap: 1.35rem;
+  width: 100%;
   max-width: 100%;
+  overflow: hidden;
   border: 1px solid rgba(0, 177, 89, 0.2) !important;
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.9) !important;
-  padding: 1rem 1.15rem;
+  border-radius: 1rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(224, 255, 239, 0.92)),
+    radial-gradient(circle at 85% 25%, rgba(0, 237, 100, 0.22), transparent 34%) !important;
+  padding: 1.4rem 1.6rem;
   animation: clubWelcomeGlow 3.6s ease-in-out infinite;
 }
 
+.home-club-welcome-line {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 0%, rgba(0, 237, 100, 0.18) 42%, rgba(255, 255, 255, 0.75) 50%, rgba(0, 104, 74, 0.12) 58%, transparent 100%);
+  animation: clubWelcomeSweep 4.4s ease-in-out infinite;
+}
+
 .home-club-welcome-badge {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3.4rem;
-  height: 3.4rem;
+  width: 5rem;
+  height: 5rem;
   flex: 0 0 auto;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   background: #00ed64 !important;
   color: #001e2b !important;
+  box-shadow: 0 18px 40px rgba(0, 177, 89, 0.26);
   animation: clubWelcomeBadge 2.8s ease-in-out infinite;
 }
 
 .home-club-welcome-badge svg {
-  width: 1.55rem;
-  height: 1.55rem;
+  width: 2.2rem;
+  height: 2.2rem;
   color: #001e2b !important;
+}
+
+.home-club-welcome > div {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  animation: clubWelcomeText 780ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .home-club-welcome-kicker {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 900;
   text-transform: uppercase;
   color: #00684a !important;
@@ -885,10 +922,43 @@ button, [role="button"], input, textarea, select {
 
 .home-club-welcome h2 {
   margin: 0.1rem 0 0;
-  font-size: clamp(1.8rem, 4vw, 3.25rem);
+  font-size: clamp(2.65rem, 7vw, 6.2rem);
   line-height: 1;
   font-weight: 950;
   color: #001e2b !important;
+}
+
+.home-club-welcome-copy {
+  max-width: 46rem;
+  margin: 0.6rem 0 0;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.55;
+  font-weight: 700;
+  color: #24594d !important;
+}
+
+.home-club-welcome-spark {
+  position: absolute;
+  z-index: 0;
+  width: 5.5rem;
+  height: 5.5rem;
+  border: 1px solid rgba(0, 177, 89, 0.22);
+  border-radius: 9999px;
+  background: rgba(0, 237, 100, 0.1) !important;
+  animation: clubWelcomeSpark 3.2s ease-in-out infinite;
+}
+
+.home-club-welcome-spark.spark-one {
+  right: 7%;
+  top: 0.85rem;
+}
+
+.home-club-welcome-spark.spark-two {
+  right: 18%;
+  bottom: -2.5rem;
+  width: 8rem;
+  height: 8rem;
+  animation-delay: 650ms;
 }
 
 .home-achievement-stage {
@@ -1027,13 +1097,29 @@ button, [role="button"], input, textarea, select {
   }
 
   .home-club-welcome {
-    width: 100%;
-    padding: 0.85rem;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 1rem;
   }
 
   .home-club-welcome-badge {
-    width: 3rem;
-    height: 3rem;
+    width: 3.4rem;
+    height: 3.4rem;
+    border-radius: 0.8rem;
+  }
+
+  .home-club-welcome-badge svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .home-club-welcome-copy {
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  .home-club-welcome-spark {
+    opacity: 0.45;
   }
 
   .home-achievement-stage .achievement-card h2 {
@@ -1372,6 +1458,9 @@ button, [role="button"], input, textarea, select {
   .home-scroll-reveal-visible,
   .home-club-welcome,
   .home-club-welcome-badge,
+  .home-club-welcome-line,
+  .home-club-welcome-spark,
+  .home-club-welcome > div,
   .achievement-carousel-slide-next,
   .achievement-carousel-slide-previous,
   .achievement-loader-track,
