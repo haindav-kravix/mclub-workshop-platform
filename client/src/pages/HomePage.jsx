@@ -176,7 +176,7 @@ export const HomePage = () => {
                   <span>What's</span>
                   <span>happening</span>
                 </h2>
-                <p className="mt-3 max-w-2xl text-slate-600">Explore the latest {featuredLabel?.toLowerCase?.() || 'session'}, register quickly, and check your status from My Events.</p>
+                <p className="mt-3 max-w-2xl text-slate-600">Stay connected with current club activities, learning updates, and community opportunities.</p>
               </div>
               <Link
                 to="/workshops"
