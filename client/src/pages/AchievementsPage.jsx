@@ -230,8 +230,6 @@ export const AchievementsPage = () => {
           role="dialog"
           aria-modal="true"
           aria-label={selectedHighlight.title}
-          onWheel={event => event.stopPropagation()}
-          onTouchMove={event => event.stopPropagation()}
         >
           <div className="highlight-detail-card">
             <button type="button" onClick={() => setSelectedHighlight(null)} className="highlight-detail-close" aria-label="Close highlight"><FiX /></button>
