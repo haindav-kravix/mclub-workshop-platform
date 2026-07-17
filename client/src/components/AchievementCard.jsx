@@ -45,7 +45,7 @@ export const AchievementCard = ({ achievement, featured = false }) => {
         <div className="flex flex-col justify-center p-5 sm:p-7">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black uppercase text-emerald-700">
-              <FiAward /> Club Achievement
+              <FiAward /> Club Highlight
             </span>
             <span className="inline-flex items-center gap-2 text-sm font-bold text-slate-500">
               <FiCalendar /> {new Date(achievement.achievedOn).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}

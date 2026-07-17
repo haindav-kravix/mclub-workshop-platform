@@ -547,6 +547,11 @@ button, [role="button"], input, textarea, select {
   50% { transform: scale(1.08) rotate(5deg); box-shadow: 0 0 0 18px rgba(0, 177, 89, 0); }
 }
 
+@keyframes achievementTargetGlow {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(0, 237, 100, 0.2), 0 20px 48px rgba(0, 104, 74, 0.14); }
+  50% { box-shadow: 0 0 0 7px rgba(0, 237, 100, 0.34), 0 28px 70px rgba(0, 177, 89, 0.24); }
+}
+
 .achievement-card {
   opacity: 0;
   transform: translateY(46px) scale(0.985);
@@ -558,6 +563,11 @@ button, [role="button"], input, textarea, select {
 
 .achievement-loader-icon {
   animation: achievementHalo 1.35s ease-in-out infinite;
+}
+
+.achievement-target-highlight {
+  scroll-margin-top: 7rem;
+  animation: achievementTargetGlow 2.4s ease-in-out 3;
 }
 
 .achievement-card .bg-black\/55,
@@ -573,7 +583,8 @@ button, [role="button"], input, textarea, select {
     transform: none;
   }
 
-  .achievement-loader-icon {
+  .achievement-loader-icon,
+  .achievement-target-highlight {
     animation: none;
   }
 }
@@ -1121,6 +1132,9 @@ button, [role="button"], input, textarea, select {
 .achievement-carousel-slide {
   display: flex;
   min-height: 27.5rem;
+  color: inherit !important;
+  cursor: pointer;
+  text-decoration: none !important;
 }
 
 .achievement-carousel-slide .achievement-card {

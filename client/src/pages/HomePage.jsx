@@ -69,11 +69,10 @@ export const HomePage = () => {
             </ScrollReveal>
             <ScrollReveal className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-sm font-black uppercase tracking-wide text-secondary">Club Achievements</p>
+                <p className="text-sm font-black uppercase tracking-wide text-secondary">Club Highlights</p>
                 <h1 className="mt-2 text-3xl font-black text-slate-950 sm:text-5xl">Latest highlights from MongoDB Technical Club</h1>
                 <p className="mt-3 max-w-2xl text-slate-600">Explore recent recognitions, activities, and student milestones from the club.</p>
               </div>
-              <Link to="/achievements" className="home-outline-action inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 font-black text-secondary">View All <FiArrowRight /></Link>
             </ScrollReveal>
             <ScrollReveal delay={120}>
               <div className="home-achievement-stage rounded-lg p-3 sm:p-5">
@@ -90,6 +89,9 @@ export const HomePage = () => {
                 ) : (
                   <HomeAchievementsCarousel achievements={achievements} />
                 )}
+              </div>
+              <div className="mt-5 flex justify-center">
+                <Link to="/achievements" className="home-outline-action inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 font-black text-secondary">View All <FiArrowRight /></Link>
               </div>
             </ScrollReveal>
           </div>

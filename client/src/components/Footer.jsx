@@ -20,7 +20,7 @@ export const Footer = () => {
     <footer className="border-t border-emerald-100 bg-white px-4 py-4 pb-20 sm:pb-5">
       <div className="mx-auto flex max-w-4xl flex-col items-center justify-center gap-3 text-center">
         <Link to="/achievements" className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-black text-secondary">
-          <FiAward /> MongoDB Technical Club Achievements
+          <FiAward /> MongoDB Technical Club Highlights
         </Link>
         <p className="text-xs font-semibold text-slate-600 sm:text-sm">
           © MongoDB Technical Club. All rights reserved.
