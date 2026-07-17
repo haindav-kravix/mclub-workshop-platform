@@ -3,9 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiEdit2, FiImage, FiLink, FiPlus, FiSave, FiTrash2, FiX } from 'react-icons/fi';
 import { achievementAPI, resolveMediaUrl } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
+import { CATEGORY_RULES, getHighlightCategory } from '../utils/highlights';
 
 const emptyForm = () => ({
-  title: '', summary: '', achievedOn: new Date().toISOString().slice(0, 10), links: [{ label: '', url: '' }], isPublished: true
+  title: '',
+  summary: '',
+  category: 'Community',
+  achievedOn: new Date().toISOString().slice(0, 10),
+  links: [{ label: '', url: '' }],
+  isPublished: true
 });
 
 export const AdminAchievementsPage = () => {
@@ -43,6 +49,7 @@ export const AdminAchievementsPage = () => {
     setForm({
       title: item.title,
       summary: item.summary,
+      category: getHighlightCategory(item),
       achievedOn: new Date(item.achievedOn).toISOString().slice(0, 10),
       links: item.links?.length ? item.links : [{ label: '', url: '' }],
       isPublished: item.isPublished !== false
@@ -68,6 +75,7 @@ export const AdminAchievementsPage = () => {
       const data = new FormData();
       data.append('title', form.title);
       data.append('summary', form.summary);
+      data.append('category', form.category);
       data.append('achievedOn', form.achievedOn);
       data.append('isPublished', String(form.isPublished));
       data.append('links', JSON.stringify(form.links.filter(link => link.label.trim() && link.url.trim())));
@@ -118,6 +126,15 @@ export const AdminAchievementsPage = () => {
           {success && <div className="mt-4"><SuccessMessage message={success} onDismiss={() => setSuccess('')} /></div>}
           <form onSubmit={submit} className="mt-5 space-y-4">
             <label className="block text-sm font-black">Title<input required value={form.title} onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))} className="mt-2 w-full" /></label>
+            <label className="block text-sm font-black">
+              Category
+              <select required value={form.category} onChange={e => setForm(prev => ({ ...prev, category: e.target.value }))} className="mt-2 w-full">
+                {CATEGORY_RULES.map(category => (
+                  <option key={category.label} value={category.label}>{category.label}</option>
+                ))}
+                <option value="Highlights">Highlights</option>
+              </select>
+            </label>
             <label className="block text-sm font-black">Achievement date<input required type="date" value={form.achievedOn} onChange={e => setForm(prev => ({ ...prev, achievedOn: e.target.value }))} className="mt-2 w-full" /></label>
             <label className="block text-sm font-black">Description<textarea required rows="6" value={form.summary} onChange={e => setForm(prev => ({ ...prev, summary: e.target.value }))} className="mt-2 w-full" /></label>
             <div>
@@ -151,7 +168,7 @@ export const AdminAchievementsPage = () => {
               <div className="flex gap-4">
                 {item.images?.[0] ? <img src={resolveMediaUrl(item.images[0])} alt="" className="h-24 w-28 flex-none rounded-lg object-cover" /> : <div className="flex h-24 w-28 items-center justify-center rounded-lg bg-emerald-50"><FiImage /></div>}
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2 py-1 text-xs font-black ${item.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{item.isPublished ? 'Published' : 'Draft'}</span><span className="text-xs font-bold text-slate-500">{new Date(item.achievedOn).toLocaleDateString()}</span></div>
+                  <div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2 py-1 text-xs font-black ${item.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{item.isPublished ? 'Published' : 'Draft'}</span><span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-black text-slate-700">{getHighlightCategory(item)}</span><span className="text-xs font-bold text-slate-500">{new Date(item.achievedOn).toLocaleDateString()}</span></div>
                   <h3 className="mt-2 text-lg font-black text-slate-950">{item.title}</h3>
                   <p className="mt-1 line-clamp-2 text-sm text-slate-600">{item.summary}</p>
                 </div>

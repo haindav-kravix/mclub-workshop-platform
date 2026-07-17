@@ -8,6 +8,7 @@ export const CATEGORY_RULES = [
 ];
 
 export const getHighlightCategory = (achievement) => {
+  if (achievement?.category) return achievement.category;
   const text = `${achievement?.title || ''} ${achievement?.summary || ''}`.toLowerCase();
   return CATEGORY_RULES.find(category => category.terms.some(term => text.includes(term)))?.label || 'Highlights';
 };

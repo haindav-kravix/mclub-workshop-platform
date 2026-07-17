@@ -14,6 +14,12 @@ const achievementLinkSchema = new mongoose.Schema({
 const achievementSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
   summary: { type: String, required: true, trim: true },
+  category: {
+    type: String,
+    enum: ['Community', 'Workshops', 'Internships', 'Certifications', 'Events', 'Media', 'Highlights'],
+    default: 'Highlights',
+    trim: true
+  },
   achievedOn: { type: Date, required: true },
   images: { type: [achievementImageSchema], default: [] },
   links: { type: [achievementLinkSchema], default: [] },

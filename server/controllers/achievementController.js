@@ -28,6 +28,13 @@ const parseLinks = (value) => {
   }
 };
 
+const ACHIEVEMENT_CATEGORIES = new Set(['Community', 'Workshops', 'Internships', 'Certifications', 'Events', 'Media', 'Highlights']);
+
+const parseCategory = (value) => {
+  const category = String(value || '').trim();
+  return ACHIEVEMENT_CATEGORIES.has(category) ? category : 'Highlights';
+};
+
 const serializeAchievement = (achievement, req) => {
   const data = typeof achievement.toObject === 'function' ? achievement.toObject() : achievement;
   return {
@@ -95,6 +102,7 @@ export const createAchievement = async (req, res) => {
     const achievement = await Achievement.create({
       title: title.trim(),
       summary: summary.trim(),
+      category: parseCategory(req.body.category),
       achievedOn,
       links: parseLinks(req.body.links),
       images: req.files.map(readAndRemoveFile),
@@ -122,6 +130,7 @@ export const updateAchievement = async (req, res) => {
     }
     if (req.body.title !== undefined) achievement.title = req.body.title.trim();
     if (req.body.summary !== undefined) achievement.summary = req.body.summary.trim();
+    if (req.body.category !== undefined) achievement.category = parseCategory(req.body.category);
     if (req.body.achievedOn) achievement.achievedOn = req.body.achievedOn;
     if (req.body.links !== undefined) achievement.links = parseLinks(req.body.links);
     if (req.body.isPublished !== undefined) achievement.isPublished = String(req.body.isPublished) !== 'false';
