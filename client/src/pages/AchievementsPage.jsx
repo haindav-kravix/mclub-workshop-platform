@@ -1,15 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FiAward } from 'react-icons/fi';
-import { achievementAPI } from '../utils/api';
-import { AchievementCard } from '../components/AchievementCard';
+import { FiArrowUpRight, FiAward, FiCalendar, FiImage, FiSearch, FiX } from 'react-icons/fi';
+import { achievementAPI, resolveMediaUrl } from '../utils/api';
 import { ErrorMessage } from '../components/UI';
+
+const CATEGORY_RULES = [
+  { label: 'Workshops', terms: ['workshop', 'session', 'bootcamp', 'training'] },
+  { label: 'Internships', terms: ['internship', 'intern', 'placement'] },
+  { label: 'Certifications', terms: ['certificate', 'certification', 'certified'] },
+  { label: 'Events', terms: ['event', 'meetup', 'launch', 'orientation'] },
+  { label: 'Community', terms: ['community', 'student', 'team', 'club'] },
+  { label: 'Media', terms: ['media', 'poster', 'photo', 'gallery'] }
+];
+
+const getHighlightCategory = (achievement) => {
+  const text = `${achievement.title || ''} ${achievement.summary || ''}`.toLowerCase();
+  return CATEGORY_RULES.find(category => category.terms.some(term => text.includes(term)))?.label || 'Highlights';
+};
+
+const formatHighlightDate = (date) => new Date(date).toLocaleDateString('en-IN', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric'
+});
 
 export const AchievementsPage = () => {
   const location = useLocation();
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [query, setQuery] = useState('');
+  const [selectedHighlight, setSelectedHighlight] = useState(null);
 
   useEffect(() => {
     achievementAPI.getPublished()
@@ -29,6 +51,23 @@ export const AchievementsPage = () => {
   }, [loading, location.search, achievements.length]);
 
   const highlightedId = new URLSearchParams(location.search).get('highlight');
+  const categories = useMemo(() => {
+    const found = new Set(achievements.map(getHighlightCategory));
+    return ['All', ...CATEGORY_RULES.map(category => category.label).filter(label => found.has(label)), ...(found.has('Highlights') ? ['Highlights'] : [])];
+  }, [achievements]);
+
+  const filteredHighlights = useMemo(() => {
+    const search = query.trim().toLowerCase();
+    return achievements.filter(item => {
+      const category = getHighlightCategory(item);
+      const matchesCategory = activeCategory === 'All' || category === activeCategory;
+      const matchesSearch = !search || `${item.title || ''} ${item.summary || ''}`.toLowerCase().includes(search);
+      return matchesCategory && matchesSearch;
+    });
+  }, [achievements, activeCategory, query]);
+
+  const featuredHighlight = filteredHighlights[0];
+  const remainingHighlights = featuredHighlight ? filteredHighlights.slice(1) : filteredHighlights;
 
   if (loading) {
     return (
@@ -55,16 +94,44 @@ export const AchievementsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-emerald-100 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100 text-secondary"><FiAward size={25} /></div>
-          <p className="mt-6 text-sm font-black uppercase tracking-wide text-secondary">MongoDB Technical Club</p>
-          <h1 className="mt-2 text-4xl font-black text-slate-950 sm:text-6xl">Club highlights</h1>
-          <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600">Milestones, recognitions, partnerships, and student successes. Newest highlights appear first.</p>
+    <div className="highlights-page min-h-screen">
+      <header className="highlights-hero">
+        <div className="highlights-orbit orbit-one" aria-hidden="true" />
+        <div className="highlights-orbit orbit-two" aria-hidden="true" />
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:py-16">
+          <div className="highlights-hero-badge">
+            <FiAward />
+            <span>MongoDB Technical Club</span>
+          </div>
+          <h1 className="highlights-hero-title mt-6">Club highlights</h1>
+          <p className="mt-5 max-w-3xl text-lg font-semibold leading-8 text-slate-600">A public media wall for milestones, student stories, activities, recognitions, and club moments. Newest highlights appear first.</p>
+
+          <div className="highlights-toolbar mt-8">
+            <div className="highlights-search">
+              <FiSearch />
+              <input
+                value={query}
+                onChange={event => setQuery(event.target.value)}
+                placeholder="Search highlights"
+                aria-label="Search highlights"
+              />
+            </div>
+            <div className="highlights-categories" aria-label="Filter highlights">
+              {categories.map(category => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setActiveCategory(category)}
+                  className={activeCategory === category ? 'active' : ''}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl space-y-8 px-4 py-10">
+      <main className="mx-auto max-w-7xl px-4 py-10">
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
         {!error && achievements.length === 0 && (
           <div className="rounded-lg border border-emerald-100 bg-white p-12 text-center">
@@ -73,16 +140,102 @@ export const AchievementsPage = () => {
             <p className="mt-2 text-slate-500">New club milestones will appear here.</p>
           </div>
         )}
-        {achievements.map((achievement, index) => (
-          <div
-            key={achievement._id}
-            id={`highlight-${achievement._id}`}
-            className={highlightedId === achievement._id ? 'achievement-target-highlight rounded-lg' : 'rounded-lg'}
-          >
-            <AchievementCard achievement={achievement} featured={index === 0} />
+        {!error && achievements.length > 0 && filteredHighlights.length === 0 && (
+          <div className="rounded-lg border border-emerald-100 bg-white p-12 text-center">
+            <FiSearch className="mx-auto text-secondary" size={42} />
+            <h2 className="mt-4 text-2xl font-black">No highlights found</h2>
+            <p className="mt-2 text-slate-500">Try another category or search term.</p>
           </div>
-        ))}
+        )}
+
+        {featuredHighlight && (
+          <section
+            id={`highlight-${featuredHighlight._id}`}
+            className={`highlight-featured-card ${highlightedId === featuredHighlight._id ? 'achievement-target-highlight' : ''}`}
+          >
+            <button type="button" onClick={() => setSelectedHighlight(featuredHighlight)} className="highlight-featured-media" aria-label={`Open ${featuredHighlight.title}`}>
+              {featuredHighlight.images?.[0] ? (
+                <img src={resolveMediaUrl(featuredHighlight.images[0])} alt={featuredHighlight.title} />
+              ) : (
+                <div className="highlight-empty-media"><FiImage /></div>
+              )}
+            </button>
+            <div className="highlight-featured-copy">
+              <div className="highlight-card-meta">
+                <span><FiAward /> {getHighlightCategory(featuredHighlight)}</span>
+                <span><FiCalendar /> {formatHighlightDate(featuredHighlight.achievedOn)}</span>
+              </div>
+              <h2>{featuredHighlight.title}</h2>
+              <p>{featuredHighlight.summary}</p>
+              <button type="button" onClick={() => setSelectedHighlight(featuredHighlight)} className="highlight-read-more">
+                Open Highlight <FiArrowUpRight />
+              </button>
+            </div>
+          </section>
+        )}
+
+        {remainingHighlights.length > 0 && (
+          <section className="highlights-wall mt-8">
+            {remainingHighlights.map((achievement, index) => (
+              <article
+                key={achievement._id}
+                id={`highlight-${achievement._id}`}
+                className={`highlight-wall-card ${highlightedId === achievement._id ? 'achievement-target-highlight' : ''}`}
+                style={{ '--highlight-delay': `${Math.min(index * 70, 420)}ms` }}
+              >
+                <button type="button" onClick={() => setSelectedHighlight(achievement)} className="highlight-wall-media" aria-label={`Open ${achievement.title}`}>
+                  {achievement.images?.[0] ? (
+                    <img src={resolveMediaUrl(achievement.images[0])} alt={achievement.title} />
+                  ) : (
+                    <div className="highlight-empty-media"><FiImage /></div>
+                  )}
+                  {achievement.images?.length > 1 && <span className="highlight-image-count">+{achievement.images.length - 1}</span>}
+                </button>
+                <div className="highlight-wall-copy">
+                  <div className="highlight-card-meta compact">
+                    <span>{getHighlightCategory(achievement)}</span>
+                    <span>{formatHighlightDate(achievement.achievedOn)}</span>
+                  </div>
+                  <h3>{achievement.title}</h3>
+                  <p>{achievement.summary}</p>
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
       </main>
+
+      {selectedHighlight && (
+        <div className="highlight-detail-backdrop" role="dialog" aria-modal="true" aria-label={selectedHighlight.title}>
+          <div className="highlight-detail-card">
+            <button type="button" onClick={() => setSelectedHighlight(null)} className="highlight-detail-close" aria-label="Close highlight"><FiX /></button>
+            <div className="highlight-detail-gallery">
+              {(selectedHighlight.images?.length ? selectedHighlight.images : [null]).map((image, index) => (
+                <div key={image || 'empty'} className="highlight-detail-image">
+                  {image ? <img src={resolveMediaUrl(image)} alt={`${selectedHighlight.title} ${index + 1}`} /> : <FiImage />}
+                </div>
+              ))}
+            </div>
+            <div className="highlight-detail-copy">
+              <div className="highlight-card-meta">
+                <span><FiAward /> {getHighlightCategory(selectedHighlight)}</span>
+                <span><FiCalendar /> {formatHighlightDate(selectedHighlight.achievedOn)}</span>
+              </div>
+              <h2>{selectedHighlight.title}</h2>
+              <p>{selectedHighlight.summary}</p>
+              {selectedHighlight.links?.length > 0 && (
+                <div className="highlight-detail-links">
+                  {selectedHighlight.links.map(link => (
+                    <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noreferrer">
+                      {link.label} <FiArrowUpRight />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
