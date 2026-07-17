@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FiArrowUpRight, FiAward, FiCalendar, FiImage, FiSearch, FiX } from 'react-icons/fi';
+import { FiArrowUpRight, FiAward, FiCalendar, FiImage, FiX } from 'react-icons/fi';
 import { achievementAPI, resolveMediaUrl } from '../utils/api';
 import { ErrorMessage } from '../components/UI';
 
@@ -30,8 +30,8 @@ export const AchievementsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const [query, setQuery] = useState('');
   const [selectedHighlight, setSelectedHighlight] = useState(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     achievementAPI.getPublished()
@@ -57,17 +57,18 @@ export const AchievementsPage = () => {
   }, [achievements]);
 
   const filteredHighlights = useMemo(() => {
-    const search = query.trim().toLowerCase();
     return achievements.filter(item => {
       const category = getHighlightCategory(item);
-      const matchesCategory = activeCategory === 'All' || category === activeCategory;
-      const matchesSearch = !search || `${item.title || ''} ${item.summary || ''}`.toLowerCase().includes(search);
-      return matchesCategory && matchesSearch;
+      return activeCategory === 'All' || category === activeCategory;
     });
-  }, [achievements, activeCategory, query]);
+  }, [achievements, activeCategory]);
 
   const featuredHighlight = filteredHighlights[0];
   const remainingHighlights = featuredHighlight ? filteredHighlights.slice(1) : filteredHighlights;
+  const openHighlight = (highlight, imageIndex = 0) => {
+    setSelectedHighlight(highlight);
+    setSelectedImageIndex(imageIndex);
+  };
 
   if (loading) {
     return (
@@ -107,15 +108,6 @@ export const AchievementsPage = () => {
           <p className="mt-5 max-w-3xl text-lg font-semibold leading-8 text-slate-600">A public media wall for milestones, student stories, activities, recognitions, and club moments. Newest highlights appear first.</p>
 
           <div className="highlights-toolbar mt-8">
-            <div className="highlights-search">
-              <FiSearch />
-              <input
-                value={query}
-                onChange={event => setQuery(event.target.value)}
-                placeholder="Search highlights"
-                aria-label="Search highlights"
-              />
-            </div>
             <div className="highlights-categories" aria-label="Filter highlights">
               {categories.map(category => (
                 <button
@@ -142,9 +134,9 @@ export const AchievementsPage = () => {
         )}
         {!error && achievements.length > 0 && filteredHighlights.length === 0 && (
           <div className="rounded-lg border border-emerald-100 bg-white p-12 text-center">
-            <FiSearch className="mx-auto text-secondary" size={42} />
+            <FiAward className="mx-auto text-secondary" size={42} />
             <h2 className="mt-4 text-2xl font-black">No highlights found</h2>
-            <p className="mt-2 text-slate-500">Try another category or search term.</p>
+            <p className="mt-2 text-slate-500">Try another category.</p>
           </div>
         )}
 
@@ -153,7 +145,7 @@ export const AchievementsPage = () => {
             id={`highlight-${featuredHighlight._id}`}
             className={`highlight-featured-card ${highlightedId === featuredHighlight._id ? 'achievement-target-highlight' : ''}`}
           >
-            <button type="button" onClick={() => setSelectedHighlight(featuredHighlight)} className="highlight-featured-media" aria-label={`Open ${featuredHighlight.title}`}>
+            <button type="button" onClick={() => openHighlight(featuredHighlight)} className="highlight-featured-media" aria-label={`Open ${featuredHighlight.title}`}>
               {featuredHighlight.images?.[0] ? (
                 <img src={resolveMediaUrl(featuredHighlight.images[0])} alt={featuredHighlight.title} />
               ) : (
@@ -167,9 +159,16 @@ export const AchievementsPage = () => {
               </div>
               <h2>{featuredHighlight.title}</h2>
               <p>{featuredHighlight.summary}</p>
-              <button type="button" onClick={() => setSelectedHighlight(featuredHighlight)} className="highlight-read-more">
-                Open Highlight <FiArrowUpRight />
-              </button>
+              <div className="highlight-action-row">
+                <button type="button" onClick={() => openHighlight(featuredHighlight)} className="highlight-read-more">
+                  View all photos <FiImage />
+                </button>
+                {featuredHighlight.links?.map(link => (
+                  <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noreferrer" className="highlight-redirect-link">
+                    {link.label} <FiArrowUpRight />
+                  </a>
+                ))}
+              </div>
             </div>
           </section>
         )}
@@ -183,7 +182,7 @@ export const AchievementsPage = () => {
                 className={`highlight-wall-card ${highlightedId === achievement._id ? 'achievement-target-highlight' : ''}`}
                 style={{ '--highlight-delay': `${Math.min(index * 70, 420)}ms` }}
               >
-                <button type="button" onClick={() => setSelectedHighlight(achievement)} className="highlight-wall-media" aria-label={`Open ${achievement.title}`}>
+                <button type="button" onClick={() => openHighlight(achievement)} className="highlight-wall-media" aria-label={`Open ${achievement.title}`}>
                   {achievement.images?.[0] ? (
                     <img src={resolveMediaUrl(achievement.images[0])} alt={achievement.title} />
                   ) : (
@@ -198,6 +197,14 @@ export const AchievementsPage = () => {
                   </div>
                   <h3>{achievement.title}</h3>
                   <p>{achievement.summary}</p>
+                  <div className="highlight-card-actions">
+                    <button type="button" onClick={() => openHighlight(achievement)}>View photos</button>
+                    {achievement.links?.slice(0, 2).map(link => (
+                      <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noreferrer">
+                        {link.label} <FiArrowUpRight />
+                      </a>
+                    ))}
+                  </div>
                 </div>
               </article>
             ))}
@@ -210,11 +217,26 @@ export const AchievementsPage = () => {
           <div className="highlight-detail-card">
             <button type="button" onClick={() => setSelectedHighlight(null)} className="highlight-detail-close" aria-label="Close highlight"><FiX /></button>
             <div className="highlight-detail-gallery">
-              {(selectedHighlight.images?.length ? selectedHighlight.images : [null]).map((image, index) => (
-                <div key={image || 'empty'} className="highlight-detail-image">
-                  {image ? <img src={resolveMediaUrl(image)} alt={`${selectedHighlight.title} ${index + 1}`} /> : <FiImage />}
-                </div>
-              ))}
+              <div className="highlight-detail-main-image">
+                {selectedHighlight.images?.[selectedImageIndex] ? (
+                  <img src={resolveMediaUrl(selectedHighlight.images[selectedImageIndex])} alt={`${selectedHighlight.title} ${selectedImageIndex + 1}`} />
+                ) : (
+                  <FiImage />
+                )}
+              </div>
+              <div className="highlight-detail-thumbnails" aria-label="All photos">
+                {(selectedHighlight.images?.length ? selectedHighlight.images : [null]).map((image, index) => (
+                  <button
+                    key={image || 'empty'}
+                    type="button"
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={index === selectedImageIndex ? 'active' : ''}
+                    aria-label={`Show photo ${index + 1}`}
+                  >
+                    {image ? <img src={resolveMediaUrl(image)} alt={`${selectedHighlight.title} thumbnail ${index + 1}`} /> : <FiImage />}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="highlight-detail-copy">
               <div className="highlight-card-meta">

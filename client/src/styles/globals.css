@@ -667,29 +667,6 @@ button, [role="button"], input, textarea, select {
   gap: 1rem;
 }
 
-.highlights-search {
-  position: relative;
-  max-width: 34rem;
-}
-
-.highlights-search svg {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #00684a !important;
-}
-
-.highlights-search input {
-  width: 100%;
-  border: 1px solid rgba(0, 177, 89, 0.22) !important;
-  border-radius: 0.85rem;
-  background: #ffffff !important;
-  padding: 0.9rem 1rem 0.9rem 2.9rem;
-  font-weight: 800;
-  box-shadow: 0 16px 38px rgba(0, 104, 74, 0.1);
-}
-
 .highlights-categories {
   display: flex;
   flex-wrap: wrap;
@@ -755,8 +732,7 @@ button, [role="button"], input, textarea, select {
 }
 
 .highlight-featured-media img,
-.highlight-wall-media img,
-.highlight-detail-image img {
+.highlight-wall-media img {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -815,7 +791,6 @@ button, [role="button"], input, textarea, select {
 }
 
 .highlight-read-more {
-  margin-top: 1.25rem;
   display: inline-flex;
   width: fit-content;
   align-items: center;
@@ -825,6 +800,35 @@ button, [role="button"], input, textarea, select {
   padding: 0.8rem 1rem;
   color: #001e2b !important;
   font-weight: 950;
+}
+
+.highlight-action-row,
+.highlight-card-actions {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.highlight-redirect-link,
+.highlight-card-actions a,
+.highlight-card-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(0, 177, 89, 0.24) !important;
+  border-radius: 0.75rem;
+  background: #ffffff !important;
+  padding: 0.72rem 0.85rem;
+  color: #00684a !important;
+  font-size: 0.88rem;
+  font-weight: 950;
+  box-shadow: 0 10px 22px rgba(0, 104, 74, 0.08);
+}
+
+.highlight-card-actions button {
+  background: #00ed64 !important;
+  color: #001e2b !important;
 }
 
 .highlights-wall {
@@ -941,20 +945,61 @@ button, [role="button"], input, textarea, select {
 
 .highlight-detail-gallery {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(18rem, 1fr);
-  gap: 0.25rem;
-  overflow-x: auto;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
   background: #ecfdf5 !important;
 }
 
-.highlight-detail-image {
+.highlight-detail-main-image {
   display: flex;
-  min-height: 22rem;
+  min-height: 24rem;
+  min-width: 0;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   color: #00684a !important;
   font-size: 3rem;
+}
+
+.highlight-detail-main-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #f8fffb !important;
+}
+
+.highlight-detail-thumbnails {
+  display: flex;
+  gap: 0.55rem;
+  overflow-x: auto;
+  border-top: 1px solid rgba(0, 104, 74, 0.12);
+  padding: 0.65rem;
+  background: #ffffff !important;
+}
+
+.highlight-detail-thumbnails button {
+  display: flex;
+  width: 5.5rem;
+  height: 4.3rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid transparent !important;
+  border-radius: 0.65rem;
+  background: #ecfdf5 !important;
+  color: #00684a !important;
+}
+
+.highlight-detail-thumbnails button.active {
+  border-color: #00ed64 !important;
+  box-shadow: 0 0 0 3px rgba(0, 237, 100, 0.18);
+}
+
+.highlight-detail-thumbnails img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .highlight-detail-copy {
@@ -1007,10 +1052,7 @@ button, [role="button"], input, textarea, select {
   }
 
   .highlight-detail-gallery {
-    grid-auto-flow: row;
-    grid-auto-columns: auto;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    overflow-y: auto;
+    min-height: min(48rem, calc(100dvh - 2rem));
   }
 }
 
@@ -1057,12 +1099,13 @@ button, [role="button"], input, textarea, select {
     max-height: calc(100dvh - 1.5rem);
   }
 
-  .highlight-detail-gallery {
-    grid-auto-columns: minmax(16rem, 90vw);
+  .highlight-detail-main-image {
+    min-height: 18rem;
   }
 
-  .highlight-detail-image {
-    min-height: 18rem;
+  .highlight-action-row,
+  .highlight-card-actions {
+    gap: 0.5rem;
   }
 }
 
