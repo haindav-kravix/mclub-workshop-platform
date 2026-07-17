@@ -618,6 +618,16 @@ button, [role="button"], input, textarea, select {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes clubWelcomeGlow {
+  0%, 100% { box-shadow: 0 18px 46px rgba(0, 104, 74, 0.12); transform: translateY(0); }
+  50% { box-shadow: 0 24px 64px rgba(0, 177, 89, 0.24); transform: translateY(-3px); }
+}
+
+@keyframes clubWelcomeBadge {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(6deg) scale(1.06); }
+}
+
 @keyframes carouselNext {
   from { opacity: 0; transform: translateX(48px) scale(0.985); }
   to { opacity: 1; transform: translateX(0) scale(1); }
@@ -833,6 +843,54 @@ button, [role="button"], input, textarea, select {
   z-index: 1;
 }
 
+.home-club-welcome {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid rgba(0, 177, 89, 0.2) !important;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.9) !important;
+  padding: 1rem 1.15rem;
+  animation: clubWelcomeGlow 3.6s ease-in-out infinite;
+}
+
+.home-club-welcome-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  flex: 0 0 auto;
+  border-radius: 0.75rem;
+  background: #00ed64 !important;
+  color: #001e2b !important;
+  animation: clubWelcomeBadge 2.8s ease-in-out infinite;
+}
+
+.home-club-welcome-badge svg {
+  width: 1.55rem;
+  height: 1.55rem;
+  color: #001e2b !important;
+}
+
+.home-club-welcome-kicker {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #00684a !important;
+}
+
+.home-club-welcome h2 {
+  margin: 0.1rem 0 0;
+  font-size: clamp(1.8rem, 4vw, 3.25rem);
+  line-height: 1;
+  font-weight: 950;
+  color: #001e2b !important;
+}
+
 .home-achievement-stage {
   border: 1px solid rgba(0, 104, 74, 0.14) !important;
   background: rgba(255, 255, 255, 0.92) !important;
@@ -966,6 +1024,16 @@ button, [role="button"], input, textarea, select {
 
   .home-achievement-stage {
     padding: 0.65rem !important;
+  }
+
+  .home-club-welcome {
+    width: 100%;
+    padding: 0.85rem;
+  }
+
+  .home-club-welcome-badge {
+    width: 3rem;
+    height: 3rem;
   }
 
   .home-achievement-stage .achievement-card h2 {
@@ -1302,6 +1370,8 @@ button, [role="button"], input, textarea, select {
   .home-hero-panel,
   .home-scroll-reveal,
   .home-scroll-reveal-visible,
+  .home-club-welcome,
+  .home-club-welcome-badge,
   .achievement-carousel-slide-next,
   .achievement-carousel-slide-previous,
   .achievement-loader-track,

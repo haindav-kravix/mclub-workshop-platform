@@ -52,6 +52,17 @@ export const HomePage = () => {
       {(achievementsLoading || achievements.length > 0) && (
         <section className="home-achievements-prime py-12 sm:py-16">
           <div className="mx-auto max-w-7xl px-4">
+            <ScrollReveal className="mb-6">
+              <div className="home-club-welcome">
+                <span className="home-club-welcome-badge">
+                  <FiAward />
+                </span>
+                <div>
+                  <p className="home-club-welcome-kicker">Welcome to</p>
+                  <h2>MongoDB Club</h2>
+                </div>
+              </div>
+            </ScrollReveal>
             <ScrollReveal className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-sm font-black uppercase tracking-wide text-secondary">Club Achievements</p>
