@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { workshopAPI, registrationAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
 import { AdminWorkshopCard } from '../components/AdminWorkshopCard';
-import { FiAward, FiCalendar, FiCheckCircle, FiMail, FiPlus, FiUsers, FiX, FiXCircle } from 'react-icons/fi';
+import { FiActivity, FiAward, FiBarChart2, FiCalendar, FiCheckCircle, FiClock, FiMail, FiPlus, FiTrendingUp, FiUsers, FiX, FiXCircle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { getEventLabel } from '../utils/eventLabels';
 
@@ -161,64 +161,121 @@ export const AdminDashboard = () => {
   const totalRegistrations = workshops.reduce((total, workshop) => total + (workshop.totalRegistrationCount ?? workshop.registrationStats?.total ?? workshop.registrationCount ?? 0), 0);
   const confirmedRegistrations = workshops.reduce((total, workshop) => total + (workshop.confirmedRegistrationCount ?? workshop.registrationStats?.confirmed ?? workshop.registrationCount ?? 0), 0);
   const rejectedRegistrations = workshops.reduce((total, workshop) => total + (workshop.rejectedRegistrationCount ?? workshop.registrationStats?.rejected ?? 0), 0);
+  const runningEvents = workshops.filter(workshop => !workshop.isStopped).length;
+  const openRegistrations = workshops.filter(workshop => workshop.registrationsOpen !== false).length;
+  const confirmationRate = totalRegistrations ? Math.round((confirmedRegistrations / totalRegistrations) * 100) : 0;
+  const topEvent = [...workshops].sort((a, b) => {
+    const aTotal = a.totalRegistrationCount ?? a.registrationStats?.total ?? a.registrationCount ?? 0;
+    const bTotal = b.totalRegistrationCount ?? b.registrationStats?.total ?? b.registrationCount ?? 0;
+    return bTotal - aTotal;
+  })[0];
   const statCards = [
-    { label: 'Total Events', value: workshops.length, icon: FiCalendar },
-    { label: 'Registrations', value: totalRegistrations, icon: FiUsers },
-    { label: 'Confirmed', value: confirmedRegistrations, icon: FiCheckCircle },
-    { label: 'Rejected', value: rejectedRegistrations, icon: FiXCircle }
+    { label: 'Total Events', value: workshops.length, icon: FiCalendar, hint: `${runningEvents} running now` },
+    { label: 'Registrations', value: totalRegistrations, icon: FiUsers, hint: `${openRegistrations} open for registration` },
+    { label: 'Confirmed', value: confirmedRegistrations, icon: FiCheckCircle, hint: `${confirmationRate}% confirmation rate` },
+    { label: 'Rejected', value: rejectedRegistrations, icon: FiXCircle, hint: 'Filtered in registrations' }
+  ];
+  const quickActions = [
+    { label: 'Create Event', icon: FiPlus, onClick: () => navigate('/admin/workshops/new'), primary: true },
+    { label: 'Analytics', icon: FiBarChart2, onClick: () => navigate('/admin/analytics') },
+    { label: 'Club Highlights', icon: FiAward, onClick: () => navigate('/admin/achievements') }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-slate-950 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
-            <div>
-              <p className="text-sm font-semibold text-secondary uppercase tracking-wide mb-2">Shared admin portal</p>
-              <h1 className="text-3xl sm:text-4xl font-bold">Admin Dashboard</h1>
-              <p className="text-slate-300 mt-2">Every admin can manage workshops, internships, registrations, and exports.</p>
+    <div className="admin-dashboard min-h-screen">
+      <section className="admin-hero">
+        <div className="admin-hero-grid" aria-hidden="true" />
+        <div className="admin-hero-orb orb-a" aria-hidden="true" />
+        <div className="admin-hero-orb orb-b" aria-hidden="true" />
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
+          <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr] lg:items-end">
+            <div className="admin-hero-copy">
+              <div className="admin-kicker"><FiActivity /> Live control room</div>
+              <h1>Admin Dashboard</h1>
+              <p>Manage workshops, internships, registrations, attendance, certificates, reports, emails, and public club highlights from one focused workspace.</p>
             </div>
-            <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-2">
-              <button onClick={() => navigate('/admin/achievements')} className="flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-white px-5 py-3 font-bold text-secondary"><FiAward /> Achievements</button>
-              <button
-                onClick={() => navigate('/admin/workshops/new')}
-                className="flex items-center justify-center space-x-2 px-6 py-3 bg-primary text-slate-950 rounded-lg hover:bg-primary/80 transition font-bold"
-              >
-                <FiPlus /> <span>Create Event</span>
-              </button>
+            <div className="admin-command-panel">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Quick actions</p>
+                <h2 className="mt-1 text-2xl font-black text-slate-950">Start faster</h2>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                {quickActions.map(action => {
+                  const Icon = action.icon;
+                  return (
+                    <button key={action.label} onClick={action.onClick} className={`admin-action-button ${action.primary ? 'primary' : ''}`}>
+                      <Icon /> <span>{action.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-8">
-            {statCards.map((stat) => {
+          <div className="admin-stat-grid">
+            {statCards.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <div key={stat.label} className="rounded-lg border border-white/10 bg-white/10 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-2xl font-bold">{stat.value}</p>
-                      <p className="text-sm text-slate-300">{stat.label}</p>
-                    </div>
-                    <Icon className="text-secondary" size={22} />
-                  </div>
+                <div key={stat.label} className="admin-stat-card" style={{ '--admin-delay': `${index * 90}ms` }}>
+                  <div className="admin-stat-icon"><Icon /></div>
+                  <p className="admin-stat-value">{stat.value}</p>
+                  <p className="admin-stat-label">{stat.label}</p>
+                  <p className="admin-stat-hint">{stat.hint}</p>
                 </div>
               );
             })}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
         {success && <SuccessMessage message={success} onDismiss={() => setSuccess('')} />}
 
+        <section className="admin-insight-grid mb-8">
+          <div className="admin-insight-card">
+            <div className="admin-insight-icon"><FiTrendingUp /></div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Top event</p>
+              <h2>{topEvent?.title || 'No event yet'}</h2>
+              <p>{topEvent ? `${topEvent.totalRegistrationCount ?? topEvent.registrationStats?.total ?? topEvent.registrationCount ?? 0} registrations recorded` : 'Create your first event to start tracking performance.'}</p>
+            </div>
+          </div>
+          <div className="admin-insight-card">
+            <div className="admin-insight-icon"><FiBarChart2 /></div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Event health</p>
+              <h2>{confirmationRate}% confirmed</h2>
+              <p>{confirmedRegistrations} confirmed students out of {totalRegistrations} total registrations.</p>
+            </div>
+          </div>
+          <div className="admin-insight-card">
+            <div className="admin-insight-icon"><FiClock /></div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Visibility</p>
+              <h2>{runningEvents} running</h2>
+              <p>{openRegistrations} events currently accepting registrations.</p>
+            </div>
+          </div>
+        </section>
+
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wide text-secondary">Event operations</p>
+            <h2 className="mt-1 text-3xl font-black text-slate-950">Manage events</h2>
+          </div>
+          <button onClick={() => navigate('/admin/workshops/new')} className="admin-action-button primary w-full sm:w-auto">
+            <FiPlus /> <span>Create Event</span>
+          </button>
+        </div>
+
         {workshops.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <p className="text-gray-600 text-lg mb-4">You haven't created any workshops or internships yet</p>
+          <div className="admin-empty-state">
+            <div className="admin-empty-icon"><FiCalendar /></div>
+            <p>You haven't created any workshops or internships yet</p>
             <button
               onClick={() => navigate('/admin/workshops/new')}
-              className="inline-flex items-center space-x-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition font-bold"
+              className="admin-action-button primary mx-auto mt-5"
             >
               <FiPlus /> <span>Create Your First Event</span>
             </button>

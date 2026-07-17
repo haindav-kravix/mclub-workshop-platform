@@ -1,28 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { FiArrowUpRight, FiAward, FiCalendar, FiImage, FiX } from 'react-icons/fi';
+import { Link, useLocation } from 'react-router-dom';
+import { FiArrowUpRight, FiAward, FiCalendar, FiImage } from 'react-icons/fi';
 import { achievementAPI, resolveMediaUrl } from '../utils/api';
 import { ErrorMessage } from '../components/UI';
-
-const CATEGORY_RULES = [
-  { label: 'Workshops', terms: ['workshop', 'session', 'bootcamp', 'training'] },
-  { label: 'Internships', terms: ['internship', 'intern', 'placement'] },
-  { label: 'Certifications', terms: ['certificate', 'certification', 'certified'] },
-  { label: 'Events', terms: ['event', 'meetup', 'launch', 'orientation'] },
-  { label: 'Community', terms: ['community', 'student', 'team', 'club'] },
-  { label: 'Media', terms: ['media', 'poster', 'photo', 'gallery'] }
-];
-
-const getHighlightCategory = (achievement) => {
-  const text = `${achievement.title || ''} ${achievement.summary || ''}`.toLowerCase();
-  return CATEGORY_RULES.find(category => category.terms.some(term => text.includes(term)))?.label || 'Highlights';
-};
-
-const formatHighlightDate = (date) => new Date(date).toLocaleDateString('en-IN', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric'
-});
+import { CATEGORY_RULES, formatHighlightDate, getHighlightCategory } from '../utils/highlights';
 
 export const AchievementsPage = () => {
   const location = useLocation();
@@ -30,8 +11,6 @@ export const AchievementsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const [selectedHighlight, setSelectedHighlight] = useState(null);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     achievementAPI.getPublished()
@@ -50,18 +29,6 @@ export const AchievementsPage = () => {
     return () => window.clearTimeout(timer);
   }, [loading, location.search, achievements.length]);
 
-  useEffect(() => {
-    if (!selectedHighlight) return undefined;
-    const originalOverflow = document.body.style.overflow;
-    const originalOverscroll = document.body.style.overscrollBehavior;
-    document.body.style.overflow = 'hidden';
-    document.body.style.overscrollBehavior = 'none';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-      document.body.style.overscrollBehavior = originalOverscroll;
-    };
-  }, [selectedHighlight]);
-
   const highlightedId = new URLSearchParams(location.search).get('highlight');
   const categories = useMemo(() => {
     const found = new Set(achievements.map(getHighlightCategory));
@@ -77,10 +44,6 @@ export const AchievementsPage = () => {
 
   const featuredHighlight = filteredHighlights[0];
   const remainingHighlights = featuredHighlight ? filteredHighlights.slice(1) : filteredHighlights;
-  const openHighlight = (highlight, imageIndex = 0) => {
-    setSelectedHighlight(highlight);
-    setSelectedImageIndex(imageIndex);
-  };
 
   if (loading) {
     return (
@@ -157,13 +120,13 @@ export const AchievementsPage = () => {
             id={`highlight-${featuredHighlight._id}`}
             className={`highlight-featured-card ${highlightedId === featuredHighlight._id ? 'achievement-target-highlight' : ''}`}
           >
-            <button type="button" onClick={() => openHighlight(featuredHighlight)} className="highlight-featured-media" aria-label={`Open ${featuredHighlight.title}`}>
+            <Link to={`/achievements/${featuredHighlight._id}`} className="highlight-featured-media" aria-label={`Open ${featuredHighlight.title}`}>
               {featuredHighlight.images?.[0] ? (
                 <img src={resolveMediaUrl(featuredHighlight.images[0])} alt={featuredHighlight.title} />
               ) : (
                 <div className="highlight-empty-media"><FiImage /></div>
               )}
-            </button>
+            </Link>
             <div className="highlight-featured-copy">
               <div className="highlight-card-meta">
                 <span><FiAward /> {getHighlightCategory(featuredHighlight)}</span>
@@ -172,9 +135,9 @@ export const AchievementsPage = () => {
               <h2>{featuredHighlight.title}</h2>
               <p>{featuredHighlight.summary}</p>
               <div className="highlight-action-row">
-                <button type="button" onClick={() => openHighlight(featuredHighlight)} className="highlight-read-more">
-                  View all photos <FiImage />
-                </button>
+                <Link to={`/achievements/${featuredHighlight._id}`} className="highlight-read-more">
+                  Open Highlight <FiArrowUpRight />
+                </Link>
                 {featuredHighlight.links?.map(link => (
                   <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noreferrer" className="highlight-redirect-link">
                     {link.label} <FiArrowUpRight />
@@ -194,14 +157,14 @@ export const AchievementsPage = () => {
                 className={`highlight-wall-card ${highlightedId === achievement._id ? 'achievement-target-highlight' : ''}`}
                 style={{ '--highlight-delay': `${Math.min(index * 70, 420)}ms` }}
               >
-                <button type="button" onClick={() => openHighlight(achievement)} className="highlight-wall-media" aria-label={`Open ${achievement.title}`}>
+                <Link to={`/achievements/${achievement._id}`} className="highlight-wall-media" aria-label={`Open ${achievement.title}`}>
                   {achievement.images?.[0] ? (
                     <img src={resolveMediaUrl(achievement.images[0])} alt={achievement.title} />
                   ) : (
                     <div className="highlight-empty-media"><FiImage /></div>
                   )}
                   {achievement.images?.length > 1 && <span className="highlight-image-count">+{achievement.images.length - 1}</span>}
-                </button>
+                </Link>
                 <div className="highlight-wall-copy">
                   <div className="highlight-card-meta compact">
                     <span>{getHighlightCategory(achievement)}</span>
@@ -210,7 +173,7 @@ export const AchievementsPage = () => {
                   <h3>{achievement.title}</h3>
                   <p>{achievement.summary}</p>
                   <div className="highlight-card-actions">
-                    <button type="button" onClick={() => openHighlight(achievement)}>View photos</button>
+                    <Link to={`/achievements/${achievement._id}`}>Open Highlight</Link>
                     {achievement.links?.slice(0, 2).map(link => (
                       <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noreferrer">
                         {link.label} <FiArrowUpRight />
@@ -223,58 +186,6 @@ export const AchievementsPage = () => {
           </section>
         )}
       </main>
-
-      {selectedHighlight && (
-        <div
-          className="highlight-detail-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-label={selectedHighlight.title}
-        >
-          <div className="highlight-detail-card">
-            <button type="button" onClick={() => setSelectedHighlight(null)} className="highlight-detail-close" aria-label="Close highlight"><FiX /></button>
-            <div className="highlight-detail-gallery">
-              <div className="highlight-detail-main-image">
-                {selectedHighlight.images?.[selectedImageIndex] ? (
-                  <img src={resolveMediaUrl(selectedHighlight.images[selectedImageIndex])} alt={`${selectedHighlight.title} ${selectedImageIndex + 1}`} />
-                ) : (
-                  <FiImage />
-                )}
-              </div>
-              <div className="highlight-detail-thumbnails" aria-label="All photos">
-                {(selectedHighlight.images?.length ? selectedHighlight.images : [null]).map((image, index) => (
-                  <button
-                    key={image || 'empty'}
-                    type="button"
-                    onClick={() => setSelectedImageIndex(index)}
-                    className={index === selectedImageIndex ? 'active' : ''}
-                    aria-label={`Show photo ${index + 1}`}
-                  >
-                    {image ? <img src={resolveMediaUrl(image)} alt={`${selectedHighlight.title} thumbnail ${index + 1}`} /> : <FiImage />}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="highlight-detail-copy">
-              <div className="highlight-card-meta">
-                <span><FiAward /> {getHighlightCategory(selectedHighlight)}</span>
-                <span><FiCalendar /> {formatHighlightDate(selectedHighlight.achievedOn)}</span>
-              </div>
-              <h2>{selectedHighlight.title}</h2>
-              <p>{selectedHighlight.summary}</p>
-              {selectedHighlight.links?.length > 0 && (
-                <div className="highlight-detail-links">
-                  {selectedHighlight.links.map(link => (
-                    <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noreferrer">
-                      {link.label} <FiArrowUpRight />
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

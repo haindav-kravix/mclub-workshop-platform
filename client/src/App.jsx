@@ -30,8 +30,10 @@ import { DesignShowcasePage } from './pages/DesignShowcasePage';
 import { CodeBlockTestPage } from './pages/CodeBlockTestPage';
 import { QRCheckInPage } from './pages/QRCheckInPage';
 import { AchievementsPage } from './pages/AchievementsPage';
+import { HighlightDetailPage } from './pages/HighlightDetailPage';
 import { AdminAchievementsPage } from './pages/AdminAchievementsPage';
 import { AdminCertificatesPage } from './pages/AdminCertificatesPage';
+import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
 
 // Styles
 import './styles/globals.css';
@@ -109,6 +111,7 @@ const AppContent = () => {
           />
           <Route path="/attendance/check-in/:workshopId" element={<QRCheckInPage />} />
           <Route path="/achievements" element={<AchievementsPage />} />
+          <Route path="/achievements/:highlightId" element={<HighlightDetailPage />} />
 
           {/* Protected Routes */}
           <Route
@@ -190,6 +193,14 @@ const AppContent = () => {
             element={
               <PrivateRoute requireAdmin={true}>
                 <AdminAchievementsPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/analytics"
+            element={
+              <PrivateRoute requireAdmin={true}>
+                <AdminAnalyticsPage />
               </PrivateRoute>
             }
           />
