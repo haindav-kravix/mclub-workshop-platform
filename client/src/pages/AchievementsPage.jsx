@@ -173,7 +173,7 @@ export const AchievementsPage = () => {
                   <h3>{achievement.title}</h3>
                   <p>{achievement.summary}</p>
                   <div className="highlight-card-actions">
-                    <Link to={`/achievements/${achievement._id}`}>Open Highlight</Link>
+                    <Link to={`/achievements/${achievement._id}`} className="highlight-open-button">Open Highlight <FiArrowUpRight /></Link>
                     {achievement.links?.slice(0, 2).map(link => (
                       <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noreferrer">
                         {link.label} <FiArrowUpRight />

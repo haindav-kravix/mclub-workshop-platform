@@ -39,7 +39,7 @@ const serializeAchievement = (achievement, req) => {
   const data = typeof achievement.toObject === 'function' ? achievement.toObject() : achievement;
   return {
     ...data,
-    images: (data.images || []).map((_, index) => `/api/achievements/${data._id}/images/${index}`),
+    images: (data.images || []).map((_, index) => `/media/highlights/${data._id}/${index}`),
     imageCount: data.images?.length || 0
   };
 };
@@ -78,6 +78,7 @@ export const getAchievementImage = async (req, res) => {
     }
     res.setHeader('Content-Type', image.mimeType);
     res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.send(image.data);
   } catch (error) {
     res.status(404).json({ message: 'Achievement image not found' });

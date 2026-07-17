@@ -5,7 +5,7 @@ export const API_ORIGIN = API_URL.replace(/\/api\/?$/, '');
 
 export const resolveMediaUrl = (url) => {
   if (!url) return url;
-  if (url.startsWith('/uploads') || url.startsWith('/api/')) return `${API_ORIGIN}${url}`;
+  if (url.startsWith('/uploads') || url.startsWith('/api/') || url.startsWith('/media/')) return `${API_ORIGIN}${url}`;
   return url;
 };
 

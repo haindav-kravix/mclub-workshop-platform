@@ -16,14 +16,27 @@ import attendanceRoutes from './routes/attendance.js';
 import blogRoutes from './routes/blogs.js';
 import achievementRoutes from './routes/achievements.js';
 import certificateRoutes from './routes/certificates.js';
+import { getAchievementImage } from './controllers/achievementController.js';
 
 const app = express();
+app.disable('x-powered-by');
 
 // File path setup for static files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  if (req.path.startsWith('/api/')) {
+    res.setHeader('Cache-Control', 'no-store');
+  }
+  next();
+});
+
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:8000',
@@ -47,7 +60,7 @@ app.use(cors({
       callback(null, true);
       return;
     }
-    callback(new Error(`CORS blocked for origin: ${origin}`));
+    callback(new Error('CORS blocked'));
   },
   credentials: true
 }));
@@ -56,6 +69,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.get('/media/highlights/:id/:index', getAchievementImage);
 
 // API Routes
 app.use('/api/auth', authRoutes);

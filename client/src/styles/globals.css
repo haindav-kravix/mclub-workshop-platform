@@ -712,6 +712,12 @@ button, [role="button"], input, textarea, select {
   to { transform: translateX(120%); }
 }
 
+@keyframes highlightButtonShine {
+  0%, 48% { transform: translateX(0) skewX(-18deg); opacity: 0; }
+  58% { opacity: 1; }
+  100% { transform: translateX(390%) skewX(-18deg); opacity: 0; }
+}
+
 .achievement-card {
   opacity: 0;
   transform: translateY(46px) scale(0.985);
@@ -931,15 +937,41 @@ button, [role="button"], input, textarea, select {
 }
 
 .highlight-read-more {
+  position: relative;
   display: inline-flex;
   width: fit-content;
   align-items: center;
   gap: 0.5rem;
+  overflow: hidden;
   border-radius: 0.75rem;
   background: #00ed64 !important;
   padding: 0.8rem 1rem;
   color: #001e2b !important;
   font-weight: 950;
+  box-shadow: 0 14px 32px rgba(0, 177, 89, 0.24);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.highlight-read-more::before,
+.highlight-open-button::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -70%;
+  width: 44%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.62), transparent);
+  transform: skewX(-18deg);
+  animation: highlightButtonShine 2.4s ease-in-out infinite;
+}
+
+.highlight-read-more:hover,
+.highlight-open-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 44px rgba(0, 177, 89, 0.32);
+}
+
+.highlight-read-more:hover svg,
+.highlight-open-button:hover svg {
+  transform: translate(2px, -2px);
 }
 
 .highlight-action-row,
@@ -951,7 +983,6 @@ button, [role="button"], input, textarea, select {
 }
 
 .highlight-redirect-link,
-.highlight-card-actions a,
 .highlight-card-actions button {
   display: inline-flex;
   align-items: center;
@@ -964,6 +995,43 @@ button, [role="button"], input, textarea, select {
   font-size: 0.88rem;
   font-weight: 950;
   box-shadow: 0 10px 22px rgba(0, 104, 74, 0.08);
+}
+
+.highlight-card-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(0, 177, 89, 0.24) !important;
+  border-radius: 0.75rem;
+  background: #ffffff !important;
+  padding: 0.72rem 0.85rem;
+  color: #00684a !important;
+  font-size: 0.88rem;
+  font-weight: 950;
+  box-shadow: 0 10px 22px rgba(0, 104, 74, 0.08);
+}
+
+.highlight-card-actions .highlight-open-button {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(0, 237, 100, 0.68) !important;
+  background: #00ed64 !important;
+  color: #001e2b !important;
+  box-shadow: 0 14px 32px rgba(0, 177, 89, 0.24);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.highlight-read-more svg,
+.highlight-open-button svg {
+  position: relative;
+  z-index: 1;
+  transition: transform 220ms ease;
+}
+
+.highlight-read-more span,
+.highlight-open-button span {
+  position: relative;
+  z-index: 1;
 }
 
 .highlight-card-actions button {
