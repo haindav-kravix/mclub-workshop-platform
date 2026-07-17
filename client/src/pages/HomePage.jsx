@@ -168,9 +168,15 @@ export const HomePage = () => {
           <div className="max-w-7xl mx-auto px-4">
             <ScrollReveal className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
               <div>
-                <p className="text-sm font-black uppercase tracking-wide text-secondary">Registrations</p>
-                <h2 className="mt-2 text-3xl sm:text-5xl font-black text-slate-950">Upcoming Workshop</h2>
-                <p className="mt-3 max-w-2xl text-slate-600">Register for the latest session and check your status from My Events.</p>
+                <div className="home-happening-kicker">
+                  <FiCalendar />
+                  <span>Registrations</span>
+                </div>
+                <h2 className="home-happening-title mt-3">
+                  <span>What's</span>
+                  <span>happening</span>
+                </h2>
+                <p className="mt-3 max-w-2xl text-slate-600">Explore the latest {featuredLabel?.toLowerCase?.() || 'session'}, register quickly, and check your status from My Events.</p>
               </div>
               <Link
                 to="/workshops"

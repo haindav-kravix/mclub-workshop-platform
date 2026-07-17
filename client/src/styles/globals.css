@@ -643,6 +643,21 @@ button, [role="button"], input, textarea, select {
   to { opacity: 1; transform: translateX(0); }
 }
 
+@keyframes happeningWord {
+  from { opacity: 0; transform: translateY(22px) scale(0.98); filter: blur(8px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes happeningPulse {
+  0%, 100% { box-shadow: 0 10px 26px rgba(0, 104, 74, 0.1); transform: translateY(0); }
+  50% { box-shadow: 0 16px 38px rgba(0, 177, 89, 0.2); transform: translateY(-2px); }
+}
+
+@keyframes happeningUnderline {
+  0%, 100% { transform: scaleX(0.72); opacity: 0.68; }
+  50% { transform: scaleX(1); opacity: 1; }
+}
+
 @keyframes carouselNext {
   from { opacity: 0; transform: translateX(48px) scale(0.985); }
   to { opacity: 1; transform: translateX(0) scale(1); }
@@ -816,6 +831,61 @@ button, [role="button"], input, textarea, select {
 
 .home-section-white {
   background: #ffffff !important;
+}
+
+.home-happening-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(0, 177, 89, 0.2) !important;
+  border-radius: 0.75rem;
+  background: #effdf5 !important;
+  padding: 0.55rem 0.8rem;
+  color: #00684a !important;
+  font-size: 0.84rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  animation: happeningPulse 3s ease-in-out infinite;
+}
+
+.home-happening-kicker svg {
+  color: #00a652 !important;
+}
+
+.home-happening-title {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25em;
+  width: fit-content;
+  max-width: 100%;
+  font-size: clamp(2.5rem, 7vw, 5.6rem);
+  line-height: 0.94;
+  font-weight: 950;
+  color: #001e2b !important;
+}
+
+.home-happening-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.52rem;
+  width: min(19rem, 70%);
+  height: 0.45rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #00ed64, #00684a) !important;
+  transform-origin: left center;
+  animation: happeningUnderline 2.7s ease-in-out infinite;
+}
+
+.home-happening-title span {
+  display: inline-block;
+  animation: happeningWord 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-happening-title span:nth-child(2) {
+  animation-delay: 130ms;
 }
 
 .home-section-soft {
@@ -1120,6 +1190,11 @@ button, [role="button"], input, textarea, select {
 
   .home-club-welcome-spark {
     opacity: 0.45;
+  }
+
+  .home-happening-title::after {
+    bottom: -0.42rem;
+    height: 0.35rem;
   }
 
   .home-achievement-stage .achievement-card h2 {
@@ -1461,6 +1536,9 @@ button, [role="button"], input, textarea, select {
   .home-club-welcome-line,
   .home-club-welcome-spark,
   .home-club-welcome > div,
+  .home-happening-kicker,
+  .home-happening-title span,
+  .home-happening-title::after,
   .achievement-carousel-slide-next,
   .achievement-carousel-slide-previous,
   .achievement-loader-track,

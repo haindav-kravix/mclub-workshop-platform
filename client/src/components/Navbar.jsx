@@ -36,7 +36,7 @@ export const Navbar = () => {
               </div>
               <div className="min-w-0 max-w-[82px] min-[380px]:max-w-[112px] sm:max-w-[150px] min-[1440px]:w-[128px] 2xl:w-[150px]">
                 <span className="block truncate font-bold text-xs min-[380px]:text-sm sm:text-base min-[1440px]:text-base 2xl:text-lg leading-tight text-slate-950">MongoDB Club</span>
-                <p className="hidden min-[380px]:block truncate text-[11px] lg:text-xs text-slate-500 leading-tight">Events Hub</p>
+                <p className="hidden min-[380px]:block truncate text-[11px] lg:text-xs text-slate-500 leading-tight">Technical Club</p>
               </div>
             </div>
           </Link>
