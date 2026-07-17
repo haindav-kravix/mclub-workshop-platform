@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { AchievementCard } from './AchievementCard';
@@ -7,8 +7,6 @@ export const HomeAchievementsCarousel = ({ achievements }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState('next');
   const [paused, setPaused] = useState(false);
-  const pointerStart = useRef(null);
-  const swiped = useRef(false);
   const count = achievements.length;
 
   const moveTo = (nextIndex, nextDirection = 'next') => {
@@ -39,25 +37,6 @@ export const HomeAchievementsCarousel = ({ achievements }) => {
   return (
     <div
       className="achievement-carousel"
-      onPointerDown={(event) => {
-        if (event.target.closest?.('.achievement-carousel-controls')) return;
-        pointerStart.current = event.clientX;
-        event.currentTarget.setPointerCapture?.(event.pointerId);
-        setPaused(true);
-      }}
-      onPointerUp={(event) => {
-        if (event.target.closest?.('.achievement-carousel-controls')) return;
-        if (pointerStart.current !== null) {
-          const distance = event.clientX - pointerStart.current;
-          if (Math.abs(distance) > 45) {
-            swiped.current = true;
-            distance > 0 ? previous() : next();
-          }
-        }
-        pointerStart.current = null;
-        window.setTimeout(() => setPaused(false), 1200);
-      }}
-      onPointerCancel={() => { pointerStart.current = null; setPaused(false); }}
       aria-roledescription="carousel"
       aria-label="MongoDB Technical Club highlights"
     >
@@ -66,11 +45,8 @@ export const HomeAchievementsCarousel = ({ achievements }) => {
         className={`achievement-carousel-slide achievement-carousel-slide-${direction} block focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300`}
         key={`${active._id}-${activeIndex}`}
         aria-label={`Open highlight: ${active.title}`}
-        onClick={(event) => {
-          if (!swiped.current) return;
-          event.preventDefault();
-          window.setTimeout(() => { swiped.current = false; }, 80);
-        }}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
       >
         <AchievementCard achievement={active} featured showLinks={false} />
       </Link>
