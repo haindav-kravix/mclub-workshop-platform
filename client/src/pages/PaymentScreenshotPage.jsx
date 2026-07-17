@@ -54,13 +54,17 @@ export const PaymentScreenshotPage = () => {
   const mimeType = uploadedFile?.mimeType || '';
   const isPreviewImage = !isFileUpload || mimeType.startsWith('image/');
   const isPdf = mimeType === 'application/pdf';
+  const goBackToRegistrations = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate(`/admin/registrations/${workshopId}`);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="border-b border-emerald-100 bg-white">
         <div className="mx-auto max-w-5xl px-4 py-5">
           <button
-            onClick={() => navigate(`/admin/registrations/${workshopId}`)}
+            onClick={goBackToRegistrations}
             className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-black text-secondary transition hover:bg-emerald-100"
           >
             <FiArrowLeft /> Back to Registrations

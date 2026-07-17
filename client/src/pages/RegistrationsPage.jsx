@@ -52,6 +52,13 @@ export const RegistrationsPage = () => {
     fetchData();
   }, [workshopId]);
 
+  useEffect(() => {
+    const savedScroll = sessionStorage.getItem(`registrations-scroll:${workshopId}`);
+    if (!savedScroll || loading) return;
+    const scrollY = Number(savedScroll);
+    window.setTimeout(() => window.scrollTo({ top: scrollY, behavior: 'auto' }), 80);
+  }, [loading, workshopId]);
+
   const handleDeleteRegistration = async (registrationId) => {
     if (window.confirm('Are you sure you want to delete this registration?')) {
       setDeleting(true);
@@ -191,7 +198,10 @@ export const RegistrationsPage = () => {
           formFields={workshop?.registrationFormFields || []}
           onDeleteRegistration={handleDeleteRegistration}
           onUpdateRegistrationStatus={handleUpdateRegistrationStatus}
-          onViewPaymentScreenshot={(registrationId, imageKey = 'paymentScreenshot') => navigate(`/admin/registrations/${workshopId}/image/${registrationId}/${imageKey}`)}
+          onViewPaymentScreenshot={(registrationId, imageKey = 'paymentScreenshot') => {
+            sessionStorage.setItem(`registrations-scroll:${workshopId}`, String(window.scrollY));
+            navigate(`/admin/registrations/${workshopId}/image/${registrationId}/${imageKey}`);
+          }}
           loading={deleting}
           emptyMessage={activeStatus === 'all' ? 'No registrations yet' : `No ${activeCard.label.toLowerCase()} registrations`}
         />
