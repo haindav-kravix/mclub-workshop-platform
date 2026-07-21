@@ -16,6 +16,7 @@ import attendanceRoutes from './routes/attendance.js';
 import blogRoutes from './routes/blogs.js';
 import achievementRoutes from './routes/achievements.js';
 import certificateRoutes from './routes/certificates.js';
+import entryRoutes from './routes/entry.js';
 import { getAchievementImage } from './controllers/achievementController.js';
 
 const app = express();
@@ -31,7 +32,7 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
   if (req.path.startsWith('/api/')) {
     res.setHeader('Cache-Control', 'no-store');
   }
@@ -120,6 +121,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/achievements', achievementRoutes);
 app.use('/api/certificates', certificateRoutes);
+app.use('/api/entry', entryRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

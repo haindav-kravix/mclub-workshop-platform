@@ -34,6 +34,8 @@ import { HighlightDetailPage } from './pages/HighlightDetailPage';
 import { AdminAchievementsPage } from './pages/AdminAchievementsPage';
 import { AdminCertificatesPage } from './pages/AdminCertificatesPage';
 import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
+import { EntryPassPage } from './pages/EntryPassPage';
+import { AdminEntryPage } from './pages/AdminEntryPage';
 
 // Styles
 import './styles/globals.css';
@@ -124,6 +126,14 @@ const AppContent = () => {
           <Route path="/attendance/check-in/:workshopId" element={<QRCheckInPage />} />
           <Route path="/achievements" element={<AchievementsPage />} />
           <Route path="/achievements/:highlightId" element={<HighlightDetailPage />} />
+          <Route
+            path="/entry-pass/:registrationId"
+            element={
+              <PrivateRoute>
+                <EntryPassPage />
+              </PrivateRoute>
+            }
+          />
 
           {/* Protected Routes */}
           <Route
@@ -197,6 +207,14 @@ const AppContent = () => {
             element={
               <PrivateRoute requireAdmin={true}>
                 <AttendanceReportsPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/entry/:workshopId"
+            element={
+              <PrivateRoute requireAdmin={true}>
+                <AdminEntryPage />
               </PrivateRoute>
             }
           />

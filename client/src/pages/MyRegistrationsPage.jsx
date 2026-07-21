@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { registrationAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage } from '../components/UI';
-import { FiCalendar, FiMapPin, FiClock, FiSend } from 'react-icons/fi';
+import { FiCalendar, FiMapPin, FiClock, FiSend, FiShield } from 'react-icons/fi';
 import { formatWorkshopTime } from '../utils/formatters';
 
 export const MyRegistrationsPage = () => {
@@ -96,16 +97,27 @@ export const MyRegistrationsPage = () => {
 
                   {/* Telegram */}
                   <div className="flex items-end">
-                    {registration.status === 'confirmed' && registration.workshopId.telegramLink ? (
-                      <a
-                        href={registration.workshopId.telegramLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="telegram-button w-full px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition flex items-center justify-center space-x-2 font-semibold"
-                      >
-                        <FiSend size={18} />
-                        <span>Join Telegram</span>
-                      </a>
+                    {registration.status === 'confirmed' ? (
+                      <div className="grid w-full gap-2">
+                        <Link
+                          to={`/entry-pass/${registration._id}`}
+                          className="entry-pass-mini-button w-full px-4 py-2 rounded-lg transition flex items-center justify-center space-x-2 font-black"
+                        >
+                          <FiShield size={18} />
+                          <span>View Entry Pass</span>
+                        </Link>
+                        {registration.workshopId.telegramLink && (
+                          <a
+                            href={registration.workshopId.telegramLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="telegram-button w-full px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition flex items-center justify-center space-x-2 font-semibold"
+                          >
+                            <FiSend size={18} />
+                            <span>Join Telegram</span>
+                          </a>
+                        )}
+                      </div>
                     ) : registration.status === 'pending' ? (
                       <div className="w-full px-4 py-2 bg-amber-50 text-amber-800 rounded-lg text-center font-semibold">
                         Reviewing your registration

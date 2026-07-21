@@ -1351,6 +1351,442 @@ button, [role="button"], input, textarea, select {
   }
 }
 
+/* Entry pass and gate management */
+.entry-pass-page,
+.entry-admin-page {
+  background:
+    radial-gradient(circle at 18% 10%, rgba(0, 237, 100, 0.18), transparent 26rem),
+    radial-gradient(circle at 80% 20%, rgba(0, 104, 74, 0.12), transparent 24rem),
+    linear-gradient(180deg, #f8fffb 0%, #ecfdf5 48%, #ffffff 100%) !important;
+}
+
+.entry-back-button,
+.entry-action-button,
+.entry-download-button,
+.entry-pass-mini-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border: 1px solid rgba(0, 177, 89, 0.24) !important;
+  border-radius: 0.85rem;
+  background: #00ed64 !important;
+  color: #001e2b !important;
+  padding: 0.82rem 1rem;
+  font-weight: 950;
+  box-shadow: 0 14px 32px rgba(0, 177, 89, 0.2);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.entry-back-button,
+.entry-action-button.subtle {
+  background: #ffffff !important;
+  color: #00684a !important;
+}
+
+.entry-action-button.secondary {
+  background: #001e2b !important;
+  color: #ffffff !important;
+}
+
+.entry-back-button:hover,
+.entry-action-button:hover,
+.entry-download-button:hover,
+.entry-pass-mini-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 48px rgba(0, 177, 89, 0.28);
+}
+
+.entry-pass-card,
+.entry-admin-hero,
+.entry-scanner-card,
+.entry-recent-card,
+.entry-list-card,
+.entry-stat-grid > div {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 104, 74, 0.12) !important;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: 0 28px 80px rgba(0, 104, 74, 0.13);
+  backdrop-filter: blur(18px);
+}
+
+.entry-pass-card {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1rem;
+  animation: adminPanelIn 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.entry-pass-card::before,
+.entry-admin-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 104, 74, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 104, 74, 0.06) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(circle at center, #000, transparent 78%);
+  pointer-events: none;
+}
+
+.entry-pass-orbit {
+  position: absolute;
+  right: -5rem;
+  top: -5rem;
+  width: 14rem;
+  height: 14rem;
+  border: 1px dashed rgba(0, 177, 89, 0.28);
+  border-radius: 9999px;
+  animation: loaderFrameSpin 11s linear infinite;
+}
+
+.entry-pass-copy,
+.entry-qr-panel,
+.entry-admin-hero > *,
+.entry-scanner-card > *,
+.entry-recent-card > *,
+.entry-list-card > *,
+.entry-stat-grid > div > * {
+  position: relative;
+  z-index: 1;
+}
+
+.entry-pass-copy {
+  padding: 1rem;
+}
+
+.entry-pass-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background: #ecfdf5 !important;
+  padding: 0.55rem 0.8rem;
+  color: #00684a !important;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.entry-pass-copy h1,
+.entry-admin-hero h1 {
+  margin-top: 1rem;
+  color: #001e2b !important;
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  font-weight: 950;
+  line-height: 0.95;
+}
+
+.entry-pass-copy p,
+.entry-admin-hero p {
+  margin-top: 1rem;
+  max-width: 44rem;
+  color: #475569 !important;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.entry-pass-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.8rem;
+  margin-top: 1.5rem;
+}
+
+.entry-pass-details div,
+.entry-holder-card {
+  border: 1px solid rgba(0, 104, 74, 0.1) !important;
+  border-radius: 1rem;
+  background: #f8fffb !important;
+  padding: 1rem;
+}
+
+.entry-pass-details div {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.entry-pass-details svg {
+  color: #00684a !important;
+}
+
+.entry-pass-details span,
+.entry-holder-card span {
+  color: #64748b !important;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.entry-pass-details strong,
+.entry-holder-card strong {
+  color: #001e2b !important;
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.entry-holder-card {
+  margin-top: 1rem;
+}
+
+.entry-holder-card strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.5rem;
+}
+
+.entry-entered-note {
+  color: #00684a !important;
+}
+
+.entry-qr-panel {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  border-radius: 1rem;
+  background: #001e2b !important;
+  padding: 1.2rem;
+  color: #ffffff !important;
+}
+
+.entry-qr-frame {
+  overflow: hidden;
+  border: 0.85rem solid #ffffff !important;
+  border-radius: 1rem;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 1px rgba(0, 237, 100, 0.28), 0 24px 60px rgba(0, 0, 0, 0.28);
+}
+
+.entry-qr-frame img {
+  display: block;
+  width: min(18rem, 72vw);
+  height: min(18rem, 72vw);
+}
+
+.entry-pass-code {
+  margin: 1rem 0;
+  color: #a7f3d0 !important;
+  font-weight: 950;
+}
+
+.entry-pass-code strong {
+  display: block;
+  color: #ffffff !important;
+  font-size: 1.8rem;
+  letter-spacing: 0.08em;
+}
+
+.entry-admin-hero {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.entry-live-card {
+  align-self: stretch;
+  border-radius: 1rem;
+  background: #001e2b !important;
+  padding: 1.1rem;
+  color: #ffffff !important;
+}
+
+.entry-live-card span {
+  color: #a7f3d0 !important;
+  font-weight: 900;
+}
+
+.entry-live-card strong {
+  display: block;
+  margin: 0.5rem 0;
+  font-size: 3.4rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.entry-live-card i {
+  display: block;
+  height: 0.7rem;
+  border-radius: 9999px;
+  background: #00ed64 !important;
+  animation: analyticsFill 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.entry-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+}
+
+.entry-stat-grid > div {
+  padding: 1rem;
+}
+
+.entry-stat-grid svg {
+  color: #00684a !important;
+  font-size: 1.45rem;
+}
+
+.entry-stat-grid span {
+  display: block;
+  margin-top: 0.65rem;
+  color: #64748b !important;
+  font-weight: 900;
+}
+
+.entry-stat-grid strong {
+  display: block;
+  color: #001e2b !important;
+  font-size: 2.4rem;
+  font-weight: 950;
+}
+
+.entry-admin-grid,
+.entry-report-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.entry-scanner-card,
+.entry-recent-card,
+.entry-list-card {
+  padding: 1rem;
+}
+
+.entry-scanner-card h2,
+.entry-recent-card h2,
+.entry-list-card h2 {
+  margin-top: 0.25rem;
+  color: #001e2b !important;
+  font-size: 1.5rem;
+  font-weight: 950;
+}
+
+.entry-camera {
+  display: none;
+  width: 100%;
+  max-height: 18rem;
+  margin-top: 1rem;
+  border-radius: 1rem;
+  background: #001e2b !important;
+  object-fit: cover;
+}
+
+.entry-camera.active {
+  display: block;
+}
+
+.entry-manual-box {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.entry-manual-box label {
+  color: #334155 !important;
+  font-weight: 900;
+}
+
+.entry-manual-box textarea {
+  width: 100%;
+  border: 1px solid rgba(0, 104, 74, 0.16) !important;
+  border-radius: 0.85rem;
+  background: #ffffff !important;
+  padding: 0.85rem;
+  color: #001e2b !important;
+}
+
+.entry-recent-card strong {
+  display: block;
+  margin-top: 1rem;
+  color: #00684a !important;
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.entry-list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  max-height: 32rem;
+  overflow: auto;
+}
+
+.entry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 0.85rem;
+  background: #f8fffb !important;
+  padding: 0.85rem;
+}
+
+.entry-row strong,
+.entry-row span {
+  display: block;
+}
+
+.entry-row strong {
+  color: #001e2b !important;
+  font-weight: 950;
+}
+
+.entry-row span,
+.entry-row p {
+  color: #64748b !important;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.entry-empty-mini {
+  border-radius: 1rem;
+  background: #f8fffb !important;
+  padding: 1rem;
+  color: #64748b !important;
+  font-weight: 850;
+}
+
+@media (min-width: 900px) {
+  .entry-pass-card {
+    grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 0.65fr);
+    padding: 1.25rem;
+  }
+
+  .entry-admin-hero {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+    align-items: end;
+  }
+
+  .entry-admin-grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
+  }
+
+  .entry-report-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media print {
+  .app-fixed-header,
+  .entry-back-button,
+  .entry-download-button,
+  .support-mail-button {
+    display: none !important;
+  }
+
+  .entry-pass-page {
+    background: #ffffff !important;
+  }
+
+  .entry-pass-card {
+    box-shadow: none;
+  }
+}
+
 @keyframes homeHeroEnter {
   from { opacity: 0; transform: translateY(28px); }
   to { opacity: 1; transform: translateY(0); }

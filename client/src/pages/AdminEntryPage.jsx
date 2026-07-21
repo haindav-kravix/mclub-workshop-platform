@@ -1,0 +1,227 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { FiArrowLeft, FiCamera, FiCheckCircle, FiDownload, FiLogIn, FiRefreshCw, FiSearch, FiShield, FiUsers, FiXCircle } from 'react-icons/fi';
+import { entryAPI } from '../utils/api';
+import { ErrorMessage, FeedbackPopup, LoadingSpinner, SuccessMessage } from '../components/UI';
+
+export const AdminEntryPage = () => {
+  const { workshopId } = useParams();
+  const navigate = useNavigate();
+  const videoRef = useRef(null);
+  const scannerTimerRef = useRef(null);
+  const streamRef = useRef(null);
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState('');
+  const [scanLoading, setScanLoading] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [feedback, setFeedback] = useState(null);
+
+  const loadReport = async () => {
+    try {
+      const response = await entryAPI.getReport(workshopId);
+      setReport(response.data);
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to load entry management');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadReport();
+    return () => stopCamera();
+  }, [workshopId]);
+
+  const stopCamera = () => {
+    if (scannerTimerRef.current) window.clearInterval(scannerTimerRef.current);
+    scannerTimerRef.current = null;
+    streamRef.current?.getTracks?.().forEach(track => track.stop());
+    streamRef.current = null;
+    setCameraActive(false);
+  };
+
+  const handleScan = async (value = token) => {
+    const passValue = String(value || '').trim();
+    if (!passValue) {
+      setError('Paste or scan an entry pass first');
+      return;
+    }
+
+    setScanLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      const response = await entryAPI.scan(workshopId, passValue);
+      setToken('');
+      setFeedback({
+        type: response.data.alreadyEntered ? 'warning' : 'success',
+        title: response.data.alreadyEntered ? 'Already entered' : 'Entry confirmed',
+        message: response.data.alreadyEntered
+          ? `${response.data.entry?.user?.name || 'Student'} already entered at ${new Date(response.data.entry?.checkedInAt).toLocaleString()}.`
+          : `${response.data.entry?.user?.name || 'Student'} is allowed to enter.`
+      });
+      setSuccess(response.data.message);
+      await loadReport();
+    } catch (err) {
+      const message = err.response?.data?.message || 'Unable to verify pass';
+      setError(message);
+      setFeedback({ type: 'error', title: 'Invalid pass', message });
+    } finally {
+      setScanLoading(false);
+    }
+  };
+
+  const startCamera = async () => {
+    if (!('BarcodeDetector' in window)) {
+      setError('Camera QR scanning is not supported in this browser. Paste the QR text manually.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      streamRef.current = stream;
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play();
+      setCameraActive(true);
+      const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+      scannerTimerRef.current = window.setInterval(async () => {
+        if (!videoRef.current || scanLoading) return;
+        const codes = await detector.detect(videoRef.current).catch(() => []);
+        const rawValue = codes?.[0]?.rawValue;
+        if (rawValue) {
+          stopCamera();
+          handleScan(rawValue);
+        }
+      }, 650);
+    } catch {
+      setError('Unable to open camera. Please allow camera access or paste the pass text.');
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await entryAPI.exportReport(workshopId);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${report?.workshop?.title || 'event'}-entry-report.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentElement.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setError('Unable to export entry report');
+    }
+  };
+
+  const entered = useMemo(() => [...(report?.entered || [])].sort((a, b) => (
+    new Date(b.entry?.checkedInAt || 0) - new Date(a.entry?.checkedInAt || 0)
+  )), [report?.entered]);
+  const notEntered = report?.notEntered || [];
+  const counts = report?.counts || {};
+  const recentEntry = useMemo(() => entered[0], [entered]);
+
+  if (loading) return <LoadingSpinner />;
+
+  return (
+    <div className="entry-admin-page min-h-screen px-4 py-8 sm:py-10">
+      <div className="mx-auto max-w-7xl">
+        <button onClick={() => navigate('/admin')} className="entry-back-button"><FiArrowLeft /> Admin Dashboard</button>
+
+        <section className="entry-admin-hero mt-6">
+          <div>
+            <div className="entry-pass-kicker"><FiLogIn /> Entry Management</div>
+            <h1>{report?.workshop?.title || 'Entry Management'}</h1>
+            <p>Scan confirmed student entry passes at the gate. This records entry time only and does not affect attendance.</p>
+          </div>
+          <div className="entry-live-card">
+            <span>Entry percentage</span>
+            <strong>{counts.entryPercentage || 0}%</strong>
+            <i style={{ width: `${counts.entryPercentage || 0}%` }} />
+          </div>
+        </section>
+
+        {error && <div className="mt-5"><ErrorMessage message={error} onDismiss={() => setError('')} /></div>}
+        {success && <div className="mt-5"><SuccessMessage message={success} onDismiss={() => setSuccess('')} /></div>}
+
+        <section className="entry-stat-grid mt-6">
+          <div><FiUsers /><span>Confirmed</span><strong>{counts.confirmed || 0}</strong></div>
+          <div><FiCheckCircle /><span>Entered</span><strong>{counts.entered || 0}</strong></div>
+          <div><FiXCircle /><span>Not Entered</span><strong>{counts.notEntered || 0}</strong></div>
+        </section>
+
+        <section className="entry-admin-grid mt-6">
+          <div className="entry-scanner-card">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Gate scanner</p>
+                <h2>Verify entry pass</h2>
+              </div>
+              <FiShield className="text-emerald-600" size={26} />
+            </div>
+            <video ref={videoRef} className={`entry-camera ${cameraActive ? 'active' : ''}`} muted playsInline />
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <button onClick={cameraActive ? stopCamera : startCamera} className="entry-action-button secondary">
+                <FiCamera /> {cameraActive ? 'Stop Camera' : 'Scan QR'}
+              </button>
+              <button onClick={loadReport} className="entry-action-button subtle"><FiRefreshCw /> Refresh</button>
+            </div>
+            <div className="entry-manual-box">
+              <label>Paste scanned pass text</label>
+              <textarea value={token} onChange={event => setToken(event.target.value)} rows="4" placeholder="Paste QR result or entryToken URL here" />
+              <button onClick={() => handleScan()} disabled={scanLoading} className="entry-action-button">
+                <FiSearch /> {scanLoading ? 'Verifying...' : 'Verify Pass'}
+              </button>
+            </div>
+          </div>
+
+          <div className="entry-recent-card">
+            <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Latest entry</p>
+            {recentEntry ? (
+              <>
+                <h2>{recentEntry.user?.name}</h2>
+                <p>{recentEntry.user?.email}</p>
+                <strong>{new Date(recentEntry.entry.checkedInAt).toLocaleString()}</strong>
+              </>
+            ) : (
+              <div className="entry-empty-mini">No one has entered yet.</div>
+            )}
+            <button onClick={handleExport} className="entry-action-button mt-5"><FiDownload /> Export Entry Report</button>
+          </div>
+        </section>
+
+        <section className="entry-report-grid mt-6">
+          <EntryList title="Entered Students" items={entered} entered />
+          <EntryList title="Not Entered Yet" items={notEntered} />
+        </section>
+      </div>
+      <FeedbackPopup open={Boolean(feedback)} type={feedback?.type} title={feedback?.title} message={feedback?.message} onClose={() => setFeedback(null)} />
+    </div>
+  );
+};
+
+const EntryList = ({ title, items, entered = false }) => (
+  <div className="entry-list-card">
+    <h2>{title}</h2>
+    <div className="entry-list">
+      {items.length === 0 ? (
+        <div className="entry-empty-mini">No students in this list.</div>
+      ) : items.map(item => (
+        <div key={item._id} className="entry-row">
+          <div>
+            <strong>{item.user?.name}</strong>
+            <span>{item.user?.email}</span>
+          </div>
+          {entered ? (
+            <p>{new Date(item.entry.checkedInAt).toLocaleString()}</p>
+          ) : (
+            <p>Waiting</p>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+);

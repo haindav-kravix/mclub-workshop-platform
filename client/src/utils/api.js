@@ -116,6 +116,22 @@ export const attendanceAPI = {
   })
 };
 
+export const entryAPI = {
+  getPass: (registrationId) => axios.get(`${API_URL}/entry/pass/${registrationId}`, {
+    headers: getAuthHeaders()
+  }),
+  getReport: (workshopId) => axios.get(`${API_URL}/entry/admin/workshop/${workshopId}`, {
+    headers: getAuthHeaders()
+  }),
+  scan: (workshopId, token) => axios.post(`${API_URL}/entry/admin/workshop/${workshopId}/scan`, { token }, {
+    headers: getAuthHeaders()
+  }),
+  exportReport: (workshopId) => axios.get(`${API_URL}/entry/admin/workshop/${workshopId}/export`, {
+    headers: getAuthHeaders(),
+    responseType: 'blob'
+  })
+};
+
 export const blogAPI = {
   getFeed: () => axios.get(`${API_URL}/blogs`, { headers: getAuthHeaders() }),
   getAdminPosts: () => axios.get(`${API_URL}/blogs/admin/all`, { headers: getAuthHeaders() }),

@@ -296,6 +296,7 @@ export const AdminDashboard = () => {
                 onToggleStopped={handleToggleStopped}
                 onTakeAttendance={(workshopId) => navigate(`/admin/attendance/${workshopId}`)}
                 onAttendanceReports={(workshopId) => navigate(`/admin/attendance/${workshopId}/reports`)}
+                onEntryManagement={(workshopId) => navigate(`/admin/entry/${workshopId}`)}
                 onCertificates={(workshopId) => navigate(`/admin/certificates/${workshopId}`)}
               />
             ))}
