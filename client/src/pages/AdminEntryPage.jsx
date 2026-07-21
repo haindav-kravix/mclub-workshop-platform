@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiCamera, FiCheckCircle, FiDownload, FiLogIn, FiRefreshCw, FiSearch, FiShield, FiUsers, FiXCircle } from 'react-icons/fi';
 import jsQR from 'jsqr';
 import { entryAPI } from '../utils/api';
-import { ErrorMessage, FeedbackPopup, LoadingSpinner, SuccessMessage } from '../components/UI';
+import { ErrorMessage, FeedbackPopup, LoadingSpinner } from '../components/UI';
 
 export const AdminEntryPage = () => {
   const { workshopId } = useParams();
@@ -14,6 +14,7 @@ export const AdminEntryPage = () => {
   const streamRef = useRef(null);
   const scanLoadingRef = useRef(false);
   const scannedValuesRef = useRef(new Set());
+  const scanNoticeTimerRef = useRef(null);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState('');
@@ -21,8 +22,8 @@ export const AdminEntryPage = () => {
   const [cameraActive, setCameraActive] = useState(false);
   const [sessionScanCount, setSessionScanCount] = useState(0);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [feedback, setFeedback] = useState(null);
+  const [scanNotice, setScanNotice] = useState(null);
 
   const loadReport = async () => {
     try {
@@ -38,7 +39,10 @@ export const AdminEntryPage = () => {
 
   useEffect(() => {
     loadReport();
-    return () => stopCamera();
+    return () => {
+      stopCamera();
+      if (scanNoticeTimerRef.current) window.clearTimeout(scanNoticeTimerRef.current);
+    };
   }, [workshopId]);
 
   useEffect(() => {
@@ -54,6 +58,15 @@ export const AdminEntryPage = () => {
     setCameraActive(false);
   };
 
+  const showScanNotice = (message) => {
+    if (scanNoticeTimerRef.current) window.clearTimeout(scanNoticeTimerRef.current);
+    setScanNotice(message);
+    scanNoticeTimerRef.current = window.setTimeout(() => {
+      setScanNotice(null);
+      scanNoticeTimerRef.current = null;
+    }, 1000);
+  };
+
   const handleScan = async (value = token) => {
     const passValue = String(value || '').trim();
     if (!passValue) {
@@ -64,18 +77,20 @@ export const AdminEntryPage = () => {
     scanLoadingRef.current = true;
     setScanLoading(true);
     setError('');
-    setSuccess('');
     try {
       const response = await entryAPI.scan(workshopId, passValue);
       setToken('');
-      setFeedback({
-        type: response.data.alreadyEntered ? 'error' : 'success',
-        title: response.data.alreadyEntered ? 'Already entered' : 'Entry confirmed',
-        message: response.data.alreadyEntered
-          ? `${response.data.entry?.user?.name || 'Student'} has already entered at ${new Date(response.data.entry?.checkedInAt).toLocaleString()}.`
-          : `${response.data.entry?.user?.name || 'Student'} is allowed to enter.`
-      });
-      setSuccess(response.data.message);
+      const studentName = response.data.entry?.user?.name || 'Student';
+      if (response.data.alreadyEntered) {
+        setFeedback({
+          type: 'error',
+          title: 'Already entered',
+          message: `${studentName} has already entered at ${new Date(response.data.entry?.checkedInAt).toLocaleString()}.`
+        });
+      } else {
+        setFeedback(null);
+        showScanNotice(`${studentName} entry success`);
+      }
       setSessionScanCount(count => count + 1);
       await loadReport();
     } catch (err) {
@@ -126,7 +141,6 @@ export const AdminEntryPage = () => {
       scannedValuesRef.current = new Set();
       setSessionScanCount(0);
       setError('');
-      setSuccess('');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
@@ -191,7 +205,6 @@ export const AdminEntryPage = () => {
         </section>
 
         {error && <div className="mt-5"><ErrorMessage message={error} onDismiss={() => setError('')} /></div>}
-        {success && <div className="mt-5"><SuccessMessage message={success} onDismiss={() => setSuccess('')} /></div>}
 
         <section className="entry-stat-grid mt-6">
           <div><FiUsers /><span>Confirmed</span><strong>{counts.confirmed || 0}</strong></div>
@@ -214,6 +227,11 @@ export const AdminEntryPage = () => {
               <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-700">
                 Scanner is open in the web page and will keep scanning new passes automatically. Session scans: {sessionScanCount}
               </p>
+            )}
+            {scanNotice && (
+              <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-600 px-3 py-2 text-sm font-black text-white shadow-lg">
+                <FiCheckCircle /> {scanNotice}
+              </div>
             )}
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <button onClick={cameraActive ? stopCamera : startCamera} disabled={!cameraActive && scanLoading} className="entry-action-button secondary">
