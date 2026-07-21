@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiCamera, FiCheckCircle, FiDownload, FiLogIn, FiRefreshCw, FiSearch, FiShield, FiUsers, FiXCircle } from 'react-icons/fi';
+import jsQR from 'jsqr';
 import { entryAPI } from '../utils/api';
 import { ErrorMessage, FeedbackPopup, LoadingSpinner, SuccessMessage } from '../components/UI';
 
@@ -8,8 +9,10 @@ export const AdminEntryPage = () => {
   const { workshopId } = useParams();
   const navigate = useNavigate();
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const scannerTimerRef = useRef(null);
   const streamRef = useRef(null);
+  const scanLoadingRef = useRef(false);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState('');
@@ -36,11 +39,16 @@ export const AdminEntryPage = () => {
     return () => stopCamera();
   }, [workshopId]);
 
+  useEffect(() => {
+    scanLoadingRef.current = scanLoading;
+  }, [scanLoading]);
+
   const stopCamera = () => {
-    if (scannerTimerRef.current) window.clearInterval(scannerTimerRef.current);
+    if (scannerTimerRef.current) window.cancelAnimationFrame(scannerTimerRef.current);
     scannerTimerRef.current = null;
     streamRef.current?.getTracks?.().forEach(track => track.stop());
     streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
     setCameraActive(false);
   };
 
@@ -75,27 +83,58 @@ export const AdminEntryPage = () => {
     }
   };
 
+  const scanCameraFrame = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (!video || !canvas || !streamRef.current) return;
+
+    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && video.videoWidth && video.videoHeight && !scanLoadingRef.current) {
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      const qrCode = jsQR(imageData.data, canvas.width, canvas.height, {
+        inversionAttempts: 'attemptBoth'
+      });
+
+      if (qrCode?.data) {
+        stopCamera();
+        handleScan(qrCode.data);
+        return;
+      }
+    }
+
+    scannerTimerRef.current = window.requestAnimationFrame(scanCameraFrame);
+  };
+
   const startCamera = async () => {
-    if (!('BarcodeDetector' in window)) {
-      setError('Camera QR scanning is not supported in this browser. Paste the QR text manually.');
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('Camera access is not supported in this browser. Please open this page in Chrome or Safari and allow camera permission.');
       return;
     }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      stopCamera();
+      setError('');
+      setSuccess('');
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
       streamRef.current = stream;
       videoRef.current.srcObject = stream;
+      videoRef.current.setAttribute('playsinline', 'true');
+      videoRef.current.setAttribute('webkit-playsinline', 'true');
       await videoRef.current.play();
       setCameraActive(true);
-      const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
-      scannerTimerRef.current = window.setInterval(async () => {
-        if (!videoRef.current || scanLoading) return;
-        const codes = await detector.detect(videoRef.current).catch(() => []);
-        const rawValue = codes?.[0]?.rawValue;
-        if (rawValue) {
-          stopCamera();
-          handleScan(rawValue);
-        }
-      }, 650);
+      scannerTimerRef.current = window.requestAnimationFrame(scanCameraFrame);
     } catch {
       setError('Unable to open camera. Please allow camera access or paste the pass text.');
     }
@@ -163,8 +202,14 @@ export const AdminEntryPage = () => {
               <FiShield className="text-emerald-600" size={26} />
             </div>
             <video ref={videoRef} className={`entry-camera ${cameraActive ? 'active' : ''}`} muted playsInline />
+            <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
+            {cameraActive && (
+              <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-700">
+                Scanner is open in the web page. Keep the QR inside the camera box.
+              </p>
+            )}
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-              <button onClick={cameraActive ? stopCamera : startCamera} className="entry-action-button secondary">
+              <button onClick={cameraActive ? stopCamera : startCamera} disabled={scanLoading} className="entry-action-button secondary">
                 <FiCamera /> {cameraActive ? 'Stop Camera' : 'Scan QR'}
               </button>
               <button onClick={loadReport} className="entry-action-button subtle"><FiRefreshCw /> Refresh</button>
