@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -38,6 +38,17 @@ import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
 // Styles
 import './styles/globals.css';
 
+const ScrollToTop = () => {
+  const { pathname, search } = useLocation();
+
+  useEffect(() => {
+    if (pathname === '/achievements' && new URLSearchParams(search).has('highlight')) return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [pathname, search]);
+
+  return null;
+};
+
 const AppContent = () => {
   const { loading } = useAuth();
   const location = useLocation();
@@ -50,6 +61,7 @@ const AppContent = () => {
 
   return (
     <div className="app-root flex min-h-screen flex-col bg-white">
+      <ScrollToTop />
       {!useBlogHeaderOnly && <Navbar />}
       <main className={`flex-1 ${useBlogHeaderOnly ? '' : 'pt-16 sm:pt-20'}`}>
         <Routes>

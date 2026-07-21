@@ -41,7 +41,7 @@ export const HomeAchievementsCarousel = ({ achievements }) => {
       aria-label="MongoDB Technical Club highlights"
     >
       <Link
-        to={`/achievements?highlight=${active._id}`}
+        to={`/achievements/${active._id}`}
         className={`achievement-carousel-slide achievement-carousel-slide-${direction} block focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300`}
         key={`${active._id}-${activeIndex}`}
         aria-label={`Open highlight: ${active.title}`}
