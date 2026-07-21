@@ -13,11 +13,13 @@ export const AdminEntryPage = () => {
   const scannerTimerRef = useRef(null);
   const streamRef = useRef(null);
   const scanLoadingRef = useRef(false);
+  const scannedValuesRef = useRef(new Set());
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState('');
   const [scanLoading, setScanLoading] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
+  const [sessionScanCount, setSessionScanCount] = useState(0);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [feedback, setFeedback] = useState(null);
@@ -59,6 +61,7 @@ export const AdminEntryPage = () => {
       return;
     }
 
+    scanLoadingRef.current = true;
     setScanLoading(true);
     setError('');
     setSuccess('');
@@ -73,12 +76,14 @@ export const AdminEntryPage = () => {
           : `${response.data.entry?.user?.name || 'Student'} is allowed to enter.`
       });
       setSuccess(response.data.message);
+      setSessionScanCount(count => count + 1);
       await loadReport();
     } catch (err) {
       const message = err.response?.data?.message || 'Unable to verify pass';
       setError(message);
       setFeedback({ type: 'error', title: 'Invalid pass', message });
     } finally {
+      scanLoadingRef.current = false;
       setScanLoading(false);
     }
   };
@@ -100,10 +105,10 @@ export const AdminEntryPage = () => {
         inversionAttempts: 'attemptBoth'
       });
 
-      if (qrCode?.data) {
-        stopCamera();
-        handleScan(qrCode.data);
-        return;
+      const scannedValue = String(qrCode?.data || '').trim();
+      if (scannedValue && !scannedValuesRef.current.has(scannedValue)) {
+        scannedValuesRef.current.add(scannedValue);
+        handleScan(scannedValue);
       }
     }
 
@@ -118,6 +123,8 @@ export const AdminEntryPage = () => {
 
     try {
       stopCamera();
+      scannedValuesRef.current = new Set();
+      setSessionScanCount(0);
       setError('');
       setSuccess('');
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -205,12 +212,12 @@ export const AdminEntryPage = () => {
             <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
             {cameraActive && (
               <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-700">
-                Scanner is open in the web page. Keep the QR inside the camera box.
+                Scanner is open in the web page and will keep scanning new passes automatically. Session scans: {sessionScanCount}
               </p>
             )}
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-              <button onClick={cameraActive ? stopCamera : startCamera} disabled={scanLoading} className="entry-action-button secondary">
-                <FiCamera /> {cameraActive ? 'Stop Camera' : 'Scan QR'}
+              <button onClick={cameraActive ? stopCamera : startCamera} disabled={!cameraActive && scanLoading} className="entry-action-button secondary">
+                <FiCamera /> {cameraActive ? 'Close Scanner' : 'Scan QR'}
               </button>
               <button onClick={loadReport} className="entry-action-button subtle"><FiRefreshCw /> Refresh</button>
             </div>
