@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { API_ORIGIN, blogAPI, resolveMediaUrl } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { MarkdownPreview } from '../utils/markdownParser';
+import { ProfileAvatar } from '../components/ProfileAvatar';
 import {
   FiArrowLeft,
   FiCode,
@@ -410,13 +411,11 @@ Use the format buttons above to style your text. Markdown is supported:
                     onClick={() => insertMention(foundUser)}
                     className="flex w-full items-center gap-3 border-b border-emerald-50 px-4 py-3 text-left transition last:border-b-0 hover:bg-emerald-50"
                   >
-                    {foundUser.profilePhoto ? (
-                      <img src={resolveMediaUrl(foundUser.profilePhoto)} alt={foundUser.name} className="h-10 w-10 rounded-full object-cover" />
-                    ) : (
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary font-black text-white">
-                        {foundUser.name?.charAt(0) || 'U'}
-                      </span>
-                    )}
+                    <ProfileAvatar
+                      user={foundUser}
+                      className="h-10 w-10 rounded-full object-cover"
+                      fallbackClassName="h-10 w-10 rounded-full bg-secondary text-white"
+                    />
                     <span>
                       <span className="block font-black text-slate-950">{foundUser.name}</span>
                       <span className="block text-xs text-slate-500">{foundUser.followerCount || 0} followers</span>

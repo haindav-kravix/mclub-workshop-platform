@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { blogAPI, resolveMediaUrl } from '../utils/api';
+import { blogAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import { FiCamera, FiEdit3, FiLogOut, FiMail, FiSave, FiUserCheck, FiUsers } from 'react-icons/fi';
 import { ProfileCertificates } from '../components/ProfileCertificates';
+import { ProfileAvatar } from '../components/ProfileAvatar';
 
 export const ProfilePage = () => {
   const { user, refreshProfile, logout } = useAuth();
@@ -75,7 +76,6 @@ export const ProfilePage = () => {
   if (loading) return <LoadingSpinner />;
 
   const displayProfile = profile || user;
-  const avatar = resolveMediaUrl(displayProfile?.profilePhoto);
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -104,13 +104,11 @@ export const ProfilePage = () => {
         <aside className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col items-center text-center">
             <div className="relative">
-              {avatar ? (
-                <img src={avatar} alt={displayProfile?.name} className="h-36 w-36 rounded-full border-4 border-white object-cover shadow-lg ring-4 ring-green-100" />
-              ) : (
-                <div className="flex h-36 w-36 items-center justify-center rounded-full bg-secondary text-5xl font-black text-white shadow-lg ring-4 ring-green-100">
-                  {displayProfile?.name?.charAt(0) || 'M'}
-                </div>
-              )}
+              <ProfileAvatar
+                user={displayProfile}
+                className="h-36 w-36 rounded-full border-4 border-white object-cover shadow-lg ring-4 ring-green-100"
+                fallbackClassName="h-36 w-36 rounded-full bg-secondary text-5xl text-white shadow-lg ring-4 ring-green-100"
+              />
               <label className="absolute bottom-2 right-2 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-secondary text-white shadow-lg transition hover:bg-secondary/90" title="Change profile photo">
                 <FiCamera />
                 <input

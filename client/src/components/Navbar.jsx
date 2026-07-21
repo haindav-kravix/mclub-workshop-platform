@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FiMenu, FiX, FiHome, FiCalendar, FiClipboard, FiSettings, FiEdit3, FiUser } from 'react-icons/fi';
-import { resolveMediaUrl } from '../utils/api';
+import { ProfileAvatar } from './ProfileAvatar';
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -94,9 +94,11 @@ export const Navbar = () => {
             {isAuthenticated ? (
               <div className="flex min-w-0 items-center pl-2 ml-1 border-l border-slate-200">
                 <Link to="/profile" className="flex min-w-0 items-center gap-2 rounded-lg bg-slate-50 px-2 py-1 transition hover:bg-primary/10">
-                  {user?.profilePhoto && (
-                    <img src={resolveMediaUrl(user.profilePhoto)} alt="Profile" className="h-8 w-8 flex-none rounded-full object-cover" />
-                  )}
+                  <ProfileAvatar
+                    user={user}
+                    className="h-8 w-8 flex-none rounded-full object-cover"
+                    fallbackClassName="h-8 w-8 flex-none rounded-full bg-secondary text-white"
+                  />
                   <span className="min-w-0 max-w-[92px] truncate text-sm font-semibold text-slate-700 2xl:max-w-[140px]">{user?.name}</span>
                 </Link>
               </div>

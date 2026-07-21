@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { attendanceAPI, workshopAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
+import { ProfileAvatar } from '../components/ProfileAvatar';
 import { FiArrowLeft, FiCheck, FiCopy, FiX } from 'react-icons/fi';
 
 const toDateInput = (value) => value ? new Date(value).toISOString().split('T')[0] : '';
@@ -291,7 +292,11 @@ export const TakeAttendancePage = () => {
             return (
             <div key={item.user._id} className="panel rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                {item.user.profilePhoto && <img src={item.user.profilePhoto} alt={item.user.name} className="w-11 h-11 rounded-full" />}
+                <ProfileAvatar
+                  user={item.user}
+                  className="w-11 h-11 flex-none rounded-full object-cover"
+                  fallbackClassName="w-11 h-11 flex-none rounded-full bg-secondary text-white"
+                />
                 <div className="min-w-0">
                   <p className="font-bold text-slate-950 truncate">{item.user.name}</p>
                   <p className="text-sm text-slate-600 break-all">{item.user.email}</p>

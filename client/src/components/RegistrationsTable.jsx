@@ -1,6 +1,7 @@
 import React from 'react';
 import { FiCheck, FiFileText, FiInbox, FiTrash2, FiX } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
+import { ProfileAvatar } from './ProfileAvatar';
 
 const getFormValue = (formData, fieldId) => {
   if (!formData) return '';
@@ -56,17 +57,11 @@ const StatusBadge = ({ status }) => (
 );
 
 const StudentAvatar = ({ user }) => (
-  user?.profilePhoto ? (
-    <img
-      src={resolveMediaUrl(user.profilePhoto)}
-      alt={user.name}
-      className="h-11 w-11 flex-none rounded-full object-cover ring-2 ring-white"
-    />
-  ) : (
-    <div className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-secondary text-sm font-black text-white ring-2 ring-white">
-      {(user?.name || 'S').charAt(0)}
-    </div>
-  )
+  <ProfileAvatar
+    user={user}
+    className="h-11 w-11 flex-none rounded-full object-cover ring-2 ring-white"
+    fallbackClassName="h-11 w-11 flex-none rounded-full bg-secondary text-sm text-white ring-2 ring-white"
+  />
 );
 
 const RegistrationActions = ({ registration, loading, onUpdateRegistrationStatus, onDeleteRegistration }) => (

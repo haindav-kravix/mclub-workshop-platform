@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
-import { API_ORIGIN, blogAPI, resolveMediaUrl } from '../utils/api';
+import { API_ORIGIN, blogAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { MarkdownPreview } from '../utils/markdownParser';
 import { useAuth } from '../context/AuthContext';
 import { BrandMark } from '../components/BrandMark';
+import { ProfileAvatar } from '../components/ProfileAvatar';
 import {
   FiBookOpen,
   FiBell,
@@ -289,7 +290,11 @@ export const BlogsPage = () => {
                       }}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     >
-                      {foundUser.profilePhoto && <img src={resolveMediaUrl(foundUser.profilePhoto)} alt={foundUser.name} className="h-10 w-10 flex-none rounded-full border-2 border-green-500 object-cover" />}
+                      <ProfileAvatar
+                        user={foundUser}
+                        className="h-10 w-10 flex-none rounded-full border-2 border-green-500 object-cover"
+                        fallbackClassName="h-10 w-10 flex-none rounded-full border-2 border-green-500 bg-secondary text-white"
+                      />
                       <div className="min-w-0">
                         <p className="truncate text-sm font-bold text-slate-900">{foundUser.name}</p>
                         <p className="text-xs text-slate-600">{foundUser.followerCount} followers</p>
@@ -359,13 +364,12 @@ export const BlogsPage = () => {
                     notifications.map(notification => (
                       <div key={notification._id} className="border-b border-slate-100 p-4 last:border-b-0">
                         <div className="flex items-start gap-3">
-                          {notification.actor?.profilePhoto ? (
-                            <img src={resolveMediaUrl(notification.actor.profilePhoto)} alt={notification.actor.name} className="h-10 w-10 rounded-full object-cover" />
-                          ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary font-black text-white">
-                              {notification.actor?.name?.charAt(0) || 'U'}
-                            </div>
-                          )}
+                          <ProfileAvatar
+                            user={notification.actor}
+                            className="h-10 w-10 rounded-full object-cover"
+                            fallbackClassName="h-10 w-10 rounded-full bg-secondary text-white"
+                            name={notification.actor?.name || 'Someone'}
+                          />
                           <div className="min-w-0 flex-1">
                             <p className="text-sm text-slate-700">
                               <span className="font-black text-slate-950">{notification.actor?.name || 'Someone'}</span>
@@ -399,11 +403,11 @@ export const BlogsPage = () => {
             className="inline-flex h-11 w-11 flex-none items-center justify-center justify-self-end rounded-full bg-secondary hover:shadow-lg hover:scale-105 transition"
             title="My Profile"
           >
-            {user?.profilePhoto ? (
-              <img src={resolveMediaUrl(user.profilePhoto)} alt={user.name} className="h-11 w-11 rounded-full border-2 border-white object-cover" />
-            ) : (
-              <FiUserCheck className="text-white text-lg" />
-            )}
+            <ProfileAvatar
+              user={user}
+              className="h-11 w-11 rounded-full border-2 border-white object-cover"
+              fallbackClassName="h-11 w-11 rounded-full border-2 border-white bg-secondary text-white"
+            />
           </button>
         </div>
       </div>
@@ -502,7 +506,11 @@ export const BlogsPage = () => {
                   {post.coverImage && <img src={post.coverImage.startsWith('/uploads') ? `${API_ORIGIN}${post.coverImage}` : post.coverImage} alt={post.title} className="w-full max-h-80 object-cover" />}
                   <div className="p-5 sm:p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      {post.author?.profilePhoto && <img src={resolveMediaUrl(post.author.profilePhoto)} alt={post.author.name} className="w-10 h-10 rounded-full" />}
+                      <ProfileAvatar
+                        user={post.author}
+                        className="w-10 h-10 rounded-full object-cover"
+                        fallbackClassName="w-10 h-10 rounded-full bg-secondary text-white"
+                      />
                       <div>
                         <p className="font-bold text-slate-950">{post.author?.name}</p>
                         <p className="text-xs text-slate-500">

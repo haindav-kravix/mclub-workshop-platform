@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { blogAPI, API_ORIGIN, resolveMediaUrl } from '../utils/api';
+import { blogAPI, API_ORIGIN } from '../utils/api';
 import { LoadingSpinner, ErrorMessage } from '../components/UI';
 import { MarkdownPreview } from '../utils/markdownParser';
 import { useAuth } from '../context/AuthContext';
+import { ProfileAvatar } from '../components/ProfileAvatar';
 import { FiArrowLeft, FiHeart, FiShare2, FiTrash2, FiUserCheck, FiUserPlus } from 'react-icons/fi';
 
 const getReadTime = (body = '') => {
@@ -125,17 +126,11 @@ export const UserProfilePage = () => {
         <div className="panel rounded-2xl p-8 mb-8">
           <div className="flex flex-col sm:flex-row items-center gap-6">
             {/* Profile Photo */}
-            {profile.profilePhoto ? (
-              <img
-                src={resolveMediaUrl(profile.profilePhoto)}
-                alt={profile.name}
-                className="w-32 h-32 rounded-full border-4 border-green-500 object-cover shadow-lg"
-              />
-            ) : (
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-5xl font-bold">
-                {profile.name.charAt(0)}
-              </div>
-            )}
+            <ProfileAvatar
+              user={profile}
+              className="w-32 h-32 rounded-full border-4 border-green-500 object-cover shadow-lg"
+              fallbackClassName="w-32 h-32 rounded-full bg-gradient-to-br from-green-400 to-green-600 text-white text-5xl"
+            />
 
             {/* Profile Info */}
             <div className="flex-1 text-center sm:text-left">
@@ -262,13 +257,11 @@ export const UserProfilePage = () => {
               profile.followers.map(follower => (
                 <div key={follower._id} className="panel rounded-lg p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {follower.profilePhoto ? (
-                      <img src={resolveMediaUrl(follower.profilePhoto)} alt={follower.name} className="w-12 h-12 rounded-full" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
-                        {follower.name.charAt(0)}
-                      </div>
-                    )}
+                    <ProfileAvatar
+                      user={follower}
+                      className="w-12 h-12 rounded-full object-cover"
+                      fallbackClassName="w-12 h-12 rounded-full bg-green-500 text-white"
+                    />
                     <div>
                       <p className="font-bold text-gray-900">{follower.name}</p>
                       <p className="text-sm text-gray-600">{follower.bio || 'No bio'}</p>
@@ -293,13 +286,11 @@ export const UserProfilePage = () => {
               profile.following.map(followed => (
                 <div key={followed._id} className="panel rounded-lg p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {followed.profilePhoto ? (
-                      <img src={resolveMediaUrl(followed.profilePhoto)} alt={followed.name} className="w-12 h-12 rounded-full" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
-                        {followed.name.charAt(0)}
-                      </div>
-                    )}
+                    <ProfileAvatar
+                      user={followed}
+                      className="w-12 h-12 rounded-full object-cover"
+                      fallbackClassName="w-12 h-12 rounded-full bg-green-500 text-white"
+                    />
                     <div>
                       <p className="font-bold text-gray-900">{followed.name}</p>
                       <p className="text-sm text-gray-600">{followed.bio || 'No bio'}</p>
