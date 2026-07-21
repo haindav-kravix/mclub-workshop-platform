@@ -83,6 +83,17 @@ export const AdminAnalyticsPage = () => {
     { label: 'Visible/running events', value: analytics.running, tone: 'good' },
     { label: 'Rejection rate', value: `${analytics.rejectionRate}%`, tone: analytics.rejectionRate > 30 ? 'warn' : 'good' }
   ];
+  const pending = Math.max(0, analytics.totalRegistrations - analytics.confirmed - analytics.rejected);
+  const funnelStages = [
+    { label: 'Registered', value: analytics.totalRegistrations, width: 100 },
+    { label: 'Confirmed', value: analytics.confirmed, width: analytics.totalRegistrations ? Math.max(12, Math.round((analytics.confirmed / analytics.totalRegistrations) * 100)) : 12 },
+    { label: 'Pending review', value: pending, width: analytics.totalRegistrations ? Math.max(12, Math.round((pending / analytics.totalRegistrations) * 100)) : 12 }
+  ];
+  const mixTotal = Math.max(analytics.totalRegistrations, 1);
+  const mixStyle = {
+    '--confirmed': `${(analytics.confirmed / mixTotal) * 360}deg`,
+    '--pending': `${((analytics.confirmed + pending) / mixTotal) * 360}deg`
+  };
 
   return (
     <div className="analytics-page min-h-screen">
@@ -176,26 +187,57 @@ export const AdminAnalyticsPage = () => {
           </div>
         </section>
 
-        <section className="analytics-live-grid mt-8">
-          <div className="analytics-trend-card wide">
-            <div>
-              <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Live event signal</p>
-              <h2>Registration momentum</h2>
+        <section className="analytics-visual-grid mt-8">
+          <div className="analytics-funnel-card">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Conversion funnel</p>
+                <h2>Registration review flow</h2>
+              </div>
+              <FiTrendingUp className="text-emerald-600" size={26} />
             </div>
-            <div className="analytics-wave" aria-hidden="true">
-              <span /><span /><span /><span /><span /><span /><span />
+            <div className="analytics-funnel-bars">
+              {funnelStages.map((stage, index) => (
+                <div key={stage.label} className="analytics-funnel-row" style={{ '--funnel-width': `${stage.width}%`, '--funnel-delay': `${index * 140}ms` }}>
+                  <div>
+                    <span>{stage.label}</span>
+                    <strong>{stage.value}</strong>
+                  </div>
+                  <i />
+                </div>
+              ))}
             </div>
-            <p>Highest demand is coming from the top ranked events. Use this section to quickly decide where approval, attendance, and email actions need attention.</p>
           </div>
-          <div className="analytics-trend-card">
-            <FiCheckCircle />
-            <strong>{analytics.confirmationRate}%</strong>
-            <span>Approval quality</span>
+
+          <div className="analytics-mix-card">
+            <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Registration mix</p>
+            <h2>Status split</h2>
+            <div className="analytics-donut" style={mixStyle}>
+              <span>{analytics.totalRegistrations}</span>
+            </div>
+            <div className="analytics-legend">
+              <span><i className="confirmed" /> Confirmed</span>
+              <span><i className="pending" /> Pending</span>
+              <span><i className="rejected" /> Rejected</span>
+            </div>
           </div>
-          <div className="analytics-trend-card">
-            <FiUsers />
-            <strong>{workshops.length}</strong>
-            <span>Total events tracked</span>
+
+          <div className="analytics-mini-grid">
+            <div className="analytics-mini-card">
+              <FiCheckCircle />
+              <strong>{analytics.confirmationRate}%</strong>
+              <span>Approval quality</span>
+            </div>
+            <div className="analytics-mini-card">
+              <FiUsers />
+              <strong>{workshops.length}</strong>
+              <span>Events tracked</span>
+            </div>
+            <div className="analytics-mini-card">
+              <FiActivity />
+              <strong>{pending}</strong>
+              <span>Pending reviews</span>
+            </div>
           </div>
         </section>
       </main>
