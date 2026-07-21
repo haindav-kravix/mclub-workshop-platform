@@ -13,7 +13,10 @@ export const AdminEntryPage = () => {
   const scannerTimerRef = useRef(null);
   const streamRef = useRef(null);
   const scanLoadingRef = useRef(false);
-  const scannedValuesRef = useRef(new Set());
+  const activeScanValueRef = useRef('');
+  const blankFrameCountRef = useRef(0);
+  const lastDecodeAtRef = useRef(0);
+  const lastSubmittedAtRef = useRef(new Map());
   const scanNoticeTimerRef = useRef(null);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +95,7 @@ export const AdminEntryPage = () => {
         showScanNotice(`${studentName} entry success`);
       }
       setSessionScanCount(count => count + 1);
-      await loadReport();
+      loadReport();
     } catch (err) {
       const message = err.response?.data?.message || 'Unable to verify pass';
       setError(message);
@@ -109,10 +112,19 @@ export const AdminEntryPage = () => {
 
     if (!video || !canvas || !streamRef.current) return;
 
+    const now = Date.now();
+    if (now - lastDecodeAtRef.current < 90) {
+      scannerTimerRef.current = window.requestAnimationFrame(scanCameraFrame);
+      return;
+    }
+    lastDecodeAtRef.current = now;
+
     if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && video.videoWidth && video.videoHeight && !scanLoadingRef.current) {
       const context = canvas.getContext('2d', { willReadFrequently: true });
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      const maxScanWidth = 640;
+      const scale = Math.min(1, maxScanWidth / video.videoWidth);
+      canvas.width = Math.round(video.videoWidth * scale);
+      canvas.height = Math.round(video.videoHeight * scale);
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -121,9 +133,22 @@ export const AdminEntryPage = () => {
       });
 
       const scannedValue = String(qrCode?.data || '').trim();
-      if (scannedValue && !scannedValuesRef.current.has(scannedValue)) {
-        scannedValuesRef.current.add(scannedValue);
-        handleScan(scannedValue);
+      if (scannedValue) {
+        blankFrameCountRef.current = 0;
+        const lastSubmittedAt = lastSubmittedAtRef.current.get(scannedValue) || 0;
+        const isFreshValue = scannedValue !== activeScanValueRef.current;
+        const canRepeatSameQr = now - lastSubmittedAt > 1800;
+
+        if (isFreshValue || canRepeatSameQr) {
+          activeScanValueRef.current = scannedValue;
+          lastSubmittedAtRef.current.set(scannedValue, now);
+          handleScan(scannedValue);
+        }
+      } else {
+        blankFrameCountRef.current += 1;
+        if (blankFrameCountRef.current >= 4) {
+          activeScanValueRef.current = '';
+        }
       }
     }
 
@@ -138,15 +163,18 @@ export const AdminEntryPage = () => {
 
     try {
       stopCamera();
-      scannedValuesRef.current = new Set();
+      activeScanValueRef.current = '';
+      blankFrameCountRef.current = 0;
+      lastDecodeAtRef.current = 0;
+      lastSubmittedAtRef.current = new Map();
       setSessionScanCount(0);
       setError('');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
           facingMode: { ideal: 'environment' },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 640 },
+          height: { ideal: 480 }
         }
       });
       streamRef.current = stream;
