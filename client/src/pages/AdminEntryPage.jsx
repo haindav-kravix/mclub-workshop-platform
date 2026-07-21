@@ -69,10 +69,10 @@ export const AdminEntryPage = () => {
       const response = await entryAPI.scan(workshopId, passValue);
       setToken('');
       setFeedback({
-        type: response.data.alreadyEntered ? 'warning' : 'success',
+        type: response.data.alreadyEntered ? 'error' : 'success',
         title: response.data.alreadyEntered ? 'Already entered' : 'Entry confirmed',
         message: response.data.alreadyEntered
-          ? `${response.data.entry?.user?.name || 'Student'} already entered at ${new Date(response.data.entry?.checkedInAt).toLocaleString()}.`
+          ? `${response.data.entry?.user?.name || 'Student'} has already entered at ${new Date(response.data.entry?.checkedInAt).toLocaleString()}.`
           : `${response.data.entry?.user?.name || 'Student'} is allowed to enter.`
       });
       setSuccess(response.data.message);
