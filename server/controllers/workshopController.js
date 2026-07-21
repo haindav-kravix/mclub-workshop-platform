@@ -43,6 +43,12 @@ const uploadedFileToDataUrl = (file) => {
   return `data:${file.mimetype};base64,${fileBuffer.toString('base64')}`;
 };
 
+const parseBoolean = (value, fallback = false) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') return value === 'true';
+  return fallback;
+};
+
 const cleanupUploadedFile = (file) => {
   if (!file?.path) return;
   fs.unlink(file.path, (err) => {
@@ -494,7 +500,9 @@ export const createWorkshop = async (req, res) => {
       capacity,
       registrationFormFields,
       dailyTimings,
-      telegramLink
+      telegramLink,
+      paymentEnabled,
+      entryPassEnabled
     } = req.body;
     const parsedTimings = parseDailyTimings(dailyTimings)
       .filter(item => item?.date)
@@ -513,7 +521,17 @@ export const createWorkshop = async (req, res) => {
     }
 
     const coverImage = uploadedFileToDataUrl(coverImageFile);
-    const qrImage = qrImageFile ? uploadedFileToDataUrl(qrImageFile) : '';
+    const shouldUsePayment = parseBoolean(paymentEnabled, false);
+
+    if (shouldUsePayment && !qrImageFile) {
+      cleanupUploadedFiles(req);
+      return res.status(400).json({ message: 'Payment QR image is required when payment is on' });
+    }
+    if (!shouldUsePayment && qrImageFile) {
+      cleanupUploadedFile(qrImageFile);
+    }
+
+    const qrImage = shouldUsePayment && qrImageFile ? uploadedFileToDataUrl(qrImageFile) : '';
 
     const workshop = new Workshop({
       eventType: eventType === 'internship' ? 'internship' : 'workshop',
@@ -521,6 +539,8 @@ export const createWorkshop = async (req, res) => {
       description,
       coverImage,
       qrImage,
+      paymentEnabled: shouldUsePayment,
+      entryPassEnabled: parseBoolean(entryPassEnabled, true),
       date: startDate || date,
       startDate: startDate || date,
       endDate: endDate || startDate || date,
@@ -545,7 +565,7 @@ export const createWorkshop = async (req, res) => {
 export const getAllWorkshops = async (req, res) => {
   try {
     const workshops = await Workshop.find({ isActive: true, isStopped: { $ne: true } })
-      .select('title eventType description coverImage date startDate endDate time duration dailyTimings venue registrationsOpen isStopped isActive')
+      .select('title eventType description coverImage date startDate endDate time duration dailyTimings venue registrationsOpen isStopped isActive paymentEnabled entryPassEnabled')
       .sort({ date: 1 })
       .lean();
     res.json(workshops);
@@ -600,7 +620,9 @@ export const updateWorkshop = async (req, res) => {
       capacity,
       registrationFormFields,
       dailyTimings,
-      telegramLink
+      telegramLink,
+      paymentEnabled,
+      entryPassEnabled
     } = req.body;
     const parsedTimings = parseDailyTimings(dailyTimings)
       .filter(item => item?.date)
@@ -624,6 +646,8 @@ export const updateWorkshop = async (req, res) => {
       venue,
       duration,
       capacity,
+      paymentEnabled: parseBoolean(paymentEnabled, false),
+      entryPassEnabled: parseBoolean(entryPassEnabled, true),
       registrationFormFields: parseRegistrationFormFields(registrationFormFields),
       updatedAt: new Date()
     };
@@ -631,14 +655,26 @@ export const updateWorkshop = async (req, res) => {
     const coverImageFile = getUploadedFile(req, 'coverImage');
     const qrImageFile = getUploadedFile(req, 'qrImage');
 
+    const existingWorkshop = await Workshop.findById(id);
+
+    if (updateData.paymentEnabled && !qrImageFile && !existingWorkshop?.qrImage) {
+      cleanupUploadedFiles(req);
+      return res.status(400).json({ message: 'Payment QR image is required when payment is on' });
+    }
+
+    if (!updateData.paymentEnabled) {
+      if (existingWorkshop?.qrImage) deleteLegacyUpload(existingWorkshop.qrImage);
+      updateData.qrImage = '';
+      if (qrImageFile) cleanupUploadedFile(qrImageFile);
+    }
+
     if (coverImageFile || qrImageFile) {
-      const workshop = await Workshop.findById(id);
       if (coverImageFile) {
-        if (workshop?.coverImage) deleteLegacyUpload(workshop.coverImage);
+        if (existingWorkshop?.coverImage) deleteLegacyUpload(existingWorkshop.coverImage);
         updateData.coverImage = uploadedFileToDataUrl(coverImageFile);
       }
-      if (qrImageFile) {
-        if (workshop?.qrImage) deleteLegacyUpload(workshop.qrImage);
+      if (qrImageFile && updateData.paymentEnabled) {
+        if (existingWorkshop?.qrImage) deleteLegacyUpload(existingWorkshop.qrImage);
         updateData.qrImage = uploadedFileToDataUrl(qrImageFile);
       }
     }

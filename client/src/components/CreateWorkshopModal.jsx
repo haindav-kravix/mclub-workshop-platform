@@ -59,6 +59,7 @@ const hasConfiguredTimings = (initialData) => {
 
 export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, layout = 'modal' }) => {
   const initialHasTimings = hasConfiguredTimings(initialData);
+  const initialPaymentEnabled = initialData?.paymentEnabled ?? Boolean(initialData?.qrImage);
   const [formData, setFormData] = useState({
     eventType: initialData?.eventType || 'workshop',
     title: initialData?.title || '',
@@ -73,6 +74,8 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
     capacity: initialData?.capacity || '',
     coverImage: null,
     qrImage: null,
+    paymentEnabled: initialPaymentEnabled,
+    entryPassEnabled: initialData?.entryPassEnabled ?? true,
     registrationFormFields: initialData?.registrationFormFields || []
   });
   const [loading, setLoading] = useState(false);
@@ -109,6 +112,21 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
     setFormData(prev => ({
       ...prev,
       qrImage: e.target.files[0]
+    }));
+  };
+
+  const handlePaymentToggle = (enabled) => {
+    setFormData(prev => ({
+      ...prev,
+      paymentEnabled: enabled,
+      qrImage: enabled ? prev.qrImage : null
+    }));
+  };
+
+  const handleEntryPassToggle = (enabled) => {
+    setFormData(prev => ({
+      ...prev,
+      entryPassEnabled: enabled
     }));
   };
 
@@ -158,6 +176,11 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
 
     if (!initialData && !formData.coverImage) {
       setError('Please upload a cover image');
+      return;
+    }
+
+    if (formData.paymentEnabled && !formData.qrImage && !initialData?.qrImage) {
+      setError('Please upload a payment QR image or turn payment off');
       return;
     }
 
@@ -397,30 +420,74 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
             <p className="text-xs text-gray-500 mt-1">Max 10MB. Supported formats: JPG, PNG, GIF, WebP, AVIF, HEIC, HEIF</p>
           </div>
 
-          {/* QR Image */}
+          {/* Payment Setup */}
           <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 p-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Payment QR Image (optional)
-            </label>
-            {initialData?.qrImage && !formData.qrImage && (
-              <div className="mb-3 flex flex-col gap-3 rounded-lg border border-emerald-100 bg-white p-3 sm:flex-row sm:items-center">
-                <img
-                  src={initialData.qrImage}
-                  alt={`Current ${eventLower} QR`}
-                  className="h-24 w-24 rounded-lg border border-slate-200 object-contain"
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-slate-900">Payment collection</p>
+                <p className="text-xs font-semibold text-slate-500">Turn this on only when students must pay before registration.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handlePaymentToggle(!formData.paymentEnabled)}
+                className={`inline-flex h-11 min-w-28 items-center justify-center rounded-lg px-4 text-sm font-black transition ${
+                  formData.paymentEnabled
+                    ? 'bg-primary text-secondary shadow-sm'
+                    : 'bg-white text-slate-700 border border-slate-200'
+                }`}
+              >
+                {formData.paymentEnabled ? 'Payment On' : 'Payment Off'}
+              </button>
+            </div>
+
+            {formData.paymentEnabled && (
+              <div className="mt-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Payment QR Image *
+                </label>
+                {initialData?.qrImage && !formData.qrImage && (
+                  <div className="mb-3 flex flex-col gap-3 rounded-lg border border-emerald-100 bg-white p-3 sm:flex-row sm:items-center">
+                    <img
+                      src={initialData.qrImage}
+                      alt={`Current ${eventLower} QR`}
+                      className="h-24 w-24 rounded-lg border border-slate-200 object-contain"
+                    />
+                    <p className="text-sm font-semibold text-slate-600">
+                      Current QR is already visible on the {eventLower} page. Upload a new image only if you want to replace it.
+                    </p>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.gif,.webp,.avif,.heic,.heif,image/*"
+                  onChange={handleQrFileChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary"
+                  required={formData.paymentEnabled && !initialData?.qrImage}
                 />
-                <p className="text-sm font-semibold text-slate-600">
-                  Current QR is already visible on the {eventLower} page. Upload a new image only if you want to replace it.
-                </p>
+                <p className="text-xs text-gray-500 mt-1">Students will see this QR and must upload their payment screenshot during registration.</p>
               </div>
             )}
-            <input
-              type="file"
-              accept=".jpg,.jpeg,.png,.gif,.webp,.avif,.heic,.heif,image/*"
-              onChange={handleQrFileChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <p className="text-xs text-gray-500 mt-1">Upload the payment QR here. Students will see the screenshot upload field during registration after this QR is added.</p>
+          </div>
+
+          {/* Entry Pass Setup */}
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-slate-900">QR entry pass</p>
+                <p className="text-xs font-semibold text-slate-500">Turn this on if confirmed students should get an entry QR pass in My Events.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleEntryPassToggle(!formData.entryPassEnabled)}
+                className={`inline-flex h-11 min-w-28 items-center justify-center rounded-lg px-4 text-sm font-black transition ${
+                  formData.entryPassEnabled
+                    ? 'bg-primary text-secondary shadow-sm'
+                    : 'bg-white text-slate-700 border border-slate-200'
+                }`}
+              >
+                {formData.entryPassEnabled ? 'Entry QR On' : 'Entry QR Off'}
+              </button>
+            </div>
           </div>
 
           {/* Form Builder */}

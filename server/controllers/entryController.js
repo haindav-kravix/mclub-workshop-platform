@@ -22,6 +22,8 @@ const extractToken = (value = '') => {
   }
 };
 
+const isEntryPassEnabled = (workshop) => workshop?.entryPassEnabled !== false;
+
 const serializeEntry = (entry) => ({
   _id: entry._id,
   registrationId: entry.registrationId?._id || entry.registrationId,
@@ -65,6 +67,9 @@ export const getMyEntryPass = async (req, res) => {
       .populate('userId', 'name email profilePhoto');
 
     if (!registration) return res.status(404).json({ message: 'Entry pass not found' });
+    if (!isEntryPassEnabled(registration.workshopId)) {
+      return res.status(403).json({ message: 'Entry pass is not enabled for this event' });
+    }
     if (registration.status !== 'confirmed') {
       return res.status(403).json({ message: 'Entry pass is available only after confirmation' });
     }
@@ -96,6 +101,9 @@ export const getEntryReport = async (req, res) => {
   try {
     const workshop = await Workshop.findById(req.params.workshopId);
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
+    if (!isEntryPassEnabled(workshop)) {
+      return res.status(403).json({ message: 'Entry pass is not enabled for this event' });
+    }
 
     const registrations = await Registration.find({
       workshopId: workshop._id,
@@ -147,6 +155,12 @@ export const scanEntryPass = async (req, res) => {
 
     if (payload.purpose !== 'entry-pass' || payload.workshopId !== req.params.workshopId) {
       return res.status(400).json({ message: 'This pass is not valid for this event' });
+    }
+
+    const workshop = await Workshop.findById(req.params.workshopId).select('entryPassEnabled');
+    if (!workshop) return res.status(404).json({ message: 'Event not found' });
+    if (!isEntryPassEnabled(workshop)) {
+      return res.status(403).json({ message: 'Entry pass is not enabled for this event' });
     }
 
     const registration = await Registration.findOne({
@@ -201,6 +215,9 @@ export const exportEntryReport = async (req, res) => {
   try {
     const workshop = await Workshop.findById(req.params.workshopId);
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
+    if (!isEntryPassEnabled(workshop)) {
+      return res.status(403).json({ message: 'Entry pass is not enabled for this event' });
+    }
 
     const registrations = await Registration.find({
       workshopId: workshop._id,

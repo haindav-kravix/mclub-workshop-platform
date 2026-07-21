@@ -74,6 +74,7 @@ export const WorkshopRegistrationPage = () => {
   const registrationsOpen = workshop?.registrationsOpen !== false && !workshop?.isStopped;
   const eventLabel = getEventLabel(workshop);
   const eventLower = getEventLabel(workshop, 'lower');
+  const paymentEnabled = Boolean(workshop?.paymentEnabled !== false && workshop?.qrImage);
 
   return (
     <div className="min-h-screen app-shell">
@@ -109,7 +110,7 @@ export const WorkshopRegistrationPage = () => {
           </div>
         ) : (
           <>
-            {workshop.qrImage && (
+            {paymentEnabled && (
               <div className="mb-5 rounded-2xl border border-emerald-200 bg-white p-5 text-center shadow-xl">
                 <h2 className="text-xl font-black text-slate-950">Payment QR</h2>
                 <p className="mt-1 text-sm font-semibold text-slate-600">Complete the payment here, then upload the screenshot below.</p>

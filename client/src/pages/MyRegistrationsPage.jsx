@@ -99,13 +99,15 @@ export const MyRegistrationsPage = () => {
                   <div className="flex items-end">
                     {registration.status === 'confirmed' ? (
                       <div className="grid w-full gap-2">
-                        <Link
-                          to={`/entry-pass/${registration._id}`}
-                          className="entry-pass-mini-button w-full px-4 py-2 rounded-lg transition flex items-center justify-center space-x-2 font-black"
-                        >
-                          <FiShield size={18} />
-                          <span>View Entry Pass</span>
-                        </Link>
+                        {registration.workshopId?.entryPassEnabled !== false && (
+                          <Link
+                            to={`/entry-pass/${registration._id}`}
+                            className="entry-pass-mini-button w-full px-4 py-2 rounded-lg transition flex items-center justify-center space-x-2 font-black"
+                          >
+                            <FiShield size={18} />
+                            <span>View Entry Pass</span>
+                          </Link>
+                        )}
                         {registration.workshopId.telegramLink && (
                           <a
                             href={registration.workshopId.telegramLink}

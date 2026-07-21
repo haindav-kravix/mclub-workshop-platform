@@ -111,6 +111,8 @@ const hasStringValueExpression = (path) => ({
   ]
 });
 
+const isPaymentEnabled = (workshop) => workshop?.paymentEnabled !== false && Boolean(workshop?.qrImage);
+
 const buildRegistrationListProjection = (formFields = []) => {
   const formDataProjection = {};
 
@@ -178,7 +180,7 @@ export const registerForWorkshop = async (req, res) => {
       return res.status(400).json({ message: `Registrations are closed for this ${eventLabel(workshop, true)}` });
     }
 
-    if (workshop.qrImage && !paymentScreenshotFile) {
+    if (isPaymentEnabled(workshop) && workshop.qrImage && !paymentScreenshotFile) {
       cleanupUploadedFiles(req);
       return res.status(400).json({ message: 'Payment screenshot is required for this workshop' });
     }
@@ -219,7 +221,7 @@ export const registerForWorkshop = async (req, res) => {
       workshopId,
       userId: req.user.id,
       formData: parsedFormData,
-      paymentScreenshot: paymentScreenshotFile ? uploadedFileToDataUrl(paymentScreenshotFile) : '',
+      paymentScreenshot: isPaymentEnabled(workshop) && paymentScreenshotFile ? uploadedFileToDataUrl(paymentScreenshotFile) : '',
       status: 'pending'
     });
 

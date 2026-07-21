@@ -1,26 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { FiX } from 'react-icons/fi';
-import { useAuth } from '../context/AuthContext';
-
-const getInitialFormData = (workshop, user) => {
-  const initialData = {};
-
-  (workshop.registrationFormFields || []).forEach((field) => {
-    const label = (field.label || '').toLowerCase();
-    if ((field.type === 'email' || label.includes('email')) && user?.email) {
-      initialData[field.fieldId] = user.email;
-    } else if (label.includes('name') && user?.name) {
-      initialData[field.fieldId] = user.name;
-    }
-  });
-
-  return initialData;
-};
-
-const isEmailField = (field) => {
-  const label = (field.label || '').toLowerCase();
-  return field.type === 'email' || label.includes('email');
-};
 
 const getOptionLabel = (index) => {
   let label = '';
@@ -33,15 +12,14 @@ const getOptionLabel = (index) => {
 };
 
 export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal' }) => {
-  const { user } = useAuth();
-  const [formData, setFormData] = useState(() => getInitialFormData(workshop, user));
+  const [formData, setFormData] = useState({});
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [imageFiles, setImageFiles] = useState({});
   const [documentFiles, setDocumentFiles] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const isModal = variant === 'modal';
-  const requiresPaymentScreenshot = Boolean(workshop.qrImage);
+  const requiresPaymentScreenshot = Boolean(workshop.paymentEnabled !== false && workshop.qrImage);
 
   useEffect(() => {
     if (!isModal) return undefined;
@@ -76,11 +54,8 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
   }, [isModal]);
 
   useEffect(() => {
-    setFormData(prev => ({
-      ...getInitialFormData(workshop, user),
-      ...prev
-    }));
-  }, [workshop, user]);
+    setFormData({});
+  }, [workshop?._id]);
 
   const handleChange = (fieldId, value) => {
     setFormData(prev => ({
@@ -166,8 +141,7 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
                     required={field.required}
                     value={formData[field.fieldId] || ''}
                     onChange={(e) => handleChange(field.fieldId, e.target.value)}
-                    readOnly={isEmailField(field) && !!user?.email}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary read-only:bg-gray-100 read-only:text-gray-700"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder={field.label}
                   />
                 )}
@@ -178,8 +152,7 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
                     required={field.required}
                     value={formData[field.fieldId] || ''}
                     onChange={(e) => handleChange(field.fieldId, e.target.value)}
-                    readOnly={!!user?.email}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary read-only:bg-gray-100 read-only:text-gray-700"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder={field.label}
                   />
                 )}
@@ -385,7 +358,7 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
           <p className="text-gray-500 text-center py-8">No form fields configured for this workshop</p>
         )}
 
-        {workshop.qrImage && (
+        {requiresPaymentScreenshot && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
             <label className="block text-sm font-black text-slate-800 mb-2">
               Upload Payment Screenshot <span className="text-red-500">*</span>

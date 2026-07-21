@@ -115,13 +115,15 @@ export const AdminWorkshopCard = ({
             <span>Attendance Report</span>
           </button>
 
-          <button
-            onClick={() => onEntryManagement(workshop._id)}
-            className="col-span-2 px-3 py-2 bg-slate-950 text-white rounded-lg hover:bg-slate-800 transition text-sm font-semibold flex items-center justify-center space-x-1"
-          >
-            <FiLogIn size={16} />
-            <span>Entry Management</span>
-          </button>
+          {workshop.entryPassEnabled !== false && (
+            <button
+              onClick={() => onEntryManagement(workshop._id)}
+              className="col-span-2 px-3 py-2 bg-slate-950 text-white rounded-lg hover:bg-slate-800 transition text-sm font-semibold flex items-center justify-center space-x-1"
+            >
+              <FiLogIn size={16} />
+              <span>Entry Management</span>
+            </button>
+          )}
 
           <button
             onClick={() => onEdit(workshop)}

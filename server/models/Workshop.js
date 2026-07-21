@@ -69,6 +69,13 @@ const workshopSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  paymentEnabled: {
+    type: Boolean
+  },
+  entryPassEnabled: {
+    type: Boolean,
+    default: true
+  },
   date: {
     type: Date,
     required: true
