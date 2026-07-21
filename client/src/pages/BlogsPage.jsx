@@ -236,6 +236,7 @@ export const BlogsPage = () => {
 
   return (
     <div className="blog-page min-h-screen bg-slate-100">
+      {createPortal((
       <div className="blog-fixed-header fixed left-0 right-0 top-0 z-[1200] bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 grid grid-cols-[44px_minmax(0,1fr)_44px_44px] lg:grid-cols-[auto_auto_minmax(260px,1fr)_auto_auto_auto] items-center gap-2 sm:gap-3">
           <button
@@ -406,12 +407,13 @@ export const BlogsPage = () => {
           </button>
         </div>
       </div>
+      ), document.body)}
       <div className="blog-fixed-header-spacer" aria-hidden="true" />
 
       {menuOpen && createPortal((
         <div
           className="bg-black/40"
-          style={{ position: 'fixed', inset: 0, zIndex: 1000 }}
+          style={{ position: 'fixed', inset: 0, zIndex: 1300 }}
           onClick={() => setMenuOpen(false)}
         >
           <div
@@ -422,7 +424,7 @@ export const BlogsPage = () => {
               top: 0,
               bottom: 0,
               width: 'min(20rem, 85vw)',
-              zIndex: 1001,
+              zIndex: 1301,
               backgroundColor: '#ffffff',
               color: '#0f172a',
               borderRight: '1px solid #e2e8f0'
