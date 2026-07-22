@@ -2457,6 +2457,35 @@ button, [role="button"], input, textarea, select {
   .home-achievement-stage .achievement-card .p-5 {
     padding: 1rem !important;
   }
+
+  .home-event-carousel {
+    min-height: 45rem !important;
+  }
+
+  .home-event-carousel-slide,
+  .home-event-carousel-slide .home-upcoming-card {
+    min-height: 39rem !important;
+  }
+
+  .home-event-carousel-slide .home-upcoming-card {
+    grid-template-rows: 14rem minmax(0, 1fr);
+  }
+
+  .home-event-carousel-slide .home-upcoming-card > div:first-child {
+    height: 14rem !important;
+    min-height: 14rem !important;
+    max-height: 14rem !important;
+  }
+
+  .home-event-carousel-slide .home-upcoming-card > div:last-child {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .home-event-carousel-slide h3 {
+    font-size: 1.7rem !important;
+    line-height: 1.12 !important;
+  }
 }
 
 .achievement-carousel-slide-next {
@@ -2500,6 +2529,36 @@ button, [role="button"], input, textarea, select {
   background: #00b159 !important;
 }
 
+.home-event-carousel {
+  display: flex;
+  min-height: 31rem;
+  flex-direction: column;
+  justify-content: space-between;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.home-event-carousel-slide {
+  min-height: 25rem;
+  color: inherit !important;
+  cursor: pointer;
+  text-decoration: none !important;
+}
+
+.home-event-carousel-slide .home-upcoming-card {
+  min-height: 25rem;
+}
+
+.home-event-carousel-slide .home-upcoming-card > div:first-child {
+  min-height: 16rem;
+}
+
+.home-event-carousel-slide h3,
+.home-event-carousel-slide p {
+  overflow-wrap: anywhere;
+}
+
 @media (min-width: 1024px) {
   .home-achievement-skeleton {
     min-height: 34rem;
@@ -2522,6 +2581,19 @@ button, [role="button"], input, textarea, select {
 
   .achievement-carousel .achievement-card .whitespace-pre-wrap {
     -webkit-line-clamp: 5;
+  }
+
+  .home-event-carousel {
+    min-height: 32rem;
+  }
+
+  .home-event-carousel-slide,
+  .home-event-carousel-slide .home-upcoming-card {
+    min-height: 26rem;
+  }
+
+  .home-event-carousel-slide .home-upcoming-card > div:first-child {
+    min-height: 26rem;
   }
 }
 

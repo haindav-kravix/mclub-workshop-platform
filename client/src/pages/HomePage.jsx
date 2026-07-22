@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { achievementAPI, workshopAPI, resolveMediaUrl } from '../utils/api';
-import { formatWorkshopTime } from '../utils/formatters';
-import { FiArrowRight, FiAward, FiBriefcase, FiCalendar, FiClock, FiMapPin, FiUsers } from 'react-icons/fi';
-import { getEventLabel } from '../utils/eventLabels';
+import { achievementAPI, workshopAPI } from '../utils/api';
+import { FiArrowRight, FiAward, FiBriefcase, FiCalendar, FiUsers } from 'react-icons/fi';
 import { HomeAchievementsCarousel } from '../components/HomeAchievementsCarousel';
+import { HomeEventsCarousel } from '../components/HomeEventsCarousel';
 import { ScrollReveal } from '../components/ScrollReveal';
 
 export const HomePage = () => {
@@ -44,8 +43,7 @@ export const HomePage = () => {
     return () => { mounted = false; };
   }, []);
 
-  const featuredWorkshop = workshops[0];
-  const featuredLabel = getEventLabel(featuredWorkshop);
+  const runningEvents = workshops.filter(event => event?.isActive !== false && event?.isStopped !== true);
 
   return (
     <div className="home-motion min-h-screen app-shell">
@@ -165,7 +163,7 @@ export const HomePage = () => {
       </div>
 
       {/* Upcoming Event Section */}
-      {(workshopsLoading || featuredWorkshop) && (
+      {(workshopsLoading || runningEvents.length > 0) && (
         <div className="home-section-white py-12 sm:py-16">
           <div className="max-w-7xl mx-auto px-4">
             <ScrollReveal className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
@@ -204,61 +202,7 @@ export const HomePage = () => {
                 </div>
               </div>
             ) : (
-              featuredWorkshop && (
-                <Link
-                  to={`/workshop/${featuredWorkshop._id}`}
-                  className="home-upcoming-card home-solid-card grid overflow-hidden rounded-lg text-slate-950 shadow-lg transition hover:-translate-y-1 hover:border-primary hover:shadow-2xl lg:grid-cols-[0.95fr_1.05fr]"
-                >
-                  <div className="relative h-56 overflow-hidden bg-emerald-50 sm:h-72 lg:h-auto">
-                    {featuredWorkshop.coverImage ? (
-                      <img
-                        src={resolveMediaUrl(featuredWorkshop.coverImage)}
-                        alt={featuredWorkshop.title}
-                        className="home-upcoming-image h-full w-full object-contain p-3 sm:p-5"
-                        onError={(event) => {
-                          event.currentTarget.onerror = null;
-                          event.currentTarget.src = '/brand/klh-head-banner.png';
-                        }}
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-emerald-50 text-4xl font-black text-primary">
-                        {featuredWorkshop.title?.charAt(0) || 'W'}
-                      </div>
-                    )}
-                    <div className="absolute left-4 top-4 rounded-lg bg-white/90 px-3 py-1 text-xs font-black text-emerald-700 shadow-sm">
-                      {featuredLabel} Registrations {featuredWorkshop.registrationsOpen !== false ? 'Open' : 'Closed'}
-                    </div>
-                  </div>
-                  <div className="flex flex-col justify-center p-5 sm:p-8">
-                    <h3 className="text-2xl font-black leading-tight sm:text-4xl break-words">{featuredWorkshop.title}</h3>
-                    <p className="mt-4 line-clamp-3 text-base leading-7 text-slate-600">{featuredWorkshop.description}</p>
-                    <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
-                        <FiCalendar className="mb-2 text-primary" />
-                        <p className="text-sm font-bold">{new Date(featuredWorkshop.startDate || featuredWorkshop.date).toLocaleDateString()}</p>
-                      </div>
-                      {formatWorkshopTime(featuredWorkshop) ? (
-                        <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
-                          <FiClock className="mb-2 text-primary" />
-                          <p className="text-sm font-bold">{formatWorkshopTime(featuredWorkshop)}</p>
-                        </div>
-                      ) : (
-                        <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
-                          <FiClock className="mb-2 text-primary" />
-                          <p className="text-sm font-bold">{featuredWorkshop.duration}</p>
-                        </div>
-                      )}
-                      <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
-                        <FiMapPin className="mb-2 text-primary" />
-                        <p className="truncate text-sm font-bold">{featuredWorkshop.venue}</p>
-                      </div>
-                    </div>
-                    <div className="mt-6 inline-flex items-center gap-2 font-black text-primary">
-                      View Details <FiArrowRight />
-                    </div>
-                  </div>
-                </Link>
-              )
+              <HomeEventsCarousel events={runningEvents} />
             )}
             </ScrollReveal>
           </div>
