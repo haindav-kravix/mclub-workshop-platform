@@ -1,9 +1,32 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiCamera, FiCheckCircle, FiDownload, FiLogIn, FiRefreshCw, FiSearch, FiShield, FiUsers, FiXCircle } from 'react-icons/fi';
+import { FiArrowLeft, FiCamera, FiCheckCircle, FiDownload, FiEdit3, FiLogIn, FiRefreshCw, FiSearch, FiShield, FiUploadCloud, FiUsers, FiXCircle } from 'react-icons/fi';
 import jsQR from 'jsqr';
-import { entryAPI } from '../utils/api';
+import { attendanceAPI, entryAPI } from '../utils/api';
 import { ErrorMessage, FeedbackPopup, LoadingSpinner } from '../components/UI';
+
+const toDateInput = (value) => value ? new Date(value).toISOString().split('T')[0] : '';
+
+const addDaysToDateInput = (dateString, days) => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  date.setDate(date.getDate() + days);
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0')
+  ].join('-');
+};
+
+const getDatesBetween = (startDate, endDate) => {
+  if (!startDate) return [];
+  const dates = [];
+  const finalDate = endDate || startDate;
+  for (let current = startDate; current <= finalDate; current = addDaysToDateInput(current, 1)) {
+    dates.push(current);
+  }
+  return dates;
+};
 
 export const AdminEntryPage = () => {
   const { workshopId } = useParams();
@@ -24,6 +47,8 @@ export const AdminEntryPage = () => {
   const [scanLoading, setScanLoading] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [sessionScanCount, setSessionScanCount] = useState(0);
+  const [attendanceDate, setAttendanceDate] = useState('');
+  const [postingAttendance, setPostingAttendance] = useState(false);
   const [error, setError] = useState('');
   const [feedback, setFeedback] = useState(null);
   const [scanNotice, setScanNotice] = useState(null);
@@ -51,6 +76,12 @@ export const AdminEntryPage = () => {
   useEffect(() => {
     scanLoadingRef.current = scanLoading;
   }, [scanLoading]);
+
+  useEffect(() => {
+    if (!report?.workshop || attendanceDate) return;
+    const firstDate = report.workshop.dailyTimings?.[0]?.date || report.workshop.startDate || report.workshop.date;
+    setAttendanceDate(toDateInput(firstDate));
+  }, [attendanceDate, report?.workshop]);
 
   const stopCamera = () => {
     if (scannerTimerRef.current) window.cancelAnimationFrame(scannerTimerRef.current);
@@ -205,12 +236,49 @@ export const AdminEntryPage = () => {
     }
   };
 
+  const handlePostAttendance = async () => {
+    if (!attendanceDate) {
+      setError('Select attendance day first');
+      return;
+    }
+
+    setPostingAttendance(true);
+    setError('');
+    try {
+      const response = await attendanceAPI.postFromEntry(workshopId, { date: attendanceDate });
+      const present = response.data.counts?.present || 0;
+      const absent = response.data.counts?.absent || 0;
+      setFeedback({
+        type: 'success',
+        title: 'Attendance updated',
+        message: `${present} present and ${absent} absent records are ready. You can still scan more passes and post again.`
+      });
+    } catch (err) {
+      const message = err.response?.data?.message || 'Unable to post entry scans to attendance';
+      setError(message);
+      setFeedback({ type: 'error', title: 'Post failed', message });
+    } finally {
+      setPostingAttendance(false);
+    }
+  };
+
   const entered = useMemo(() => [...(report?.entered || [])].sort((a, b) => (
     new Date(b.entry?.checkedInAt || 0) - new Date(a.entry?.checkedInAt || 0)
   )), [report?.entered]);
   const notEntered = report?.notEntered || [];
   const counts = report?.counts || {};
   const recentEntry = useMemo(() => entered[0], [entered]);
+  const dateOptions = useMemo(() => {
+    const workshop = report?.workshop;
+    if (!workshop) return [];
+    if (workshop.dailyTimings?.length) {
+      return workshop.dailyTimings.map(item => toDateInput(item.date));
+    }
+    return getDatesBetween(
+      toDateInput(workshop.startDate || workshop.date),
+      toDateInput(workshop.endDate || workshop.startDate || workshop.date)
+    );
+  }, [report?.workshop]);
 
   if (loading) return <LoadingSpinner />;
 
@@ -223,7 +291,7 @@ export const AdminEntryPage = () => {
           <div>
             <div className="entry-pass-kicker"><FiLogIn /> Entry Management</div>
             <h1>{report?.workshop?.title || 'Entry Management'}</h1>
-            <p>Scan confirmed student entry passes at the gate. This records entry time only and does not affect attendance.</p>
+            <p>Scan confirmed student entry passes at the gate, then post the entered list to attendance when you are ready.</p>
           </div>
           <div className="entry-live-card">
             <span>Entry percentage</span>
@@ -288,6 +356,35 @@ export const AdminEntryPage = () => {
               <div className="entry-empty-mini">No one has entered yet.</div>
             )}
             <button onClick={handleExport} className="entry-action-button mt-5"><FiDownload /> Export Entry Report</button>
+            <div className="entry-attendance-post mt-4">
+              <label>Post entry scans to attendance</label>
+              <select
+                value={attendanceDate}
+                onChange={event => setAttendanceDate(event.target.value)}
+                className="entry-attendance-select"
+              >
+                {dateOptions.map(date => (
+                  <option key={date} value={date}>
+                    {new Date(`${date}T00:00:00`).toLocaleDateString()}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handlePostAttendance}
+                disabled={postingAttendance || !attendanceDate}
+                className="entry-action-button w-full"
+              >
+                <FiUploadCloud /> {postingAttendance ? 'Posting...' : 'Post / Update Attendance'}
+              </button>
+              <button
+                onClick={() => navigate(`/admin/attendance/${workshopId}?date=${attendanceDate || ''}&retake=continue`)}
+                disabled={!attendanceDate}
+                className="entry-action-button subtle w-full"
+              >
+                <FiEdit3 /> Modify in Attendance
+              </button>
+              <p>New scans can be posted again later. Existing manual edits are kept unless the student entered.</p>
+            </div>
           </div>
         </section>
 

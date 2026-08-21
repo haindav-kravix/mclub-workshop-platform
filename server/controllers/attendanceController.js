@@ -1,5 +1,6 @@
 import Attendance from '../models/Attendance.js';
 import AttendanceSession from '../models/AttendanceSession.js';
+import Entry from '../models/Entry.js';
 import Registration from '../models/Registration.js';
 import Workshop from '../models/Workshop.js';
 import ExcelJS from 'exceljs';
@@ -92,7 +93,10 @@ export const submitAttendance = async (req, res) => {
     const incomingStatusByUser = new Map(
       entries
         .filter(entry => registeredUserIds.has(entry.userId))
-        .map(entry => [entry.userId, entry.status === 'present' ? 'present' : 'absent'])
+        .map(entry => [entry.userId, {
+          status: entry.status === 'present' ? 'present' : 'absent',
+          source: entry.source === 'entry' ? 'entry' : 'manual'
+        }])
     );
     const currentAttendance = await Attendance.findOne({ workshopId, date: normalizeDate(date) });
     const qrPresentUsers = new Set(
@@ -108,8 +112,8 @@ export const submitAttendance = async (req, res) => {
 
       return {
         userId,
-        status: incomingStatusByUser.get(userId) || 'absent',
-        source: 'manual'
+        status: incomingStatusByUser.get(userId)?.status || 'absent',
+        source: incomingStatusByUser.get(userId)?.source || 'manual'
       };
     });
 
@@ -128,6 +132,81 @@ export const submitAttendance = async (req, res) => {
     res.json({ success: true, attendance });
   } catch (error) {
     res.status(500).json({ message: 'Error submitting attendance', error: error.message });
+  }
+};
+
+export const postEntryAttendance = async (req, res) => {
+  try {
+    const { workshopId } = req.params;
+    const { date } = req.body;
+
+    if (!date) {
+      return res.status(400).json({ message: 'Date is required' });
+    }
+
+    const workshop = await Workshop.findById(workshopId);
+    if (!workshop) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    const attendanceDate = normalizeDate(date);
+    const confirmedRegistrations = await Registration.find({ workshopId, status: 'confirmed' })
+      .select('userId')
+      .sort({ createdAt: 1 });
+    const entries = await Entry.find({ workshopId }).select('userId');
+    const enteredUserIds = new Set(entries.map(entry => entry.userId.toString()));
+
+    const existingAttendance = await Attendance.findOne({ workshopId, date: attendanceDate });
+    const existingByUser = new Map((existingAttendance?.entries || []).map(entry => [
+      entry.userId.toString(),
+      {
+        status: entry.status,
+        source: entry.source || 'manual'
+      }
+    ]));
+
+    const cleanEntries = confirmedRegistrations.map(registration => {
+      const userId = registration.userId.toString();
+      const existing = existingByUser.get(userId);
+
+      if (enteredUserIds.has(userId)) {
+        return { userId, status: 'present', source: 'entry' };
+      }
+
+      if (existing?.status === 'present') {
+        return { userId, status: 'present', source: existing.source };
+      }
+
+      return { userId, status: 'absent', source: existing?.source || 'manual' };
+    });
+
+    const attendance = await Attendance.findOneAndUpdate(
+      { workshopId, date: attendanceDate },
+      {
+        workshopId,
+        date: attendanceDate,
+        entries: cleanEntries,
+        submittedBy: req.user.id,
+        updatedAt: new Date()
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    ).populate('entries.userId', 'name email profilePhoto');
+
+    const presentCount = attendance.entries.filter(entry => entry.status === 'present').length;
+
+    res.json({
+      success: true,
+      message: existingAttendance ? 'Attendance updated from entry scans' : 'Attendance posted from entry scans',
+      attendance,
+      counts: {
+        confirmed: confirmedRegistrations.length,
+        entered: enteredUserIds.size,
+        present: presentCount,
+        absent: Math.max(0, attendance.entries.length - presentCount)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error posting entry attendance', error: error.message });
   }
 };
 
@@ -196,7 +275,7 @@ export const exportDailyAttendance = async (req, res) => {
         entry.userId?.name || '',
         entry.userId?.email || '',
         entry.status,
-        entry.source === 'qr' ? 'QR' : 'Manual'
+        entry.source === 'qr' ? 'QR' : entry.source === 'entry' ? 'Entry Pass' : 'Manual'
       ]);
     });
     styleWorksheet(sheet);

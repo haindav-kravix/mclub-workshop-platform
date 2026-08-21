@@ -1699,6 +1699,38 @@ button, [role="button"], input, textarea, select {
   color: #001e2b !important;
 }
 
+.entry-attendance-post {
+  display: grid;
+  gap: 0.7rem;
+  border: 1px solid rgba(0, 104, 74, 0.12) !important;
+  border-radius: 1rem;
+  background: #f8fffb !important;
+  padding: 1rem;
+}
+
+.entry-attendance-post label {
+  color: #001e2b !important;
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
+.entry-attendance-select {
+  width: 100%;
+  border: 1px solid rgba(0, 104, 74, 0.16) !important;
+  border-radius: 0.85rem;
+  background: #ffffff !important;
+  padding: 0.82rem 0.9rem;
+  color: #001e2b !important;
+  font-weight: 850;
+}
+
+.entry-attendance-post p {
+  color: #64748b !important;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
 .entry-recent-card strong {
   display: block;
   margin-top: 1rem;

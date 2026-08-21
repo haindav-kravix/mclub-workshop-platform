@@ -127,7 +127,7 @@ export const TakeAttendancePage = () => {
 
       await attendanceAPI.submitAttendance(workshopId, {
         date: selectedDate,
-        entries: rosterForSubmit.map(item => ({ userId: item.user._id, status: item.status }))
+        entries: rosterForSubmit.map(item => ({ userId: item.user._id, status: item.status, source: item.source }))
       });
       setSuccess(manualEnabled ? 'Attendance submitted successfully' : 'QR attendance submitted successfully');
       setTimeout(() => navigate(`/admin/attendance/${workshopId}/reports`), 700);
@@ -178,7 +178,7 @@ export const TakeAttendancePage = () => {
   const qrImageUrl = qrCheckInUrl
     ? `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(qrCheckInUrl)}`
     : '';
-  const qrConfirmedStudents = roster.filter(item => item.status === 'present' && item.source === 'qr');
+  const confirmedStudents = roster.filter(item => item.status === 'present' && ['qr', 'entry'].includes(item.source));
 
   if (loading && !workshop) return <LoadingSpinner />;
 
@@ -289,6 +289,7 @@ export const TakeAttendancePage = () => {
           <div className="grid gap-3">
           {roster.map(item => {
             const isQrPresent = item.status === 'present' && item.source === 'qr';
+            const isEntryPresent = item.status === 'present' && item.source === 'entry';
             return (
             <div key={item.user._id} className="panel rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
@@ -300,9 +301,9 @@ export const TakeAttendancePage = () => {
                 <div className="min-w-0">
                   <p className="font-bold text-slate-950 truncate">{item.user.name}</p>
                   <p className="text-sm text-slate-600 break-all">{item.user.email}</p>
-                  {isQrPresent && (
+                  {(isQrPresent || isEntryPresent) && (
                     <p className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">
-                      QR scanned - present
+                      {isQrPresent ? 'QR scanned - present' : 'Entry pass - present'}
                     </p>
                   )}
                 </div>
@@ -347,29 +348,29 @@ export const TakeAttendancePage = () => {
         {!manualEnabled && (
           <div className="panel mt-5 rounded-lg p-5">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-bold text-slate-950">QR Confirmed Attendance</h2>
+              <h2 className="text-lg font-bold text-slate-950">Confirmed Attendance</h2>
               <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-black text-emerald-700">
-                {qrConfirmedStudents.length}
+                {confirmedStudents.length}
               </span>
             </div>
             <p className="mt-1 text-sm font-semibold text-slate-500">
-              Confirmed scans appear here automatically while QR attendance is on.
+              QR scans and entry-posted records appear here automatically.
             </p>
             <div className="mt-4 space-y-2">
-              {qrConfirmedStudents.map(item => (
+              {confirmedStudents.map(item => (
                 <div key={item.user._id} className="flex items-center justify-between gap-3 rounded-lg border border-emerald-100 bg-emerald-50 p-3">
                   <div className="min-w-0">
                     <p className="truncate font-bold text-slate-950">{item.user.name}</p>
                     <p className="break-all text-xs font-semibold text-slate-600">{item.user.email}</p>
                   </div>
                   <span className="flex-none rounded-full bg-emerald-600 px-3 py-1 text-xs font-black text-white">
-                    Present
+                    {item.source === 'entry' ? 'Entry' : 'QR'}
                   </span>
                 </div>
               ))}
-              {qrConfirmedStudents.length === 0 && (
+              {confirmedStudents.length === 0 && (
                 <p className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-sm font-semibold text-slate-500">
-                  No QR attendance confirmed yet.
+                  No confirmed attendance yet.
                 </p>
               )}
             </div>

@@ -13,7 +13,7 @@ const attendanceEntrySchema = new mongoose.Schema({
   },
   source: {
     type: String,
-    enum: ['manual', 'qr'],
+    enum: ['manual', 'qr', 'entry'],
     default: 'manual'
   }
 }, { _id: false });

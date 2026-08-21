@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.get('/workshop/:workshopId/roster', authenticateToken, adminOnly, attendanceController.getAttendanceRoster);
 router.post('/workshop/:workshopId', authenticateToken, adminOnly, attendanceController.submitAttendance);
+router.post('/workshop/:workshopId/from-entry', authenticateToken, adminOnly, attendanceController.postEntryAttendance);
 router.get('/workshop/:workshopId/reports', authenticateToken, adminOnly, attendanceController.getAttendanceReports);
 router.delete('/workshop/:workshopId/reports/day', authenticateToken, adminOnly, attendanceController.resetAttendanceDay);
 router.get('/workshop/:workshopId/reports/day/export', authenticateToken, adminOnly, attendanceController.exportDailyAttendance);
