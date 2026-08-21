@@ -60,7 +60,6 @@ const serializeConfirmedRegistration = (registration, entry = null) => ({
   _id: registration._id,
   status: registration.status,
   createdAt: registration.createdAt,
-  formData: registration.formData,
   user: registration.userId ? {
     _id: registration.userId._id,
     name: registration.userId.name,
@@ -123,6 +122,7 @@ export const getEntryReport = async (req, res) => {
       workshopId: workshop._id,
       status: 'confirmed'
     })
+      .select('status createdAt userId')
       .populate('userId', 'name email profilePhoto')
       .sort({ createdAt: 1 });
 
@@ -151,7 +151,11 @@ export const getEntryReport = async (req, res) => {
       notEntered
     });
   } catch (error) {
-    console.error('Entry report error:', error);
+    console.error('Entry report error:', {
+      workshopId: req.params.workshopId,
+      message: error.message,
+      stack: error.stack
+    });
     res.status(500).json({ message: 'Unable to load entry report' });
   }
 };
