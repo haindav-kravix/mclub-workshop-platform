@@ -74,6 +74,28 @@ const deleteLegacyUpload = (imageUrl) => {
   });
 };
 
+const withCoverImageUrl = (workshop) => ({
+  ...workshop,
+  coverImage: `/api/workshops/${workshop._id}/cover-image`
+});
+
+const sendDataUrlImage = (res, dataUrl) => {
+  if (dataUrl?.startsWith('/uploads/') || dataUrl?.startsWith('http')) {
+    return res.redirect(dataUrl);
+  }
+
+  const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.*)$/);
+  if (!match) {
+    return res.status(404).json({ message: 'Image not found' });
+  }
+
+  const [, mimeType, base64Data] = match;
+  const buffer = Buffer.from(base64Data, 'base64');
+  res.setHeader('Content-Type', mimeType || 'image/png');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  return res.send(buffer);
+};
+
 const escapeXml = (value = '') => String(value)
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
@@ -565,12 +587,28 @@ export const createWorkshop = async (req, res) => {
 export const getAllWorkshops = async (req, res) => {
   try {
     const workshops = await Workshop.find({ isActive: true, isStopped: { $ne: true } })
-      .select('title eventType description coverImage date startDate endDate time duration dailyTimings venue registrationsOpen isStopped isActive paymentEnabled entryPassEnabled')
+      .select('title eventType description date startDate endDate time duration dailyTimings venue registrationsOpen isStopped isActive paymentEnabled entryPassEnabled')
       .sort({ date: 1 })
       .lean();
-    res.json(workshops);
+    res.json(workshops.map(withCoverImageUrl));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching workshops', error: error.message });
+  }
+};
+
+export const getWorkshopCoverImage = async (req, res) => {
+  try {
+    const workshop = await Workshop.findById(req.params.id)
+      .select('coverImage')
+      .lean();
+
+    if (!workshop?.coverImage) {
+      return res.status(404).json({ message: 'Image not found' });
+    }
+
+    return sendDataUrlImage(res, workshop.coverImage);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching image', error: error.message });
   }
 };
 
@@ -712,6 +750,7 @@ export const deleteWorkshop = async (req, res) => {
 export const getAdminWorkshops = async (req, res) => {
   try {
     const workshops = await Workshop.find({})
+      .select('-coverImage -qrImage')
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 })
       .lean();
@@ -755,7 +794,7 @@ export const getAdminWorkshops = async (req, res) => {
       };
 
       return {
-        ...workshop,
+        ...withCoverImageUrl(workshop),
         registrationStats: counts,
         totalRegistrationCount: counts.total,
         confirmedRegistrationCount: counts.confirmed,

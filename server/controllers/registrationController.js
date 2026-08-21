@@ -241,7 +241,7 @@ export const registerForWorkshop = async (req, res) => {
 export const getUserRegistrations = async (req, res) => {
   try {
     const registrations = await Registration.find({ userId: req.user.id })
-      .populate('workshopId')
+      .populate('workshopId', 'title eventType date startDate endDate time duration dailyTimings venue telegramLink registrationFormFields entryPassEnabled')
       .sort({ createdAt: -1 })
       .allowDiskUse(true);
 
