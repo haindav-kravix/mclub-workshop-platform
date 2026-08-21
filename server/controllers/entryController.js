@@ -43,6 +43,19 @@ const serializeEntry = (entry) => ({
   } : null
 });
 
+const serializeEntryWorkshop = (workshop) => ({
+  _id: workshop._id,
+  title: workshop.title,
+  eventType: workshop.eventType,
+  date: workshop.date,
+  startDate: workshop.startDate,
+  endDate: workshop.endDate,
+  dailyTimings: workshop.dailyTimings,
+  venue: workshop.venue,
+  duration: workshop.duration,
+  entryPassEnabled: workshop.entryPassEnabled
+});
+
 const serializeConfirmedRegistration = (registration, entry = null) => ({
   _id: registration._id,
   status: registration.status,
@@ -63,7 +76,7 @@ export const getMyEntryPass = async (req, res) => {
       _id: req.params.registrationId,
       userId: req.user.id
     })
-      .populate('workshopId')
+      .populate('workshopId', 'title eventType date startDate endDate dailyTimings venue duration entryPassEnabled')
       .populate('userId', 'name email profilePhoto');
 
     if (!registration) return res.status(404).json({ message: 'Entry pass not found' });
@@ -83,7 +96,7 @@ export const getMyEntryPass = async (req, res) => {
       registrationId: registration._id,
       token,
       passCode: registration._id.toString().slice(-8).toUpperCase(),
-      workshop: registration.workshopId,
+      workshop: serializeEntryWorkshop(registration.workshopId),
       user: {
         _id: registration.userId._id,
         name: registration.userId.name,
@@ -99,7 +112,8 @@ export const getMyEntryPass = async (req, res) => {
 
 export const getEntryReport = async (req, res) => {
   try {
-    const workshop = await Workshop.findById(req.params.workshopId);
+    const workshop = await Workshop.findById(req.params.workshopId)
+      .select('title eventType date startDate endDate dailyTimings venue duration entryPassEnabled');
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
     if (!isEntryPassEnabled(workshop)) {
       return res.status(403).json({ message: 'Entry pass is not enabled for this event' });
@@ -126,7 +140,7 @@ export const getEntryReport = async (req, res) => {
     const notEntered = confirmed.filter(item => !item.entry);
 
     res.json({
-      workshop,
+      workshop: serializeEntryWorkshop(workshop),
       counts: {
         confirmed: confirmed.length,
         entered: entered.length,
@@ -137,6 +151,7 @@ export const getEntryReport = async (req, res) => {
       notEntered
     });
   } catch (error) {
+    console.error('Entry report error:', error);
     res.status(500).json({ message: 'Unable to load entry report' });
   }
 };
