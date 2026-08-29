@@ -6,7 +6,7 @@ import { certificateAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 
 const defaults = {
-  nameX: 0.5, nameY: 0.52, fontFamily: 'Great Vibes', fontSize: 58, fontColor: '#111827', alignment: 'center', uppercase: false, maxWidth: 0.72
+  nameX: 0.5, nameY: 0.52, fontFamily: 'Great Vibes', fontSize: 72, fontColor: '#111827', alignment: 'center', uppercase: false, maxWidth: 0.9
 };
 
 const certificateFontFamily = (fontFamily) => {
@@ -42,7 +42,11 @@ export const AdminCertificatesPage = () => {
       if (setupResponse.data.template) {
         const { templateImage: image, ...saved } = setupResponse.data.template;
         setTemplateImage(image);
-        setSettings(prev => ({ ...prev, ...saved }));
+        setSettings(prev => ({
+          ...prev,
+          ...saved,
+          maxWidth: saved.fontFamily === 'Great Vibes' ? Math.max(saved.maxWidth || 0.9, 0.9) : saved.maxWidth
+        }));
       }
       const people = eligibleResponse.data || [];
       setRecipients(people);
@@ -180,11 +184,11 @@ export const AdminCertificatesPage = () => {
             <h2 className="text-xl font-black">Name controls</h2>
             <div className="mt-5 space-y-4">
               <label className="block text-sm font-black">Preview name<input value={previewName} onChange={e => setPreviewName(e.target.value)} className="mt-2 w-full" /></label>
-              <label className="block text-sm font-black">Font<select value={settings.fontFamily} onChange={e => setSettings(prev => ({ ...prev, fontFamily: e.target.value }))} className="mt-2 w-full"><option value="Great Vibes">Certificate Script</option><option>Helvetica</option><option>Times Roman</option><option>Courier</option></select></label>
-              <label className="block text-sm font-black">Font size<div className="mt-2 flex items-center gap-3"><input type="range" min="10" max="120" value={settings.fontSize} onChange={e => setSettings(prev => ({ ...prev, fontSize: Number(e.target.value) }))} className="min-w-0 flex-1" /><span className="w-12 text-right font-black">{settings.fontSize}</span></div></label>
+              <label className="block text-sm font-black">Font<select value={settings.fontFamily} onChange={e => setSettings(prev => ({ ...prev, fontFamily: e.target.value, maxWidth: e.target.value === 'Great Vibes' ? Math.max(prev.maxWidth, 0.9) : prev.maxWidth }))} className="mt-2 w-full"><option value="Great Vibes">Certificate Script</option><option>Helvetica</option><option>Times Roman</option><option>Courier</option></select></label>
+              <label className="block text-sm font-black">Font size<div className="mt-2 flex items-center gap-3"><input type="range" min="10" max="180" value={settings.fontSize} onChange={e => setSettings(prev => ({ ...prev, fontSize: Number(e.target.value) }))} className="min-w-0 flex-1" /><span className="w-12 text-right font-black">{settings.fontSize}</span></div></label>
               <label className="block text-sm font-black">Text colour<input type="color" value={settings.fontColor} onChange={e => setSettings(prev => ({ ...prev, fontColor: e.target.value }))} className="mt-2 h-11 w-full rounded-lg" /></label>
               <label className="block text-sm font-black">Alignment<select value={settings.alignment} onChange={e => setSettings(prev => ({ ...prev, alignment: e.target.value }))} className="mt-2 w-full"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
-              <label className="block text-sm font-black">Maximum name width<div className="mt-2 flex items-center gap-3"><input type="range" min="20" max="95" value={Math.round(settings.maxWidth * 100)} onChange={e => setSettings(prev => ({ ...prev, maxWidth: Number(e.target.value) / 100 }))} className="min-w-0 flex-1" /><span className="w-12 text-right font-black">{Math.round(settings.maxWidth * 100)}%</span></div></label>
+              <label className="block text-sm font-black">Maximum name width<div className="mt-2 flex items-center gap-3"><input type="range" min="20" max="100" value={Math.round(settings.maxWidth * 100)} onChange={e => setSettings(prev => ({ ...prev, maxWidth: Number(e.target.value) / 100 }))} className="min-w-0 flex-1" /><span className="w-12 text-right font-black">{Math.round(settings.maxWidth * 100)}%</span></div></label>
               <label className="flex items-center gap-3 rounded-lg bg-slate-50 p-3 text-sm font-black"><input type="checkbox" checked={settings.uppercase} onChange={e => setSettings(prev => ({ ...prev, uppercase: e.target.checked }))} /> Uppercase participant names</label>
               <button onClick={saveSetup} disabled={saving} className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-black text-white disabled:opacity-50"><FiSave /> {saving ? 'Saving...' : 'Save Design & Controls'}</button>
             </div>

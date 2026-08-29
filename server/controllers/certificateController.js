@@ -76,9 +76,13 @@ const generateCertificatePdf = async (template, participantName) => {
 
   const font = await getCertificateFont(pdf, template.fontFamily);
   const text = template.uppercase ? participantName.toUpperCase() : participantName;
-  const maxTextWidth = image.width * template.maxWidth;
+  const isScriptFont = template.fontFamily === 'Great Vibes';
+  const maxNameWidth = isScriptFont ? Math.max(template.maxWidth, 0.9) : template.maxWidth;
+  const maxTextWidth = image.width * maxNameWidth;
   let fontSize = template.fontSize;
-  while (fontSize > 10 && font.widthOfTextAtSize(text, fontSize) > maxTextWidth) fontSize -= 1;
+  if (!isScriptFont) {
+    while (fontSize > 10 && font.widthOfTextAtSize(text, fontSize) > maxTextWidth) fontSize -= 1;
+  }
   const textWidth = font.widthOfTextAtSize(text, fontSize);
   let x = image.width * template.nameX;
   if (template.alignment === 'center') x -= textWidth / 2;
@@ -124,11 +128,11 @@ export const saveTemplateSetup = async (req, res) => {
       nameX: Number(req.body.nameX ?? existing?.nameX ?? 0.5),
       nameY: Number(req.body.nameY ?? existing?.nameY ?? 0.52),
       fontFamily: req.body.fontFamily || existing?.fontFamily || 'Great Vibes',
-      fontSize: Number(req.body.fontSize ?? existing?.fontSize ?? 42),
+      fontSize: Number(req.body.fontSize ?? existing?.fontSize ?? 58),
       fontColor: req.body.fontColor || existing?.fontColor || '#111827',
       alignment: req.body.alignment || existing?.alignment || 'center',
       uppercase: String(req.body.uppercase) === 'true',
-      maxWidth: Number(req.body.maxWidth ?? existing?.maxWidth ?? 0.72),
+      maxWidth: Number(req.body.maxWidth ?? existing?.maxWidth ?? 0.9),
       updatedBy: req.user.id
     };
     if (req.file) {
