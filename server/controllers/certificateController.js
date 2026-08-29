@@ -1,10 +1,16 @@
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
 import Certificate from '../models/Certificate.js';
 import CertificateTemplate from '../models/CertificateTemplate.js';
 import Workshop from '../models/Workshop.js';
 import Registration from '../models/Registration.js';
 import Attendance from '../models/Attendance.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const safeFileName = (value = 'certificate') => String(value)
   .replace(/[^a-z0-9]+/gi, '-')
@@ -15,6 +21,22 @@ const fontMap = {
   Helvetica: StandardFonts.Helvetica,
   'Times Roman': StandardFonts.TimesRoman,
   Courier: StandardFonts.Courier
+};
+
+const scriptFontPath = path.join(
+  __dirname,
+  '../node_modules/@fontsource/great-vibes/files/great-vibes-latin-400-normal.woff'
+);
+let scriptFontBytes = null;
+
+const getCertificateFont = async (pdf, fontFamily) => {
+  if (fontFamily === 'Great Vibes') {
+    pdf.registerFontkit(fontkit);
+    scriptFontBytes ||= fs.readFileSync(scriptFontPath);
+    return pdf.embedFont(scriptFontBytes);
+  }
+
+  return pdf.embedFont(fontMap[fontFamily] || StandardFonts.Helvetica);
 };
 
 const hexToRgb = (hex = '#111827') => {
@@ -52,7 +74,7 @@ const generateCertificatePdf = async (template, participantName) => {
   const page = pdf.addPage([image.width, image.height]);
   page.drawImage(image, { x: 0, y: 0, width: image.width, height: image.height });
 
-  const font = await pdf.embedFont(fontMap[template.fontFamily] || StandardFonts.Helvetica);
+  const font = await getCertificateFont(pdf, template.fontFamily);
   const text = template.uppercase ? participantName.toUpperCase() : participantName;
   const maxTextWidth = image.width * template.maxWidth;
   let fontSize = template.fontSize;
@@ -101,7 +123,7 @@ export const saveTemplateSetup = async (req, res) => {
     const update = {
       nameX: Number(req.body.nameX ?? existing?.nameX ?? 0.5),
       nameY: Number(req.body.nameY ?? existing?.nameY ?? 0.52),
-      fontFamily: req.body.fontFamily || existing?.fontFamily || 'Helvetica',
+      fontFamily: req.body.fontFamily || existing?.fontFamily || 'Great Vibes',
       fontSize: Number(req.body.fontSize ?? existing?.fontSize ?? 42),
       fontColor: req.body.fontColor || existing?.fontColor || '#111827',
       alignment: req.body.alignment || existing?.alignment || 'center',

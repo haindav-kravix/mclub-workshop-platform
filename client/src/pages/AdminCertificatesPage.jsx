@@ -1,11 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiCheck, FiFileText, FiImage, FiSave, FiUsers } from 'react-icons/fi';
+import '@fontsource/great-vibes/latin-400.css';
 import { certificateAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 
 const defaults = {
-  nameX: 0.5, nameY: 0.52, fontFamily: 'Helvetica', fontSize: 42, fontColor: '#111827', alignment: 'center', uppercase: false, maxWidth: 0.72
+  nameX: 0.5, nameY: 0.52, fontFamily: 'Great Vibes', fontSize: 58, fontColor: '#111827', alignment: 'center', uppercase: false, maxWidth: 0.72
+};
+
+const certificateFontFamily = (fontFamily) => {
+  if (fontFamily === 'Great Vibes') return '"Great Vibes", cursive';
+  if (fontFamily === 'Times Roman') return 'Times New Roman, serif';
+  if (fontFamily === 'Courier') return 'Courier New, monospace';
+  return 'Arial, sans-serif';
 };
 
 export const AdminCertificatesPage = () => {
@@ -156,7 +164,7 @@ export const AdminCertificatesPage = () => {
                   style={{
                     left: `${settings.nameX * 100}%`, top: `${settings.nameY * 100}%`,
                     transform: settings.alignment === 'center' ? 'translate(-50%, -50%)' : settings.alignment === 'right' ? 'translate(-100%, -50%)' : 'translate(0, -50%)',
-                    fontFamily: settings.fontFamily === 'Times Roman' ? 'Times New Roman, serif' : settings.fontFamily === 'Courier' ? 'Courier New, monospace' : 'Arial, sans-serif',
+                    fontFamily: certificateFontFamily(settings.fontFamily),
                     fontSize: `clamp(12px, ${Math.max(1.2, settings.fontSize / 12)}vw, ${settings.fontSize}px)`,
                     color: settings.fontColor,
                     maxWidth: `${settings.maxWidth * 100}%`
@@ -172,7 +180,7 @@ export const AdminCertificatesPage = () => {
             <h2 className="text-xl font-black">Name controls</h2>
             <div className="mt-5 space-y-4">
               <label className="block text-sm font-black">Preview name<input value={previewName} onChange={e => setPreviewName(e.target.value)} className="mt-2 w-full" /></label>
-              <label className="block text-sm font-black">Font<select value={settings.fontFamily} onChange={e => setSettings(prev => ({ ...prev, fontFamily: e.target.value }))} className="mt-2 w-full"><option>Helvetica</option><option>Times Roman</option><option>Courier</option></select></label>
+              <label className="block text-sm font-black">Font<select value={settings.fontFamily} onChange={e => setSettings(prev => ({ ...prev, fontFamily: e.target.value }))} className="mt-2 w-full"><option value="Great Vibes">Certificate Script</option><option>Helvetica</option><option>Times Roman</option><option>Courier</option></select></label>
               <label className="block text-sm font-black">Font size<div className="mt-2 flex items-center gap-3"><input type="range" min="10" max="120" value={settings.fontSize} onChange={e => setSettings(prev => ({ ...prev, fontSize: Number(e.target.value) }))} className="min-w-0 flex-1" /><span className="w-12 text-right font-black">{settings.fontSize}</span></div></label>
               <label className="block text-sm font-black">Text colour<input type="color" value={settings.fontColor} onChange={e => setSettings(prev => ({ ...prev, fontColor: e.target.value }))} className="mt-2 h-11 w-full rounded-lg" /></label>
               <label className="block text-sm font-black">Alignment<select value={settings.alignment} onChange={e => setSettings(prev => ({ ...prev, alignment: e.target.value }))} className="mt-2 w-full"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
