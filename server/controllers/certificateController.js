@@ -118,17 +118,12 @@ const generateCertificatePdf = async (template, participantName) => {
   const font = await getCertificateFont(pdf, template.fontFamily);
   const text = template.uppercase ? participantName.toUpperCase() : participantName;
   const isScriptFont = template.fontFamily === 'Great Vibes';
-  const maxNameWidth = isScriptFont ? Math.max(template.maxWidth, 0.9) : template.maxWidth;
-  const maxTextWidth = image.width * maxNameWidth;
   let fontSize = normalizeCertificateFontSize(template.fontFamily, template.fontSize);
-  if (!isScriptFont) {
-    while (fontSize > 10 && font.widthOfTextAtSize(text, fontSize) > maxTextWidth) fontSize -= 1;
-  }
   const textWidth = font.widthOfTextAtSize(text, fontSize);
   let x = image.width * template.nameX;
   if (template.alignment === 'center') x -= textWidth / 2;
   if (template.alignment === 'right') x -= textWidth;
-  const yOffset = isScriptFont ? fontSize * 0.08 : fontSize * 0.32;
+  const yOffset = isScriptFont ? fontSize * 0.08 : fontSize * 0.28;
   const y = image.height * (1 - template.nameY) - yOffset;
 
   page.drawText(text, {
