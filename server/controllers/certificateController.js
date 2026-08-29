@@ -65,6 +65,47 @@ const templateResponse = (template) => template ? {
   updatedAt: template.updatedAt
 } : null;
 
+const normalizeCertificateFontSize = (fontFamily, fontSize) => {
+  const value = Number(fontSize || 0);
+  if (fontFamily === 'Great Vibes' && value > 0 && value < 120) return 160;
+  return value || (fontFamily === 'Great Vibes' ? 160 : 42);
+};
+
+const getFormValue = (formData, fieldId) => {
+  if (!formData || !fieldId) return '';
+  if (formData instanceof Map) return formData.get(fieldId) || '';
+  return formData[fieldId] || '';
+};
+
+const isUsableCertificateName = (value = '') => {
+  const text = String(value || '').trim();
+  return text.length > 1 && !text.includes('@') && !text.startsWith('{') && !text.startsWith('data:');
+};
+
+const getCertificateRecipientName = (registration, formFields = []) => {
+  const nameFields = formFields.filter(field => {
+    const label = String(field.label || '').toLowerCase();
+    return field.type !== 'email' && (
+      label === 'name' ||
+      label.includes('full name') ||
+      label.includes('student name') ||
+      label.includes('participant name') ||
+      label.includes('certificate name') ||
+      label.includes('name as per') ||
+      label.includes('candidate name')
+    );
+  });
+
+  for (const field of nameFields) {
+    const value = getFormValue(registration.formData, field.fieldId);
+    if (isUsableCertificateName(value)) return String(value).trim();
+  }
+
+  const profileName = registration.userId?.name;
+  if (isUsableCertificateName(profileName)) return String(profileName).trim();
+  return registration.userId?.email || 'Participant';
+};
+
 const generateCertificatePdf = async (template, participantName) => {
   const pdf = await PDFDocument.create();
   const imageBytes = template.templateImage;
@@ -79,7 +120,7 @@ const generateCertificatePdf = async (template, participantName) => {
   const isScriptFont = template.fontFamily === 'Great Vibes';
   const maxNameWidth = isScriptFont ? Math.max(template.maxWidth, 0.9) : template.maxWidth;
   const maxTextWidth = image.width * maxNameWidth;
-  let fontSize = template.fontSize;
+  let fontSize = normalizeCertificateFontSize(template.fontFamily, template.fontSize);
   if (!isScriptFont) {
     while (fontSize > 10 && font.widthOfTextAtSize(text, fontSize) > maxTextWidth) fontSize -= 1;
   }
@@ -128,7 +169,10 @@ export const saveTemplateSetup = async (req, res) => {
       nameX: Number(req.body.nameX ?? existing?.nameX ?? 0.5),
       nameY: Number(req.body.nameY ?? existing?.nameY ?? 0.52),
       fontFamily: req.body.fontFamily || existing?.fontFamily || 'Great Vibes',
-      fontSize: Number(req.body.fontSize ?? existing?.fontSize ?? 58),
+      fontSize: normalizeCertificateFontSize(
+        req.body.fontFamily || existing?.fontFamily || 'Great Vibes',
+        req.body.fontSize ?? existing?.fontSize
+      ),
       fontColor: req.body.fontColor || existing?.fontColor || '#111827',
       alignment: req.body.alignment || existing?.alignment || 'center',
       uppercase: String(req.body.uppercase) === 'true',
@@ -156,8 +200,10 @@ export const saveTemplateSetup = async (req, res) => {
 export const getEligibleRecipients = async (req, res) => {
   try {
     const workshopId = req.params.workshopId;
+    const workshop = await Workshop.findById(workshopId).select('registrationFormFields');
+    if (!workshop) return res.status(404).json({ message: 'Event not found' });
     const registrations = await Registration.find({ workshopId, status: 'confirmed' })
-      .select('userId createdAt')
+      .select('userId createdAt formData')
       .populate('userId', 'name email profilePhoto')
       .sort({ createdAt: 1 });
     const reports = await Attendance.find({ workshopId }).select('entries');
@@ -177,6 +223,7 @@ export const getEligibleRecipients = async (req, res) => {
       return {
         registrationId: registration._id,
         user: registration.userId,
+        certificateName: getCertificateRecipientName(registration, workshop.registrationFormFields || []),
         attendancePresent: attendance.present,
         attendanceTotal: attendance.total,
         attendancePercentage: attendance.total ? Math.round((attendance.present / attendance.total) * 100) : null,
@@ -194,9 +241,10 @@ export const generateCertificates = async (req, res) => {
     const userIds = Array.isArray(req.body.userIds) ? [...new Set(req.body.userIds)] : [];
     if (!userIds.length) return res.status(400).json({ message: 'Select at least one eligible participant' });
     const [workshop, template, registrations] = await Promise.all([
-      Workshop.findById(workshopId).select('title'),
+      Workshop.findById(workshopId).select('title registrationFormFields'),
       CertificateTemplate.findOne({ workshopId }),
       Registration.find({ workshopId, status: 'confirmed', userId: { $in: userIds } })
+        .select('userId formData')
         .populate('userId', 'name email')
     ]);
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
@@ -204,8 +252,9 @@ export const generateCertificates = async (req, res) => {
     if (!registrations.length) return res.status(400).json({ message: 'No eligible confirmed participants selected' });
 
     for (const registration of registrations) {
-      const pdfData = await generateCertificatePdf(template, registration.userId.name);
-      const fileName = `${safeFileName(workshop.title)}-${safeFileName(registration.userId.name)}.pdf`;
+      const recipientName = getCertificateRecipientName(registration, workshop.registrationFormFields || []);
+      const pdfData = await generateCertificatePdf(template, recipientName);
+      const fileName = `${safeFileName(workshop.title)}-${safeFileName(recipientName)}.pdf`;
       await Certificate.findOneAndUpdate(
         { workshopId, userId: registration.userId._id },
         {

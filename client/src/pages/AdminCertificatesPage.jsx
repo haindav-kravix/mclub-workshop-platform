@@ -6,7 +6,7 @@ import { certificateAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 
 const defaults = {
-  nameX: 0.5, nameY: 0.52, fontFamily: 'Great Vibes', fontSize: 72, fontColor: '#111827', alignment: 'center', uppercase: false, maxWidth: 0.9
+  nameX: 0.5, nameY: 0.52, fontFamily: 'Great Vibes', fontSize: 160, fontColor: '#111827', alignment: 'center', uppercase: false, maxWidth: 0.9
 };
 
 const certificateFontFamily = (fontFamily) => {
@@ -14,6 +14,12 @@ const certificateFontFamily = (fontFamily) => {
   if (fontFamily === 'Times Roman') return 'Times New Roman, serif';
   if (fontFamily === 'Courier') return 'Courier New, monospace';
   return 'Arial, sans-serif';
+};
+
+const normalizeCertificateFontSize = (fontFamily, fontSize) => {
+  const value = Number(fontSize || 0);
+  if (fontFamily === 'Great Vibes' && value > 0 && value < 120) return Math.round(value * 2.4);
+  return value || (fontFamily === 'Great Vibes' ? 160 : 42);
 };
 
 export const AdminCertificatesPage = () => {
@@ -45,13 +51,14 @@ export const AdminCertificatesPage = () => {
         setSettings(prev => ({
           ...prev,
           ...saved,
-          maxWidth: saved.fontFamily === 'Great Vibes' ? Math.max(saved.maxWidth || 0.9, 0.9) : saved.maxWidth
+          fontSize: normalizeCertificateFontSize(saved.fontFamily || prev.fontFamily, saved.fontSize),
+          maxWidth: (saved.fontFamily || prev.fontFamily) === 'Great Vibes' ? Math.max(saved.maxWidth || 0.9, 0.9) : saved.maxWidth
         }));
       }
       const people = eligibleResponse.data || [];
       setRecipients(people);
       setSelected(people.filter(item => !item.certificateIssuedAt).map(item => item.user._id));
-      if (people[0]?.user?.name) setPreviewName(people[0].user.name);
+      if (people[0]?.certificateName || people[0]?.user?.name) setPreviewName(people[0].certificateName || people[0].user.name);
     } catch (err) {
       setError(err.response?.data?.message || 'Unable to load certificate setup');
     } finally {
@@ -169,7 +176,7 @@ export const AdminCertificatesPage = () => {
                     left: `${settings.nameX * 100}%`, top: `${settings.nameY * 100}%`,
                     transform: settings.alignment === 'center' ? 'translate(-50%, -50%)' : settings.alignment === 'right' ? 'translate(-100%, -50%)' : 'translate(0, -50%)',
                     fontFamily: certificateFontFamily(settings.fontFamily),
-                    fontSize: `clamp(12px, ${Math.max(1.2, settings.fontSize / 12)}vw, ${settings.fontSize}px)`,
+                    fontSize: `clamp(18px, ${Math.max(1.8, settings.fontSize / 8)}vw, ${settings.fontSize}px)`,
                     color: settings.fontColor,
                     maxWidth: `${settings.maxWidth * 100}%`
                   }}
@@ -184,8 +191,8 @@ export const AdminCertificatesPage = () => {
             <h2 className="text-xl font-black">Name controls</h2>
             <div className="mt-5 space-y-4">
               <label className="block text-sm font-black">Preview name<input value={previewName} onChange={e => setPreviewName(e.target.value)} className="mt-2 w-full" /></label>
-              <label className="block text-sm font-black">Font<select value={settings.fontFamily} onChange={e => setSettings(prev => ({ ...prev, fontFamily: e.target.value, maxWidth: e.target.value === 'Great Vibes' ? Math.max(prev.maxWidth, 0.9) : prev.maxWidth }))} className="mt-2 w-full"><option value="Great Vibes">Certificate Script</option><option>Helvetica</option><option>Times Roman</option><option>Courier</option></select></label>
-              <label className="block text-sm font-black">Font size<div className="mt-2 flex items-center gap-3"><input type="range" min="10" max="180" value={settings.fontSize} onChange={e => setSettings(prev => ({ ...prev, fontSize: Number(e.target.value) }))} className="min-w-0 flex-1" /><span className="w-12 text-right font-black">{settings.fontSize}</span></div></label>
+              <label className="block text-sm font-black">Font<select value={settings.fontFamily} onChange={e => setSettings(prev => ({ ...prev, fontFamily: e.target.value, fontSize: e.target.value === 'Great Vibes' ? Math.max(normalizeCertificateFontSize(e.target.value, prev.fontSize), 160) : Math.min(prev.fontSize, 120), maxWidth: e.target.value === 'Great Vibes' ? Math.max(prev.maxWidth, 0.9) : prev.maxWidth }))} className="mt-2 w-full"><option value="Great Vibes">Certificate Script</option><option>Helvetica</option><option>Times Roman</option><option>Courier</option></select></label>
+              <label className="block text-sm font-black">Font size<div className="mt-2 flex items-center gap-3"><input type="range" min="20" max="420" value={settings.fontSize} onChange={e => setSettings(prev => ({ ...prev, fontSize: Number(e.target.value) }))} className="min-w-0 flex-1" /><span className="w-14 text-right font-black">{settings.fontSize}</span></div></label>
               <label className="block text-sm font-black">Text colour<input type="color" value={settings.fontColor} onChange={e => setSettings(prev => ({ ...prev, fontColor: e.target.value }))} className="mt-2 h-11 w-full rounded-lg" /></label>
               <label className="block text-sm font-black">Alignment<select value={settings.alignment} onChange={e => setSettings(prev => ({ ...prev, alignment: e.target.value }))} className="mt-2 w-full"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
               <label className="block text-sm font-black">Maximum name width<div className="mt-2 flex items-center gap-3"><input type="range" min="20" max="100" value={Math.round(settings.maxWidth * 100)} onChange={e => setSettings(prev => ({ ...prev, maxWidth: Number(e.target.value) / 100 }))} className="min-w-0 flex-1" /><span className="w-12 text-right font-black">{Math.round(settings.maxWidth * 100)}%</span></div></label>
@@ -206,7 +213,7 @@ export const AdminCertificatesPage = () => {
               return (
                 <label key={item.user._id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 ${checked ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
                   <input type="checkbox" checked={checked} onChange={() => setSelected(prev => checked ? prev.filter(id => id !== item.user._id) : [...prev, item.user._id])} />
-                  <div className="min-w-0 flex-1"><p className="truncate font-black">{item.user.name}</p><p className="truncate text-sm text-slate-500">{item.user.email}</p><div className="mt-2 flex flex-wrap gap-2 text-xs font-black"><span className="rounded-full bg-white px-2 py-1">{item.attendancePercentage === null ? 'No attendance yet' : `${item.attendancePercentage}% attendance`}</span>{item.certificateIssuedAt && <span className="rounded-full bg-emerald-100 px-2 py-1 text-emerald-700"><FiCheck className="inline" /> Issued</span>}</div></div>
+                  <div className="min-w-0 flex-1"><p className="truncate font-black">{item.certificateName || item.user.name}</p><p className="truncate text-sm text-slate-500">{item.user.email}</p><div className="mt-2 flex flex-wrap gap-2 text-xs font-black"><span className="rounded-full bg-white px-2 py-1">{item.attendancePercentage === null ? 'No attendance yet' : `${item.attendancePercentage}% attendance`}</span>{item.certificateIssuedAt && <span className="rounded-full bg-emerald-100 px-2 py-1 text-emerald-700"><FiCheck className="inline" /> Issued</span>}</div></div>
                 </label>
               );
             })}

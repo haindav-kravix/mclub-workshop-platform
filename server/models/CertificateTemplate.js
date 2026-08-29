@@ -13,7 +13,7 @@ const certificateTemplateSchema = new mongoose.Schema({
   nameX: { type: Number, min: 0, max: 1, default: 0.5 },
   nameY: { type: Number, min: 0, max: 1, default: 0.52 },
   fontFamily: { type: String, enum: ['Great Vibes', 'Helvetica', 'Times Roman', 'Courier'], default: 'Great Vibes' },
-  fontSize: { type: Number, min: 10, max: 180, default: 58 },
+  fontSize: { type: Number, min: 10, max: 420, default: 160 },
   fontColor: { type: String, default: '#111827' },
   alignment: { type: String, enum: ['left', 'center', 'right'], default: 'center' },
   uppercase: { type: Boolean, default: false },
