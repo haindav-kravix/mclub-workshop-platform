@@ -71,6 +71,11 @@ const normalizeCertificateFontSize = (fontFamily, fontSize) => {
   return value || (fontFamily === 'Great Vibes' ? 160 : 42);
 };
 
+const getPdfFontSize = (fontFamily, fontSize) => {
+  const normalized = normalizeCertificateFontSize(fontFamily, fontSize);
+  return fontFamily === 'Great Vibes' ? normalized : normalized * 1.75;
+};
+
 const getFormValue = (formData, fieldId) => {
   if (!formData || !fieldId) return '';
   if (formData instanceof Map) return formData.get(fieldId) || '';
@@ -118,7 +123,7 @@ const generateCertificatePdf = async (template, participantName) => {
   const font = await getCertificateFont(pdf, template.fontFamily);
   const text = template.uppercase ? participantName.toUpperCase() : participantName;
   const isScriptFont = template.fontFamily === 'Great Vibes';
-  let fontSize = normalizeCertificateFontSize(template.fontFamily, template.fontSize);
+  const fontSize = getPdfFontSize(template.fontFamily, template.fontSize);
   const textWidth = font.widthOfTextAtSize(text, fontSize);
   let x = image.width * template.nameX;
   if (template.alignment === 'center') x -= textWidth / 2;
