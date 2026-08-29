@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { registrationAPI, workshopAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
 import { RegistrationsTable } from '../components/RegistrationsTable';
-import { FiArrowLeft, FiCheckCircle, FiClock, FiDownload, FiUsers, FiXCircle } from 'react-icons/fi';
+import { FiArrowLeft, FiCheckCircle, FiClock, FiDownload, FiSearch, FiUsers, FiXCircle } from 'react-icons/fi';
 
 export const RegistrationsPage = () => {
   const { workshopId } = useParams();
@@ -15,6 +15,7 @@ export const RegistrationsPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [activeStatus, setActiveStatus] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const totalCount = registrations.length;
   const confirmedCount = registrations.filter(registration => registration.status === 'confirmed').length;
@@ -27,9 +28,21 @@ export const RegistrationsPage = () => {
     { label: 'Reviewing', value: pendingCount, status: 'pending', icon: FiClock, className: 'border-amber-200 bg-amber-50 text-amber-900', activeClass: 'ring-amber-500', iconClass: 'bg-amber-100 text-amber-700' },
     { label: 'Rejected', value: rejectedCount, status: 'rejected', icon: FiXCircle, className: 'border-rose-200 bg-rose-50 text-rose-900', activeClass: 'ring-rose-500', iconClass: 'bg-rose-100 text-rose-700' }
   ];
-  const filteredRegistrations = activeStatus === 'all'
+  const statusFilteredRegistrations = activeStatus === 'all'
     ? registrations
     : registrations.filter(registration => registration.status === activeStatus);
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const filteredRegistrations = normalizedSearch
+    ? statusFilteredRegistrations.filter(registration => {
+        const formValues = Object.values(registration.formData || {}).flat().join(' ');
+        return [
+          registration.userId?.name,
+          registration.userId?.email,
+          registration.status,
+          formValues
+        ].filter(Boolean).join(' ').toLowerCase().includes(normalizedSearch);
+      })
+    : statusFilteredRegistrations;
   const activeCard = countCards.find(card => card.status === activeStatus) || countCards[0];
 
   useEffect(() => {
@@ -180,15 +193,45 @@ export const RegistrationsPage = () => {
         {/* Export Button */}
         {registrations.length > 0 && (
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm font-bold text-slate-600">
-              Showing <span className="text-slate-950">{filteredRegistrations.length}</span> {activeCard.label.toLowerCase()} registration{filteredRegistrations.length === 1 ? '' : 's'}
-            </p>
+            <div>
+              <p className="text-sm font-bold text-slate-600">
+                Showing <span className="text-slate-950">{filteredRegistrations.length}</span> {activeCard.label.toLowerCase()} registration{filteredRegistrations.length === 1 ? '' : 's'}
+              </p>
+              {normalizedSearch && (
+                <p className="mt-1 text-xs font-bold text-slate-500">
+                  Search applied from {statusFilteredRegistrations.length} visible records
+                </p>
+              )}
+            </div>
             <button
               onClick={handleExportToExcel}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-5 py-3 font-black text-white shadow-sm transition hover:bg-slate-800 sm:w-auto"
             >
               <FiDownload /> <span>Export to Excel</span>
             </button>
+          </div>
+        )}
+
+        {registrations.length > 0 && (
+          <div className="mb-5 rounded-xl border border-emerald-100 bg-white p-3 shadow-sm">
+            <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 focus-within:border-emerald-400 focus-within:bg-white">
+              <FiSearch className="flex-none text-slate-500" />
+              <input
+                value={searchQuery}
+                onChange={event => setSearchQuery(event.target.value)}
+                placeholder="Search registrations by name, email, status, or form answer"
+                className="min-h-11 flex-1 border-0 bg-transparent p-0 text-sm font-bold outline-none focus:ring-0"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="rounded-md bg-white px-2 py-1 text-xs font-black text-slate-500 transition hover:text-slate-950"
+                >
+                  Clear
+                </button>
+              )}
+            </label>
           </div>
         )}
 
@@ -203,7 +246,7 @@ export const RegistrationsPage = () => {
             navigate(`/admin/registrations/${workshopId}/image/${registrationId}/${imageKey}`);
           }}
           loading={deleting}
-          emptyMessage={activeStatus === 'all' ? 'No registrations yet' : `No ${activeCard.label.toLowerCase()} registrations`}
+          emptyMessage={normalizedSearch ? 'No registrations match your search' : activeStatus === 'all' ? 'No registrations yet' : `No ${activeCard.label.toLowerCase()} registrations`}
         />
       </div>
     </div>

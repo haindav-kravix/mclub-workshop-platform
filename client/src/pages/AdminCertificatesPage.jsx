@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiCheck, FiFileText, FiImage, FiSave, FiUsers } from 'react-icons/fi';
+import { FiArrowLeft, FiCheck, FiFileText, FiImage, FiSave, FiSearch, FiUsers } from 'react-icons/fi';
 import '@fontsource/great-vibes/latin-400.css';
 import { certificateAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
@@ -37,6 +37,7 @@ export const AdminCertificatesPage = () => {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [recipientSearch, setRecipientSearch] = useState('');
 
   const load = async () => {
     try {
@@ -74,6 +75,17 @@ export const AdminCertificatesPage = () => {
 
   const displayName = settings.uppercase ? previewName.toUpperCase() : previewName;
   const selectedSet = useMemo(() => new Set(selected), [selected]);
+  const normalizedRecipientSearch = recipientSearch.trim().toLowerCase();
+  const filteredRecipients = useMemo(() => {
+    if (!normalizedRecipientSearch) return recipients;
+    return recipients.filter(item => [
+      item.certificateName,
+      item.user?.name,
+      item.user?.email,
+      item.attendancePercentage === null ? 'no attendance yet' : `${item.attendancePercentage}% attendance`,
+      item.certificateIssuedAt ? 'issued' : 'not issued'
+    ].filter(Boolean).join(' ').toLowerCase().includes(normalizedRecipientSearch));
+  }, [normalizedRecipientSearch, recipients]);
 
   const chooseTemplate = (file) => {
     if (!file) return;
@@ -208,10 +220,35 @@ export const AdminCertificatesPage = () => {
         <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div><p className="text-sm font-black uppercase text-secondary">Eligible confirmed participants</p><h2 className="mt-1 text-2xl font-black">Choose certificate recipients</h2></div>
-            <div className="flex gap-2"><button onClick={() => setSelected(recipients.map(item => item.user._id))} className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-black text-secondary">Select all</button><button onClick={() => setSelected([])} className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-black">Clear</button></div>
+            <div className="flex flex-wrap gap-2"><button onClick={() => setSelected(filteredRecipients.map(item => item.user._id))} className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-black text-secondary">Select visible</button><button onClick={() => setSelected(recipients.map(item => item.user._id))} className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-black text-secondary">Select all</button><button onClick={() => setSelected([])} className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-black">Clear</button></div>
           </div>
+          {recipients.length > 0 && (
+            <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
+              <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 focus-within:border-emerald-400">
+                <FiSearch className="flex-none text-slate-500" />
+                <input
+                  value={recipientSearch}
+                  onChange={event => setRecipientSearch(event.target.value)}
+                  placeholder="Search recipients by name, email, attendance, or issued status"
+                  className="min-h-11 flex-1 border-0 bg-transparent p-0 text-sm font-bold outline-none focus:ring-0"
+                />
+                {recipientSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setRecipientSearch('')}
+                    className="rounded-md bg-slate-50 px-2 py-1 text-xs font-black text-slate-500 transition hover:text-slate-950"
+                  >
+                    Clear
+                  </button>
+                )}
+              </label>
+              <p className="mt-2 text-xs font-bold text-slate-500">
+                Showing {filteredRecipients.length} of {recipients.length} recipients · {selected.length} selected
+              </p>
+            </div>
+          )}
           <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {recipients.map(item => {
+            {filteredRecipients.map(item => {
               const checked = selectedSet.has(item.user._id);
               return (
                 <label key={item.user._id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 ${checked ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
@@ -222,6 +259,7 @@ export const AdminCertificatesPage = () => {
             })}
           </div>
           {recipients.length === 0 && <div className="mt-5 rounded-lg bg-slate-50 p-8 text-center"><FiUsers className="mx-auto" size={28} /><p className="mt-2 font-black">No confirmed participants yet</p></div>}
+          {recipients.length > 0 && filteredRecipients.length === 0 && <div className="mt-5 rounded-lg bg-slate-50 p-8 text-center"><FiSearch className="mx-auto" size={28} /><p className="mt-2 font-black">No recipients match your search</p></div>}
           <button onClick={generate} disabled={generating || selected.length === 0} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 font-black text-white disabled:opacity-50 sm:w-auto"><FiFileText /> {generating ? 'Generating PDFs...' : `Generate ${selected.length} Certificate${selected.length === 1 ? '' : 's'}`}</button>
         </section>
       </main>
