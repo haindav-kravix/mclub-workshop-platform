@@ -128,7 +128,8 @@ const generateCertificatePdf = async (template, participantName) => {
   let x = image.width * template.nameX;
   if (template.alignment === 'center') x -= textWidth / 2;
   if (template.alignment === 'right') x -= textWidth;
-  const y = image.height * (1 - template.nameY) - fontSize * 0.32;
+  const yOffset = isScriptFont ? fontSize * 0.08 : fontSize * 0.32;
+  const y = image.height * (1 - template.nameY) - yOffset;
 
   page.drawText(text, {
     x: Math.max(0, x),

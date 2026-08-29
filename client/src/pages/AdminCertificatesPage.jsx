@@ -18,7 +18,7 @@ const certificateFontFamily = (fontFamily) => {
 
 const normalizeCertificateFontSize = (fontFamily, fontSize) => {
   const value = Number(fontSize || 0);
-  if (fontFamily === 'Great Vibes' && value > 0 && value < 120) return Math.round(value * 2.4);
+  if (fontFamily === 'Great Vibes' && value > 0 && value < 120) return 160;
   return value || (fontFamily === 'Great Vibes' ? 160 : 42);
 };
 
