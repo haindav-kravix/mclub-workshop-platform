@@ -505,10 +505,9 @@ export const getHackathonEvaluation = async (req, res) => {
     if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Evaluation is available only for hackathons' });
 
     const registrations = await Registration.find({ workshopId, status: 'confirmed' })
-      .populate('userId', 'name email profilePhoto')
       .populate('evaluationReviews.evaluator', 'name email')
       .populate('evaluatedBy', 'name email')
-      .select('userId formData status teamCode evaluationScores evaluationReviews evaluationAverage evaluatedAt evaluatedBy')
+      .select('status teamCode evaluationScores evaluationReviews evaluationAverage evaluatedAt evaluatedBy createdAt updatedAt')
       .sort({ createdAt: 1 })
       .lean();
 
