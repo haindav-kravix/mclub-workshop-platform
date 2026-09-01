@@ -148,7 +148,7 @@ export const MyRegistrationsPage = () => {
                 {/* Form Data */}
                 {registration.teamCode && (
                   <div className="bg-emerald-50 px-6 py-4 border-t border-emerald-100">
-                    <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Hackathon team code</p>
+                    <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Hackathon team name</p>
                     <p className="mt-1 text-2xl font-black tracking-widest text-slate-950">{registration.teamCode}</p>
                   </div>
                 )}

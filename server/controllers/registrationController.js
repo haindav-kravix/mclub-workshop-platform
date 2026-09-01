@@ -17,13 +17,11 @@ const eventLabel = (workshop, lower = false) => {
 
 const ADMIN_SCORE_CODE = 'KLHAZ';
 const generateTeamCode = () => {
-  const syllables = ['MO', 'NO', 'VA', 'DA', 'TA', 'NE', 'XO', 'LU', 'MI', 'RA', 'ZO', 'KA', 'VI', 'SA', 'RO', 'BI'];
-  const targetLength = 6 + Math.floor(Math.random() * 3);
-  let code = '';
-  while (code.length < targetLength) {
-    code += syllables[Math.floor(Math.random() * syllables.length)];
-  }
-  return code.slice(0, targetLength);
+  const prefixes = ['Code', 'Data', 'Query', 'Cloud', 'Byte', 'Stack', 'Logic', 'Script', 'Atlas', 'Node', 'Dev', 'Tech'];
+  const suffixes = ['Forge', 'Nest', 'Crew', 'Labs', 'Minds', 'Flow', 'Spark', 'Quest', 'Core', 'Verse', 'Works', 'Zone'];
+  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+  return `${prefix}${suffix}`;
 };
 
 const generateUniqueTeamCode = async (workshopId) => {

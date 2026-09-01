@@ -184,7 +184,7 @@ export const AdminHackathonEvaluationPage = () => {
                 <div className="min-w-0">
                   <p className="break-words text-xl font-black text-slate-950">{getTeamName(registration)}</p>
                   <p className="mt-1 text-sm font-bold text-slate-500">
-                    Team code <span className="tracking-widest text-slate-950">{registration.teamCode || 'PENDING'}</span>
+                    Team name <span className="tracking-widest text-slate-950">{registration.teamCode || 'PENDING'}</span>
                   </p>
                 </div>
                 <div className="rounded-xl bg-slate-950 px-5 py-3 text-center text-white">

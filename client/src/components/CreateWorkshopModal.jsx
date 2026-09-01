@@ -259,7 +259,7 @@ export const CreateWorkshopModal = ({
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
               <p className="text-sm font-black text-slate-900">Hackathon evaluation</p>
               <p className="mt-1 text-xs font-semibold text-slate-600">
-                Team codes are generated automatically after registration. Admin can set review count, score confirmed teams, and choose when the leaderboard is visible.
+                Team names are generated automatically after registration. Admin can set review count, score confirmed teams, and choose when the leaderboard is visible.
               </p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
