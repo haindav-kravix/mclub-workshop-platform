@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiEdit3, FiEye, FiEyeOff, FiRefreshCw, FiSave, FiSearch, FiShield, FiTrendingUp, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiBarChart2, FiEdit3, FiEye, FiEyeOff, FiRefreshCw, FiSave, FiSearch, FiShield, FiX } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { registrationAPI } from '../utils/api';
 
@@ -35,15 +35,14 @@ export const AdminHackathonEvaluationPage = () => {
   const [success, setSuccess] = useState('');
 
   const reviewCount = Math.min(20, Math.max(1, Number(workshop?.hackathonReviewCount) || 3));
-  const rankedRegistrations = useMemo(() => [...registrations].sort((a, b) => (b.evaluationAverage || 0) - (a.evaluationAverage || 0)), [registrations]);
   const visibleRegistrations = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    if (!query) return rankedRegistrations;
-    return rankedRegistrations.filter(registration => (
+    if (!query) return registrations;
+    return registrations.filter(registration => (
       getTeamName(registration).toLowerCase().includes(query) ||
       String(registration.teamCode || '').toLowerCase().includes(query)
     ));
-  }, [rankedRegistrations, searchTerm]);
+  }, [registrations, searchTerm]);
 
   useEffect(() => {
     const loadEvaluation = async () => {
@@ -150,15 +149,23 @@ export const AdminHackathonEvaluationPage = () => {
                 Add review marks for confirmed teams. Average scores update the leaderboard automatically.
               </p>
             </div>
-            <button
-              onClick={toggleLeaderboard}
-              className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-black shadow-sm transition ${
-                workshop?.hackathonLeaderboardVisible ? 'bg-rose-50 text-rose-700 hover:bg-rose-100' : 'bg-primary text-secondary hover:bg-primary/80'
-              }`}
-            >
-              {workshop?.hackathonLeaderboardVisible ? <FiEyeOff /> : <FiEye />}
-              {workshop?.hackathonLeaderboardVisible ? 'Hide Leaderboard' : 'Show Leaderboard'}
-            </button>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button
+                onClick={() => navigate(`/hackathon/${workshopId}/leaderboard`)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-3 text-sm font-black text-secondary shadow-sm transition hover:bg-emerald-50"
+              >
+                <FiBarChart2 /> View Leaderboard
+              </button>
+              <button
+                onClick={toggleLeaderboard}
+                className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-black shadow-sm transition ${
+                  workshop?.hackathonLeaderboardVisible ? 'bg-rose-50 text-rose-700 hover:bg-rose-100' : 'bg-primary text-secondary hover:bg-primary/80'
+                }`}
+              >
+                {workshop?.hackathonLeaderboardVisible ? <FiEyeOff /> : <FiEye />}
+                {workshop?.hackathonLeaderboardVisible ? 'Hide Leaderboard' : 'Show Leaderboard'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -167,7 +174,7 @@ export const AdminHackathonEvaluationPage = () => {
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
         {success && <SuccessMessage message={success} onDismiss={() => setSuccess('')} />}
 
-        <div className="mb-6 grid gap-4 md:grid-cols-3">
+        <div className="mb-6 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
             <FiShield className="text-3xl text-emerald-600" />
             <p className="mt-3 text-3xl font-black text-slate-950">{registrations.length}</p>
@@ -177,11 +184,6 @@ export const AdminHackathonEvaluationPage = () => {
             <FiRefreshCw className="text-3xl text-violet-600" />
             <p className="mt-3 text-3xl font-black text-slate-950">{reviewCount}</p>
             <p className="text-sm font-bold text-slate-500">Reviews per team</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm">
-            <FiTrendingUp className="text-3xl text-primary" />
-            <p className="mt-3 text-3xl font-black">{rankedRegistrations[0]?.evaluationAverage || 0}</p>
-            <p className="text-sm font-bold text-slate-300">Top average</p>
           </div>
         </div>
 
@@ -199,21 +201,14 @@ export const AdminHackathonEvaluationPage = () => {
         </div>
 
         <div className="grid gap-4">
-          {visibleRegistrations.map((registration, index) => (
+          {visibleRegistrations.map((registration) => (
             <div key={registration._id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-              <div className="grid gap-4 lg:grid-cols-[72px_1fr_auto_auto] lg:items-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-2xl font-black text-emerald-700">
-                  #{index + 1}
-                </div>
+              <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
                 <div className="min-w-0">
                   <p className="break-words text-xl font-black text-slate-950">{getTeamName(registration)}</p>
                   <p className="mt-1 text-sm font-bold text-slate-500">
                     Team name <span className="tracking-widest text-slate-950">{registration.teamCode || 'PENDING'}</span>
                   </p>
-                </div>
-                <div className="rounded-xl bg-slate-950 px-5 py-3 text-center text-white">
-                  <p className="text-xs font-black uppercase tracking-wide text-primary">Average</p>
-                  <p className="text-3xl font-black">{registration.evaluationAverage || 0}</p>
                 </div>
                 <button
                   onClick={() => setActiveRegistration(registration)}

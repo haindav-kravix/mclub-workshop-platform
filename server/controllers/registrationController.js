@@ -567,7 +567,9 @@ export const getHackathonLeaderboard = async (req, res) => {
       .lean();
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
     if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Leaderboard is available only for hackathons' });
-    if (!workshop.hackathonLeaderboardVisible) return res.status(403).json({ message: 'Leaderboard is not visible yet' });
+    if (!workshop.hackathonLeaderboardVisible && !req.user.isAdmin) {
+      return res.status(403).json({ message: 'Leaderboard is not visible yet' });
+    }
 
     const ownRegistration = await Registration.exists({
       workshopId,
