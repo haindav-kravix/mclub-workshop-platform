@@ -33,7 +33,7 @@ export const AchievementCard = ({ achievement, featured = false, showLinks = tru
         <div className={`grid min-h-52 gap-1 bg-emerald-50 ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
           {images.length ? images.slice(0, featured ? 4 : 2).map((image, index) => (
             <div key={image} className={`relative flex items-center justify-center overflow-hidden bg-white ${index === 0 && images.length === 3 ? 'row-span-2' : ''}`}>
-              <img src={resolveMediaUrl(image)} alt={`${achievement.title} ${index + 1}`} className="h-full min-h-52 w-full object-contain p-2" loading="lazy" />
+              <img src={resolveMediaUrl(image, { w: featured ? 1100 : 700 })} alt={`${achievement.title} ${index + 1}`} className="h-full min-h-52 w-full object-contain p-2" loading="lazy" />
               {index === 1 && images.length > 2 && !featured && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/55 text-xl font-black text-white">+{images.length - 2}</div>
               )}

@@ -122,7 +122,7 @@ export const AchievementsPage = () => {
           >
             <Link to={`/achievements/${featuredHighlight._id}`} className="highlight-featured-media" aria-label={`Open ${featuredHighlight.title}`}>
               {featuredHighlight.images?.[0] ? (
-                <img src={resolveMediaUrl(featuredHighlight.images[0])} alt={featuredHighlight.title} />
+                <img src={resolveMediaUrl(featuredHighlight.images[0], { w: 1200 })} alt={featuredHighlight.title} />
               ) : (
                 <div className="highlight-empty-media"><FiImage /></div>
               )}
@@ -159,7 +159,7 @@ export const AchievementsPage = () => {
               >
                 <Link to={`/achievements/${achievement._id}`} className="highlight-wall-media" aria-label={`Open ${achievement.title}`}>
                   {achievement.images?.[0] ? (
-                    <img src={resolveMediaUrl(achievement.images[0])} alt={achievement.title} />
+                    <img src={resolveMediaUrl(achievement.images[0], { w: 800 })} alt={achievement.title} />
                   ) : (
                     <div className="highlight-empty-media"><FiImage /></div>
                   )}

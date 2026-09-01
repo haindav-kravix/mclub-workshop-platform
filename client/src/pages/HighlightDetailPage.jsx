@@ -64,7 +64,7 @@ export const HighlightDetailPage = () => {
           <div className="mt-6 grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
             <div className="highlight-detail-cover">
               {images[0] ? (
-                <img src={resolveMediaUrl(images[0])} alt={highlight.title} />
+                <img src={resolveMediaUrl(images[0], { w: 1400 })} alt={highlight.title} />
               ) : (
                 <FiImage />
               )}
@@ -102,8 +102,8 @@ export const HighlightDetailPage = () => {
           {images.length > 0 ? (
             <div className="highlight-detail-photo-grid">
               {images.map((image, index) => (
-                <a key={image} href={resolveMediaUrl(image)} target="_blank" rel="noreferrer" className="highlight-detail-photo">
-                  <img src={resolveMediaUrl(image)} alt={`${highlight.title} ${index + 1}`} />
+                <a key={image} href={resolveMediaUrl(image, { w: 1800 })} target="_blank" rel="noreferrer" className="highlight-detail-photo">
+                  <img src={resolveMediaUrl(image, { w: 1000 })} alt={`${highlight.title} ${index + 1}`} />
                 </a>
               ))}
             </div>
@@ -119,7 +119,7 @@ export const HighlightDetailPage = () => {
             <div className="mt-5 grid gap-4 md:grid-cols-3">
               {related.map(item => (
                 <Link key={item._id} to={`/achievements/${item._id}`} className="highlight-related-card">
-                  {item.images?.[0] ? <img src={resolveMediaUrl(item.images[0])} alt={item.title} /> : <div><FiImage /></div>}
+                  {item.images?.[0] ? <img src={resolveMediaUrl(item.images[0], { w: 700 })} alt={item.title} /> : <div><FiImage /></div>}
                   <span>{getHighlightCategory(item)}</span>
                   <h3>{item.title}</h3>
                 </Link>

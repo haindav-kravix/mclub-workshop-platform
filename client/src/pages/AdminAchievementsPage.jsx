@@ -166,7 +166,7 @@ export const AdminAchievementsPage = () => {
           {achievements.map(item => (
             <article key={item._id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex gap-4">
-                {item.images?.[0] ? <img src={resolveMediaUrl(item.images[0])} alt="" className="h-24 w-28 flex-none rounded-lg object-cover" /> : <div className="flex h-24 w-28 items-center justify-center rounded-lg bg-emerald-50"><FiImage /></div>}
+                {item.images?.[0] ? <img src={resolveMediaUrl(item.images[0], { w: 500 })} alt="" className="h-24 w-28 flex-none rounded-lg object-cover" /> : <div className="flex h-24 w-28 items-center justify-center rounded-lg bg-emerald-50"><FiImage /></div>}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2 py-1 text-xs font-black ${item.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{item.isPublished ? 'Published' : 'Draft'}</span><span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-black text-slate-700">{getHighlightCategory(item)}</span><span className="text-xs font-bold text-slate-500">{new Date(item.achievedOn).toLocaleDateString()}</span></div>
                   <h3 className="mt-2 text-lg font-black text-slate-950">{item.title}</h3>

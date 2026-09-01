@@ -3,10 +3,15 @@ import axios from 'axios';
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 export const API_ORIGIN = API_URL.replace(/\/api\/?$/, '');
 
-export const resolveMediaUrl = (url) => {
+export const resolveMediaUrl = (url, options = {}) => {
   if (!url) return url;
-  if (url.startsWith('/uploads') || url.startsWith('/api/') || url.startsWith('/media/')) return `${API_ORIGIN}${url}`;
-  return url;
+  const resolved = url.startsWith('/uploads') || url.startsWith('/api/') || url.startsWith('/media/')
+    ? `${API_ORIGIN}${url}`
+    : url;
+  if (!options.w || !resolved.includes('/media/highlights/')) return resolved;
+  const mediaUrl = new URL(resolved);
+  mediaUrl.searchParams.set('w', String(options.w));
+  return mediaUrl.toString();
 };
 
 const getAuthHeaders = () => {
