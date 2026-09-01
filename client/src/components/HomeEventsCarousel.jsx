@@ -55,6 +55,9 @@ export const HomeEventsCarousel = ({ events }) => {
               <img
                 src={resolveMediaUrl(event.coverImage)}
                 alt={event.title}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
                 className="home-upcoming-image h-full w-full object-contain p-3 sm:p-5"
                 onError={(imageEvent) => {
                   imageEvent.currentTarget.onerror = null;

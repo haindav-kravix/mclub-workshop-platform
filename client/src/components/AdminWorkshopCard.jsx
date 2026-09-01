@@ -35,6 +35,8 @@ export const AdminWorkshopCard = ({
           <img
             src={resolveMediaUrl(workshop.coverImage)}
             alt={workshop.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-contain"
             onError={(event) => {
               event.currentTarget.onerror = null;

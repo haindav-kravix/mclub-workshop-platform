@@ -24,6 +24,8 @@ export const WorkshopCard = ({ workshop, onClick }) => {
           <img
             src={resolveMediaUrl(workshop.coverImage)}
             alt={workshop.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-contain group-hover:scale-105 transition"
             onError={(event) => {
               event.currentTarget.onerror = null;

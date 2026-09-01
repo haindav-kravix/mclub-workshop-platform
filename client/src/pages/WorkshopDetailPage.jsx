@@ -86,6 +86,9 @@ export const WorkshopDetailPage = () => {
             <img
               src={resolveMediaUrl(workshop.coverImage)}
               alt={workshop.title}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
               className="w-full h-full object-contain"
               onError={(event) => {
                 event.currentTarget.onerror = null;

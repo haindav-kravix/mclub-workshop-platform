@@ -117,6 +117,8 @@ export const WorkshopRegistrationPage = () => {
                 <img
                   src={resolveMediaUrl(workshop.qrImage)}
                   alt={`${workshop.title} QR`}
+                  loading="eager"
+                  decoding="async"
                   className="mx-auto mt-4 max-h-72 w-full max-w-xs rounded-xl border border-slate-100 object-contain p-3"
                 />
               </div>
