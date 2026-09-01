@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { workshopAPI, registrationAPI, resolveMediaUrl } from '../utils/api';
 import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
-import { FiCalendar, FiClock, FiMapPin, FiArrowLeft, FiSend } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiMapPin, FiArrowLeft, FiSend, FiBarChart2 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { formatTimeRange12Hour, formatWorkshopTime } from '../utils/formatters';
 import { getEventLabel } from '../utils/eventLabels';
@@ -191,6 +191,15 @@ export const WorkshopDetailPage = () => {
                   <FiSend />
                   Join Telegram Group
                 </a>
+              )}
+              {workshop.eventType === 'hackathon' && workshop.hackathonLeaderboardVisible && (
+                <button
+                  onClick={() => navigate(`/hackathon/${workshop._id}/leaderboard`)}
+                  className="w-full px-4 py-2 bg-violet-50 text-violet-700 rounded-lg hover:bg-violet-100 transition flex items-center justify-center space-x-2 font-black"
+                >
+                  <FiBarChart2 size={18} />
+                  <span>View Leaderboard</span>
+                </button>
               )}
             </div>
           ) : registrationStatus === 'pending' ? (

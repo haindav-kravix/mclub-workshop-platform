@@ -177,6 +177,7 @@ export const AdminDashboard = () => {
   ];
   const quickActions = [
     { label: 'Create Event', icon: FiPlus, onClick: () => navigate('/admin/workshops/new'), primary: true },
+    { label: 'Hackathon Admin', icon: FiAward, onClick: () => navigate('/admin/hackathons') },
     { label: 'Analytics', icon: FiBarChart2, onClick: () => navigate('/admin/analytics') },
     { label: 'Club Highlights', icon: FiAward, onClick: () => navigate('/admin/achievements') }
   ];
@@ -298,6 +299,7 @@ export const AdminDashboard = () => {
                 onAttendanceReports={(workshopId) => navigate(`/admin/attendance/${workshopId}/reports`)}
                 onEntryManagement={(workshopId) => navigate(`/admin/entry/${workshopId}`)}
                 onCertificates={(workshopId) => navigate(`/admin/certificates/${workshopId}`)}
+                onHackathonEvaluation={(workshopId) => navigate(`/admin/hackathon/${workshopId}/evaluation`)}
               />
             ))}
           </div>

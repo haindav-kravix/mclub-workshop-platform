@@ -50,7 +50,7 @@ const dailyTimingSchema = new mongoose.Schema({
 const workshopSchema = new mongoose.Schema({
   eventType: {
     type: String,
-    enum: ['workshop', 'internship'],
+    enum: ['workshop', 'internship', 'hackathon'],
     default: 'workshop'
   },
   title: {
@@ -75,6 +75,16 @@ const workshopSchema = new mongoose.Schema({
   entryPassEnabled: {
     type: Boolean,
     default: true
+  },
+  hackathonLeaderboardVisible: {
+    type: Boolean,
+    default: false
+  },
+  hackathonReviewCount: {
+    type: Number,
+    default: 3,
+    min: 1,
+    max: 20
   },
   date: {
     type: Date,

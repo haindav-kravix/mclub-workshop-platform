@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { registrationAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage } from '../components/UI';
-import { FiCalendar, FiMapPin, FiClock, FiSend, FiShield } from 'react-icons/fi';
+import { FiBarChart2, FiCalendar, FiMapPin, FiClock, FiSend, FiShield } from 'react-icons/fi';
 import { formatWorkshopTime } from '../utils/formatters';
 
 export const MyRegistrationsPage = () => {
@@ -108,6 +108,15 @@ export const MyRegistrationsPage = () => {
                             <span>View Entry Pass</span>
                           </Link>
                         )}
+                        {registration.workshopId?.eventType === 'hackathon' && registration.workshopId?.hackathonLeaderboardVisible && (
+                          <Link
+                            to={`/hackathon/${registration.workshopId._id}/leaderboard`}
+                            className="w-full px-4 py-2 rounded-lg transition flex items-center justify-center space-x-2 font-black bg-violet-50 text-violet-700 hover:bg-violet-100"
+                          >
+                            <FiBarChart2 size={18} />
+                            <span>Leaderboard</span>
+                          </Link>
+                        )}
                         {registration.workshopId.telegramLink && (
                           <a
                             href={registration.workshopId.telegramLink}
@@ -137,6 +146,12 @@ export const MyRegistrationsPage = () => {
                 </div>
 
                 {/* Form Data */}
+                {registration.teamCode && (
+                  <div className="bg-emerald-50 px-6 py-4 border-t border-emerald-100">
+                    <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Hackathon team code</p>
+                    <p className="mt-1 text-2xl font-black tracking-widest text-slate-950">{registration.teamCode}</p>
+                  </div>
+                )}
                 {Object.keys(registration.formData).length > 0 && (
                   <div className="bg-slate-50 px-6 py-4 border-t border-slate-200">
                     <p className="text-sm font-semibold text-gray-700 mb-3">Submitted Information</p>

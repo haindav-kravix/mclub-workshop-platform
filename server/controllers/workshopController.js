@@ -524,7 +524,9 @@ export const createWorkshop = async (req, res) => {
       dailyTimings,
       telegramLink,
       paymentEnabled,
-      entryPassEnabled
+      entryPassEnabled,
+      hackathonLeaderboardVisible,
+      hackathonReviewCount
     } = req.body;
     const parsedTimings = parseDailyTimings(dailyTimings)
       .filter(item => item?.date)
@@ -556,13 +558,15 @@ export const createWorkshop = async (req, res) => {
     const qrImage = shouldUsePayment && qrImageFile ? uploadedFileToDataUrl(qrImageFile) : '';
 
     const workshop = new Workshop({
-      eventType: eventType === 'internship' ? 'internship' : 'workshop',
+      eventType: ['workshop', 'internship', 'hackathon'].includes(eventType) ? eventType : 'workshop',
       title,
       description,
       coverImage,
       qrImage,
       paymentEnabled: shouldUsePayment,
       entryPassEnabled: parseBoolean(entryPassEnabled, true),
+      hackathonLeaderboardVisible: parseBoolean(hackathonLeaderboardVisible, false),
+      hackathonReviewCount: Math.min(20, Math.max(1, Number(hackathonReviewCount) || 3)),
       date: startDate || date,
       startDate: startDate || date,
       endDate: endDate || startDate || date,
@@ -660,7 +664,9 @@ export const updateWorkshop = async (req, res) => {
       dailyTimings,
       telegramLink,
       paymentEnabled,
-      entryPassEnabled
+      entryPassEnabled,
+      hackathonLeaderboardVisible,
+      hackathonReviewCount
     } = req.body;
     const parsedTimings = parseDailyTimings(dailyTimings)
       .filter(item => item?.date)
@@ -673,7 +679,7 @@ export const updateWorkshop = async (req, res) => {
 
     const updateData = {
       title,
-      eventType: eventType === 'internship' ? 'internship' : 'workshop',
+      eventType: ['workshop', 'internship', 'hackathon'].includes(eventType) ? eventType : 'workshop',
       description,
       date: startDate || date,
       startDate: startDate || date,
@@ -686,6 +692,8 @@ export const updateWorkshop = async (req, res) => {
       capacity,
       paymentEnabled: parseBoolean(paymentEnabled, false),
       entryPassEnabled: parseBoolean(entryPassEnabled, true),
+      hackathonLeaderboardVisible: parseBoolean(hackathonLeaderboardVisible, false),
+      hackathonReviewCount: Math.min(20, Math.max(1, Number(hackathonReviewCount) || 3)),
       registrationFormFields: parseRegistrationFormFields(registrationFormFields),
       updatedAt: new Date()
     };

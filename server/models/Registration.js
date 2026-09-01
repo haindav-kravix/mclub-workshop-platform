@@ -20,6 +20,25 @@ const registrationSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  teamCode: {
+    type: String,
+    default: ''
+  },
+  evaluationScores: {
+    type: [Number],
+    default: []
+  },
+  evaluationAverage: {
+    type: Number,
+    default: 0
+  },
+  evaluatedAt: {
+    type: Date
+  },
+  evaluatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   status: {
     type: String,
     enum: ['confirmed', 'pending', 'cancelled', 'rejected'],
@@ -40,5 +59,7 @@ registrationSchema.index({ workshopId: 1, userId: 1 }, { unique: true });
 registrationSchema.index({ workshopId: 1, createdAt: -1 });
 registrationSchema.index({ userId: 1, createdAt: -1 });
 registrationSchema.index({ workshopId: 1, status: 1 });
+registrationSchema.index({ workshopId: 1, teamCode: 1 });
+registrationSchema.index({ workshopId: 1, evaluationAverage: -1 });
 
 export default mongoose.model('Registration', registrationSchema);

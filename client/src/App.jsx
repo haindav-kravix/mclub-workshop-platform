@@ -36,6 +36,9 @@ import { AdminCertificatesPage } from './pages/AdminCertificatesPage';
 import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
 import { EntryPassPage } from './pages/EntryPassPage';
 import { AdminEntryPage } from './pages/AdminEntryPage';
+import { AdminHackathonEvaluationPage } from './pages/AdminHackathonEvaluationPage';
+import { HackathonLeaderboardPage } from './pages/HackathonLeaderboardPage';
+import { AdminHackathonsPage } from './pages/AdminHackathonsPage';
 
 // Styles
 import './styles/globals.css';
@@ -134,6 +137,14 @@ const AppContent = () => {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/hackathon/:workshopId/leaderboard"
+            element={
+              <PrivateRoute>
+                <HackathonLeaderboardPage />
+              </PrivateRoute>
+            }
+          />
 
           {/* Protected Routes */}
           <Route
@@ -187,6 +198,22 @@ const AppContent = () => {
             }
           />
           <Route
+            path="/admin/hackathons"
+            element={
+              <PrivateRoute requireAdmin={true}>
+                <AdminHackathonsPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/hackathons/new"
+            element={
+              <PrivateRoute requireAdmin={true}>
+                <WorkshopFormPage defaultEventType="hackathon" />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/admin/workshops/:workshopId/edit"
             element={
               <PrivateRoute requireAdmin={true}>
@@ -215,6 +242,14 @@ const AppContent = () => {
             element={
               <PrivateRoute requireAdmin={true}>
                 <AdminEntryPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/hackathon/:workshopId/evaluation"
+            element={
+              <PrivateRoute requireAdmin={true}>
+                <AdminHackathonEvaluationPage />
               </PrivateRoute>
             }
           />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiAward, FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiFileText, FiList, FiLogIn, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
+import { FiAward, FiBarChart2, FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiFileText, FiList, FiLogIn, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
 import { formatWorkshopTime } from '../utils/formatters';
 import { getEventLabel } from '../utils/eventLabels';
@@ -17,7 +17,9 @@ export const AdminWorkshopCard = ({
   onTakeAttendance,
   onAttendanceReports,
   onEntryManagement,
-  onCertificates
+  onCertificates,
+  onHackathonEvaluation,
+  showEmail = true
 }) => {
   const registrationsOpen = workshop.registrationsOpen !== false;
   const totalRegistrations = workshop.totalRegistrationCount ?? workshop.registrationStats?.total ?? workshop.registrationCount ?? 0;
@@ -125,6 +127,16 @@ export const AdminWorkshopCard = ({
             </button>
           )}
 
+          {workshop.eventType === 'hackathon' && (
+            <button
+              onClick={() => onHackathonEvaluation(workshop._id)}
+              className="col-span-2 px-3 py-2 bg-violet-50 text-violet-700 rounded-lg hover:bg-violet-100 transition text-sm font-semibold flex items-center justify-center space-x-1"
+            >
+              <FiBarChart2 size={16} />
+              <span>Evaluation & Leaderboard</span>
+            </button>
+          )}
+
           <button
             onClick={() => onEdit(workshop)}
             className="px-3 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition text-sm font-semibold flex items-center justify-center space-x-1"
@@ -157,7 +169,7 @@ export const AdminWorkshopCard = ({
             <span>Certificates</span>
           </button>
 
-          {workshop.isActive && (
+          {showEmail && workshop.isActive && (
             <button
               onClick={() => onEmail(workshop)}
               className="col-span-2 px-3 py-2 bg-sky-50 text-sky-700 rounded-lg hover:bg-sky-100 transition text-sm font-semibold flex items-center justify-center space-x-1"

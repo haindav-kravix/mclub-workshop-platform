@@ -201,6 +201,18 @@ export const RegistrationsTable = ({
                   </dl>
                 )}
 
+                {reg.teamCode && (
+                  <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 p-3">
+                    <p className="text-[11px] font-black uppercase tracking-wide text-emerald-700">Hackathon team code</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-3">
+                      <p className="text-2xl font-black tracking-widest text-slate-950">{reg.teamCode}</p>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-600">
+                        Average: {reg.evaluationAverage || 0}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50 p-3">
                   <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Payment Screenshot</p>
                   {reg.paymentScreenshot ? (

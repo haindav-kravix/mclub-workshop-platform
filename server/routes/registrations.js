@@ -14,6 +14,10 @@ router.delete('/:registrationId', authenticateToken, registrationController.canc
 router.get('/workshop/:workshopId', authenticateToken, adminOnly, registrationController.getWorkshopRegistrations);
 router.get('/workshop/:workshopId/export', authenticateToken, adminOnly, registrationController.exportRegistrationsToExcel);
 router.get('/workshop/:workshopId/upload/:registrationId/:imageKey', authenticateToken, adminOnly, registrationController.getRegistrationUpload);
+router.get('/hackathon/:workshopId/evaluation', authenticateToken, adminOnly, registrationController.getHackathonEvaluation);
+router.patch('/hackathon/:workshopId/leaderboard', authenticateToken, adminOnly, registrationController.toggleHackathonLeaderboard);
+router.patch('/hackathon/evaluation/:registrationId', authenticateToken, adminOnly, registrationController.updateHackathonEvaluation);
+router.get('/hackathon/:workshopId/leaderboard', authenticateToken, registrationController.getHackathonLeaderboard);
 router.patch('/admin/:registrationId/status', authenticateToken, adminOnly, registrationController.updateRegistrationStatus);
 router.delete('/admin/:registrationId', authenticateToken, adminOnly, registrationController.deleteRegistration);
 

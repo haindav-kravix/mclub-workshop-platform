@@ -11,8 +11,24 @@ const safeExportFileName = (value = 'registrations') => String(value)
   .toLowerCase() || 'registrations';
 
 const eventLabel = (workshop, lower = false) => {
-  const label = workshop?.eventType === 'internship' ? 'Internship' : 'Workshop';
+  const label = workshop?.eventType === 'hackathon' ? 'Hackathon' : workshop?.eventType === 'internship' ? 'Internship' : 'Workshop';
   return lower ? label.toLowerCase() : label;
+};
+
+const ADMIN_SCORE_CODE = 'KLHAZ';
+const generateTeamCode = () => {
+  const length = 6 + Math.floor(Math.random() * 3);
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  return Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+};
+
+const generateUniqueTeamCode = async (workshopId) => {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const teamCode = generateTeamCode();
+    const exists = await Registration.exists({ workshopId, teamCode });
+    if (!exists) return teamCode;
+  }
+  return generateTeamCode();
 };
 
 const parseFormData = (formData) => {
@@ -141,6 +157,9 @@ const buildRegistrationListProjection = (formFields = []) => {
     status: 1,
     createdAt: 1,
     updatedAt: 1,
+    teamCode: 1,
+    evaluationScores: 1,
+    evaluationAverage: 1,
     formData: formDataProjection,
     paymentScreenshot: {
       $cond: [hasStringValueExpression('$paymentScreenshot'), 'uploaded', '']
@@ -222,6 +241,7 @@ export const registerForWorkshop = async (req, res) => {
       userId: req.user.id,
       formData: parsedFormData,
       paymentScreenshot: isPaymentEnabled(workshop) && paymentScreenshotFile ? uploadedFileToDataUrl(paymentScreenshotFile) : '',
+      teamCode: workshop.eventType === 'hackathon' ? await generateUniqueTeamCode(workshopId) : '',
       status: 'pending'
     });
 
@@ -241,7 +261,7 @@ export const registerForWorkshop = async (req, res) => {
 export const getUserRegistrations = async (req, res) => {
   try {
     const registrations = await Registration.find({ userId: req.user.id })
-      .populate('workshopId', 'title eventType date startDate endDate time duration dailyTimings venue telegramLink registrationFormFields entryPassEnabled')
+      .populate('workshopId', 'title eventType date startDate endDate time duration dailyTimings venue telegramLink registrationFormFields entryPassEnabled hackathonLeaderboardVisible')
       .sort({ createdAt: -1 })
       .allowDiskUse(true);
 
@@ -444,6 +464,121 @@ export const updateRegistrationStatus = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error updating registration status', error: error.message });
+  }
+};
+
+export const getHackathonEvaluation = async (req, res) => {
+  try {
+    const { workshopId } = req.params;
+    const workshop = await Workshop.findById(workshopId)
+      .select('title eventType hackathonReviewCount hackathonLeaderboardVisible')
+      .lean();
+
+    if (!workshop) return res.status(404).json({ message: 'Event not found' });
+    if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Evaluation is available only for hackathons' });
+
+    const registrations = await Registration.find({ workshopId, status: 'confirmed' })
+      .populate('userId', 'name email profilePhoto')
+      .select('userId formData status teamCode evaluationScores evaluationAverage evaluatedAt')
+      .sort({ evaluationAverage: -1, updatedAt: -1 })
+      .lean();
+
+    res.json({ workshop, registrations });
+  } catch (error) {
+    res.status(500).json({ message: 'Error loading evaluation', error: error.message });
+  }
+};
+
+export const updateHackathonEvaluation = async (req, res) => {
+  try {
+    const { registrationId } = req.params;
+    const { scores = [], code } = req.body;
+
+    if (code !== ADMIN_SCORE_CODE) {
+      return res.status(403).json({ message: 'Invalid admin code' });
+    }
+
+    const registration = await Registration.findById(registrationId);
+    if (!registration) return res.status(404).json({ message: 'Registration not found' });
+
+    const workshop = await Workshop.findById(registration.workshopId).select('eventType hackathonReviewCount');
+    if (!workshop || workshop.eventType !== 'hackathon') {
+      return res.status(400).json({ message: 'Evaluation is available only for hackathons' });
+    }
+
+    const reviewCount = Math.min(20, Math.max(1, Number(workshop.hackathonReviewCount) || 3));
+    const normalizedScores = Array.from({ length: reviewCount }, (_, index) => {
+      const value = Number(scores[index]);
+      if (!Number.isFinite(value)) return 0;
+      return Math.min(100, Math.max(0, value));
+    });
+    const average = normalizedScores.length
+      ? Math.round((normalizedScores.reduce((total, score) => total + score, 0) / normalizedScores.length) * 100) / 100
+      : 0;
+
+    registration.evaluationScores = normalizedScores;
+    registration.evaluationAverage = average;
+    registration.evaluatedAt = new Date();
+    registration.evaluatedBy = req.user.id;
+    registration.updatedAt = new Date();
+    await registration.save();
+    await registration.populate('userId', 'name email profilePhoto');
+
+    res.json({ success: true, registration });
+  } catch (error) {
+    res.status(500).json({ message: 'Error saving evaluation', error: error.message });
+  }
+};
+
+export const toggleHackathonLeaderboard = async (req, res) => {
+  try {
+    const { workshopId } = req.params;
+    const { visible } = req.body;
+    const workshop = await Workshop.findById(workshopId);
+    if (!workshop) return res.status(404).json({ message: 'Event not found' });
+    if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Leaderboard is available only for hackathons' });
+
+    workshop.hackathonLeaderboardVisible = Boolean(visible);
+    workshop.updatedAt = new Date();
+    await workshop.save();
+    res.json({ success: true, workshop });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating leaderboard visibility', error: error.message });
+  }
+};
+
+export const getHackathonLeaderboard = async (req, res) => {
+  try {
+    const { workshopId } = req.params;
+    const workshop = await Workshop.findById(workshopId)
+      .select('title eventType hackathonLeaderboardVisible')
+      .lean();
+    if (!workshop) return res.status(404).json({ message: 'Event not found' });
+    if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Leaderboard is available only for hackathons' });
+    if (!workshop.hackathonLeaderboardVisible) return res.status(403).json({ message: 'Leaderboard is not visible yet' });
+
+    const ownRegistration = await Registration.exists({
+      workshopId,
+      userId: req.user.id,
+      status: 'confirmed'
+    });
+    if (!ownRegistration && !req.user.isAdmin) {
+      return res.status(403).json({ message: 'Leaderboard is visible only for confirmed teams' });
+    }
+
+    const registrations = await Registration.find({
+      workshopId,
+      status: 'confirmed',
+      evaluationAverage: { $gt: 0 }
+    })
+      .populate('userId', 'name')
+      .select('userId formData teamCode evaluationAverage')
+      .sort({ evaluationAverage: -1, updatedAt: 1 })
+      .lean();
+
+    res.json({ workshop, leaderboard: registrations });
+  } catch (error) {
+    res.status(500).json({ message: 'Error loading leaderboard', error: error.message });
   }
 };
 
