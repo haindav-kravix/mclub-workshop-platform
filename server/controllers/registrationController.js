@@ -531,9 +531,9 @@ export const updateHackathonEvaluation = async (req, res) => {
       return res.status(400).json({ message: 'Evaluation is available only for hackathons' });
     }
 
-    const hasExistingMarks = registration.evaluatedAt ||
-      registration.evaluationScores?.some(score => Number(score) > 0) ||
-      registration.evaluationReviews?.some(review => Number(review?.score) > 0 || String(review?.reason || '').trim());
+    const hasExistingMarks = registration.evaluationReviews?.some(review => (
+      Number(review?.score) > 0 && Boolean(String(review?.reason || '').trim())
+    ));
     if (hasExistingMarks && code !== ADMIN_SCORE_CODE) {
       return res.status(403).json({ message: 'Invalid admin code' });
     }

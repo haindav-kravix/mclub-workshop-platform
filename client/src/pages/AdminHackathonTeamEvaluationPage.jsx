@@ -10,13 +10,10 @@ const getTeamName = (registration) => {
   return registration.teamCode || 'Confirmed team';
 };
 
-const hasSavedMarks = (registration) => Boolean(
-  registration?.evaluatedAt ||
-  registration?.evaluationScores?.some(score => Number(score) > 0) ||
-  registration?.evaluationReviews?.some(review => Number(review?.score) > 0 || String(review?.reason || '').trim())
-);
-
 const reviewComplete = (review) => Number(review?.score) > 0 && Boolean(String(review?.reason || '').trim());
+const hasPostedMarks = (registration) => Boolean(
+  registration?.evaluationReviews?.some(reviewComplete)
+);
 
 export const AdminHackathonTeamEvaluationPage = () => {
   const { workshopId, registrationId } = useParams();
@@ -99,7 +96,7 @@ export const AdminHackathonTeamEvaluationPage = () => {
   };
 
   const handleSave = () => {
-    if (hasSavedMarks(registration)) {
+    if (hasPostedMarks(registration)) {
       setCodeModal({ open: true, code: '' });
       return;
     }
@@ -144,30 +141,32 @@ export const AdminHackathonTeamEvaluationPage = () => {
           {Array.from({ length: reviewCount }, (_, index) => {
             const review = reviews[index] || { score: '', reason: '' };
             const locked = index > nextOpenIndex;
-            const complete = reviewComplete(review);
+            const readyToPost = reviewComplete(review);
+            const postedReview = registration?.evaluationReviews?.[index];
+            const posted = reviewComplete(postedReview);
 
             return (
               <section
                 key={index}
                 className={`rounded-3xl border bg-white p-5 shadow-sm transition ${
-                  locked ? 'border-slate-200 opacity-60' : complete ? 'border-emerald-200 shadow-emerald-100' : 'border-emerald-100'
+                  locked ? 'border-slate-200 opacity-60' : posted ? 'border-emerald-200 shadow-emerald-100' : 'border-emerald-100'
                 }`}
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className={`flex h-12 w-12 items-center justify-center rounded-2xl text-xl ${
-                      locked ? 'bg-slate-100 text-slate-500' : complete ? 'bg-emerald-50 text-emerald-700' : 'bg-primary text-secondary'
+                      locked ? 'bg-slate-100 text-slate-500' : posted ? 'bg-emerald-50 text-emerald-700' : 'bg-primary text-secondary'
                     }`}>
-                      {locked ? <FiLock /> : complete ? <FiCheckCircle /> : index + 1}
+                      {locked ? <FiLock /> : posted ? <FiCheckCircle /> : index + 1}
                     </div>
                     <div>
                       <h2 className="text-xl font-black text-slate-950">Review {index + 1}</h2>
                       <p className="text-sm font-bold text-slate-500">
-                        {locked ? `Complete Review ${nextOpenIndex + 1} first` : complete ? 'Completed' : `Maximum ${reviewMaxScores[index]} marks`}
+                        {locked ? `Complete Review ${nextOpenIndex + 1} first` : posted ? 'Completed' : readyToPost ? 'Ready to post' : `Maximum ${reviewMaxScores[index]} marks`}
                       </p>
                     </div>
                   </div>
-                  {review.evaluatorName && (
+                  {posted && review.evaluatorName && (
                     <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
                       By {review.evaluatorName}
                     </span>
@@ -210,9 +209,9 @@ export const AdminHackathonTeamEvaluationPage = () => {
             disabled={saving || !registration}
             className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-lg font-black text-secondary shadow-lg shadow-emerald-200/60 transition hover:bg-primary/80 disabled:opacity-60"
           >
-            <FiSave /> {saving ? 'Saving...' : hasSavedMarks(registration) ? 'Update Marks' : 'Post Marks'}
+            <FiSave /> {saving ? 'Saving...' : hasPostedMarks(registration) ? 'Update Marks' : 'Post Marks'}
           </button>
-          {hasSavedMarks(registration) && (
+          {hasPostedMarks(registration) && (
             <p className="mt-3 text-center text-xs font-bold text-slate-500">
               Updating posted marks requires the admin code.
             </p>
