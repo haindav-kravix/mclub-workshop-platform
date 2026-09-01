@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FiX } from 'react-icons/fi';
 import { FormBuilder } from './FormBuilder';
 import { getEventLabelByType } from '../utils/eventLabels';
+import { resolveMediaUrl } from '../utils/api';
 
 const toDateInput = (value) => value ? value.split('T')[0] : '';
 
@@ -538,7 +539,7 @@ export const CreateWorkshopModal = ({
                 {initialData?.qrImage && !formData.qrImage && (
                   <div className="mb-3 flex flex-col gap-3 rounded-lg border border-emerald-100 bg-white p-3 sm:flex-row sm:items-center">
                     <img
-                      src={initialData.qrImage}
+                      src={resolveMediaUrl(initialData.qrImage)}
                       alt={`Current ${eventLower} QR`}
                       className="h-24 w-24 rounded-lg border border-slate-200 object-contain"
                     />

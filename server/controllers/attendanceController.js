@@ -38,7 +38,9 @@ export const getAttendanceRoster = async (req, res) => {
     const { workshopId } = req.params;
     const { date } = req.query;
 
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(workshopId)
+      .select('title eventType date startDate endDate time duration dailyTimings venue')
+      .lean();
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
@@ -83,7 +85,9 @@ export const submitAttendance = async (req, res) => {
       return res.status(400).json({ message: 'Date and attendance entries are required' });
     }
 
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(workshopId)
+      .select('_id')
+      .lean();
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
@@ -144,7 +148,9 @@ export const postEntryAttendance = async (req, res) => {
       return res.status(400).json({ message: 'Date is required' });
     }
 
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(workshopId)
+      .select('_id')
+      .lean();
     if (!workshop) {
       return res.status(404).json({ message: 'Event not found' });
     }
@@ -246,7 +252,9 @@ export const resetAttendanceDay = async (req, res) => {
     const { date } = req.body;
     if (!date) return res.status(400).json({ message: 'Date is required' });
 
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(workshopId)
+      .select('_id')
+      .lean();
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
 
     await Attendance.deleteOne({ workshopId, date: normalizeDate(date) });
@@ -262,7 +270,9 @@ export const exportDailyAttendance = async (req, res) => {
     const { date } = req.query;
     if (!date) return res.status(400).json({ message: 'Date is required' });
 
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(workshopId)
+      .select('title')
+      .lean();
     const attendance = await Attendance.findOne({ workshopId, date: normalizeDate(date) })
       .populate('entries.userId', 'name email');
     if (!workshop || !attendance) return res.status(404).json({ message: 'Attendance report not found' });
@@ -293,7 +303,9 @@ export const exportDailyAttendance = async (req, res) => {
 export const exportOverallAttendance = async (req, res) => {
   try {
     const { workshopId } = req.params;
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(workshopId)
+      .select('title')
+      .lean();
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
 
     const reports = await Attendance.find({ workshopId })
@@ -385,7 +397,9 @@ export const setQrSession = async (req, res) => {
       return res.status(400).json({ message: 'Date is required' });
     }
 
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(workshopId)
+      .select('_id')
+      .lean();
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
@@ -418,7 +432,9 @@ export const qrCheckIn = async (req, res) => {
       return res.status(400).json({ message: 'Attendance date is required' });
     }
 
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(workshopId)
+      .select('_id')
+      .lean();
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }

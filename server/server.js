@@ -33,7 +33,9 @@ app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
-  if (req.path.startsWith('/api/')) {
+  const isCacheableMedia = /^\/api\/workshops\/[^/]+\/(cover-image|qr-image)$/.test(req.path) ||
+    req.path.startsWith('/api/media/');
+  if (req.path.startsWith('/api/') && !isCacheableMedia) {
     res.setHeader('Cache-Control', 'no-store');
   }
   next();

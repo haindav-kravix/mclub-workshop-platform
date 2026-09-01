@@ -89,10 +89,20 @@ const deleteLegacyUpload = (imageUrl) => {
 
 const withCoverImageUrl = (workshop) => ({
   ...workshop,
-  coverImage: `/api/workshops/${workshop._id}/cover-image`
+  coverImage: workshop.coverImage === undefined || workshop.coverImage
+    ? `/api/workshops/${workshop._id}/cover-image?v=${new Date(workshop.updatedAt || workshop.createdAt || Date.now()).getTime()}`
+    : ''
+});
+
+const withWorkshopImageUrls = (workshop) => ({
+  ...withCoverImageUrl(workshop),
+  qrImage: workshop.paymentEnabled !== false && (workshop.qrImage === undefined || workshop.qrImage)
+    ? `/api/workshops/${workshop._id}/qr-image?v=${new Date(workshop.updatedAt || workshop.createdAt || Date.now()).getTime()}`
+    : ''
 });
 
 const sendDataUrlImage = (res, dataUrl) => {
+  res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
   if (dataUrl?.startsWith('/uploads/') || dataUrl?.startsWith('http')) {
     return res.redirect(dataUrl);
   }
@@ -105,7 +115,6 @@ const sendDataUrlImage = (res, dataUrl) => {
   const [, mimeType, base64Data] = match;
   const buffer = Buffer.from(base64Data, 'base64');
   res.setHeader('Content-Type', mimeType || 'image/png');
-  res.setHeader('Cache-Control', 'public, max-age=86400');
   return res.send(buffer);
 };
 
@@ -600,7 +609,7 @@ export const createWorkshop = async (req, res) => {
     });
 
     await workshop.save();
-    res.status(201).json({ success: true, workshop });
+    res.status(201).json({ success: true, workshop: withWorkshopImageUrls(workshop.toObject()) });
   } catch (error) {
     cleanupUploadedFiles(req);
     res.status(500).json({ message: 'Error creating workshop', error: error.message });
@@ -610,7 +619,7 @@ export const createWorkshop = async (req, res) => {
 export const getAllWorkshops = async (req, res) => {
   try {
     const workshops = await Workshop.find({ isActive: true, isStopped: { $ne: true } })
-      .select('title eventType description date startDate endDate time duration dailyTimings venue registrationsOpen isStopped isActive paymentEnabled entryPassEnabled')
+      .select('title eventType description date startDate endDate time duration dailyTimings venue registrationsOpen isStopped isActive paymentEnabled entryPassEnabled createdAt updatedAt')
       .sort({ date: 1 })
       .lean();
     res.json(workshops.map(withCoverImageUrl));
@@ -635,16 +644,34 @@ export const getWorkshopCoverImage = async (req, res) => {
   }
 };
 
+export const getWorkshopQrImage = async (req, res) => {
+  try {
+    const workshop = await Workshop.findById(req.params.id)
+      .select('qrImage')
+      .lean();
+
+    if (!workshop?.qrImage) {
+      return res.status(404).json({ message: 'Image not found' });
+    }
+
+    return sendDataUrlImage(res, workshop.qrImage);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching image', error: error.message });
+  }
+};
+
 export const getWorkshopById = async (req, res) => {
   try {
     const workshop = await Workshop.findById(req.params.id)
-      .populate('createdBy', 'name email');
+      .select('-coverImage -qrImage')
+      .populate('createdBy', 'name email')
+      .lean();
     
     if (!workshop || workshop.isStopped || !workshop.isActive) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
     
-    res.json(workshop);
+    res.json(withWorkshopImageUrls(workshop));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching workshop', error: error.message });
   }
@@ -653,13 +680,15 @@ export const getWorkshopById = async (req, res) => {
 export const getAdminWorkshopById = async (req, res) => {
   try {
     const workshop = await Workshop.findById(req.params.id)
-      .populate('createdBy', 'name email');
+      .select('-coverImage -qrImage')
+      .populate('createdBy', 'name email')
+      .lean();
 
     if (!workshop) {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    res.json(workshop);
+    res.json(withWorkshopImageUrls(workshop));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching event', error: error.message });
   }
@@ -753,7 +782,7 @@ export const updateWorkshop = async (req, res) => {
     const workshop = await Workshop.findByIdAndUpdate(id, updateData, { new: true })
       .populate('createdBy', 'name email');
 
-    res.json({ success: true, workshop });
+    res.json({ success: true, workshop: withWorkshopImageUrls(workshop.toObject()) });
   } catch (error) {
     cleanupUploadedFiles(req);
     res.status(500).json({ message: 'Error updating workshop', error: error.message });
@@ -885,7 +914,7 @@ export const generateWorkshopReport = async (req, res) => {
 
 export const toggleWorkshopStatus = async (req, res) => {
   try {
-    const workshop = await Workshop.findById(req.params.id);
+    const workshop = await Workshop.findById(req.params.id).select('-coverImage -qrImage');
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
@@ -893,7 +922,7 @@ export const toggleWorkshopStatus = async (req, res) => {
     workshop.isActive = !workshop.isActive;
     await workshop.save();
 
-    res.json({ success: true, workshop });
+    res.json({ success: true, workshop: withWorkshopImageUrls(workshop.toObject()) });
   } catch (error) {
     res.status(500).json({ message: 'Error updating workshop status', error: error.message });
   }
@@ -901,7 +930,7 @@ export const toggleWorkshopStatus = async (req, res) => {
 
 export const toggleRegistrationStatus = async (req, res) => {
   try {
-    const workshop = await Workshop.findById(req.params.id);
+    const workshop = await Workshop.findById(req.params.id).select('-coverImage -qrImage');
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
@@ -909,7 +938,7 @@ export const toggleRegistrationStatus = async (req, res) => {
     workshop.registrationsOpen = !workshop.registrationsOpen;
     await workshop.save();
 
-    res.json({ success: true, workshop });
+    res.json({ success: true, workshop: withWorkshopImageUrls(workshop.toObject()) });
   } catch (error) {
     res.status(500).json({ message: 'Error updating registration status', error: error.message });
   }
@@ -917,7 +946,7 @@ export const toggleRegistrationStatus = async (req, res) => {
 
 export const toggleStoppedStatus = async (req, res) => {
   try {
-    const workshop = await Workshop.findById(req.params.id);
+    const workshop = await Workshop.findById(req.params.id).select('-coverImage -qrImage');
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
@@ -925,7 +954,7 @@ export const toggleStoppedStatus = async (req, res) => {
     workshop.isStopped = !workshop.isStopped;
     await workshop.save();
 
-    res.json({ success: true, workshop });
+    res.json({ success: true, workshop: withWorkshopImageUrls(workshop.toObject()) });
   } catch (error) {
     res.status(500).json({ message: 'Error updating workshop stop status', error: error.message });
   }

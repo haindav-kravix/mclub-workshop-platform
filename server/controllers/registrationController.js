@@ -215,7 +215,24 @@ export const registerForWorkshop = async (req, res) => {
     const paymentScreenshotFile = getUploadedFile(req, 'paymentScreenshot');
 
     // Check if workshop exists
-    const workshop = await Workshop.findById(workshopId);
+    const [workshop] = await Workshop.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(workshopId) } },
+      {
+        $project: {
+          eventType: 1,
+          registrationsOpen: 1,
+          isStopped: 1,
+          isActive: 1,
+          capacity: 1,
+          registrationCount: 1,
+          registrationFormFields: 1,
+          paymentEnabled: 1,
+          qrImage: {
+            $cond: [hasStringValueExpression('$qrImage'), 'present', '']
+          }
+        }
+      }
+    ]);
     if (!workshop) {
       cleanupUploadedFiles(req);
       return res.status(404).json({ message: 'Event not found' });
@@ -277,7 +294,13 @@ export const registerForWorkshop = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Registration submitted for review',
-      registration
+      registration: {
+        _id: registration._id,
+        workshopId: registration.workshopId,
+        status: registration.status,
+        teamCode: registration.teamCode,
+        createdAt: registration.createdAt
+      }
     });
   } catch (error) {
     cleanupUploadedFiles(req);
@@ -303,7 +326,9 @@ export const getWorkshopRegistrations = async (req, res) => {
     const { workshopId } = req.params;
 
     // Check if workshop exists and user is admin
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(workshopId)
+      .select('title registrationFormFields')
+      .lean();
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
@@ -394,10 +419,11 @@ export const cancelRegistration = async (req, res) => {
     await registration.save();
 
     // Update registration count
-    const workshop = await Workshop.findById(registration.workshopId);
-    if (wasConfirmed && workshop && workshop.registrationCount > 0) {
-      workshop.registrationCount -= 1;
-      await workshop.save();
+    if (wasConfirmed) {
+      await Workshop.updateOne(
+        { _id: registration.workshopId, registrationCount: { $gt: 0 } },
+        { $inc: { registrationCount: -1 } }
+      );
     }
 
     res.json({ success: true, message: 'Registration cancelled' });
@@ -410,7 +436,9 @@ export const exportRegistrationsToExcel = async (req, res) => {
   try {
     const { workshopId } = req.params;
 
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(workshopId)
+      .select('title registrationFormFields')
+      .lean();
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
@@ -448,7 +476,9 @@ export const updateRegistrationStatus = async (req, res) => {
       return res.status(404).json({ message: 'Registration not found' });
     }
 
-    const workshop = await Workshop.findById(registration.workshopId);
+    const workshop = await Workshop.findById(registration.workshopId)
+      .select('capacity registrationCount')
+      .lean();
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
@@ -472,13 +502,17 @@ export const updateRegistrationStatus = async (req, res) => {
 
     if (previousStatus !== status) {
       if (status === 'confirmed' && previousStatus !== 'confirmed') {
-        workshop.registrationCount = (workshop.registrationCount || 0) + 1;
-        await workshop.save();
+        await Workshop.updateOne(
+          { _id: registration.workshopId },
+          { $inc: { registrationCount: 1 } }
+        );
       }
 
       if (previousStatus === 'confirmed' && status !== 'confirmed' && workshop.registrationCount > 0) {
-        workshop.registrationCount -= 1;
-        await workshop.save();
+        await Workshop.updateOne(
+          { _id: registration.workshopId, registrationCount: { $gt: 0 } },
+          { $inc: { registrationCount: -1 } }
+        );
       }
     }
 
@@ -602,7 +636,9 @@ export const updateHackathonEvaluation = async (req, res) => {
 export const exportHackathonEvaluation = async (req, res) => {
   try {
     const { workshopId } = req.params;
-    const workshop = await Workshop.findById(workshopId).lean();
+    const workshop = await Workshop.findById(workshopId)
+      .select('title eventType hackathonReviewCount registrationFormFields')
+      .lean();
 
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
     if (workshop.eventType !== 'hackathon') {
@@ -683,14 +719,20 @@ export const toggleHackathonLeaderboard = async (req, res) => {
   try {
     const { workshopId } = req.params;
     const { visible } = req.body;
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(workshopId)
+      .select('eventType hackathonLeaderboardVisible')
+      .lean();
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
     if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Leaderboard is available only for hackathons' });
 
-    workshop.hackathonLeaderboardVisible = Boolean(visible);
-    workshop.updatedAt = new Date();
-    await workshop.save();
-    res.json({ success: true, workshop });
+    const updatedWorkshop = await Workshop.findByIdAndUpdate(
+      workshopId,
+      { hackathonLeaderboardVisible: Boolean(visible), updatedAt: new Date() },
+      { new: true }
+    )
+      .select('title eventType hackathonReviewCount hackathonReviewMaxScores hackathonLeaderboardVisible')
+      .lean();
+    res.json({ success: true, workshop: updatedWorkshop });
   } catch (error) {
     res.status(500).json({ message: 'Error updating leaderboard visibility', error: error.message });
   }
@@ -743,7 +785,9 @@ export const deleteRegistration = async (req, res) => {
     const { registrationId } = req.params;
     const { workshopId } = req.body;
 
-    const workshop = await Workshop.findById(workshopId);
+    const workshop = await Workshop.findById(workshopId)
+      .select('_id')
+      .lean();
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }

@@ -232,7 +232,9 @@ export const scanEntryPass = async (req, res) => {
 
 export const exportEntryReport = async (req, res) => {
   try {
-    const workshop = await Workshop.findById(req.params.workshopId);
+    const workshop = await Workshop.findById(req.params.workshopId)
+      .select('title entryPassEnabled')
+      .lean();
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
     if (!isEntryPassEnabled(workshop)) {
       return res.status(403).json({ message: 'Entry pass is not enabled for this event' });

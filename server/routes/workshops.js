@@ -12,6 +12,7 @@ const workshopImageUpload = upload.fields([
 // Public routes
 router.get('/', workshopController.getAllWorkshops);
 router.get('/:id/cover-image', workshopController.getWorkshopCoverImage);
+router.get('/:id/qr-image', workshopController.getWorkshopQrImage);
 
 // Admin routes
 router.post('/', authenticateToken, adminOnly, workshopImageUpload, workshopController.createWorkshop);
