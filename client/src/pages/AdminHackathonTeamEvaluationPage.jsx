@@ -31,10 +31,12 @@ export const AdminHackathonTeamEvaluationPage = () => {
   const reviewMaxScores = Array.from({ length: reviewCount }, (_, index) => (
     Math.min(1000, Math.max(1, Number(workshop?.hackathonReviewMaxScores?.[index]) || 100))
   ));
-  const nextOpenIndex = useMemo(() => {
-    const index = reviews.findIndex(review => !reviewComplete(review));
+  const nextPostedOpenIndex = useMemo(() => {
+    const postedReviews = registration?.evaluationReviews || [];
+    const index = Array.from({ length: reviewCount }, (_, reviewIndex) => postedReviews[reviewIndex])
+      .findIndex(review => !reviewComplete(review));
     return index === -1 ? reviews.length : index;
-  }, [reviews]);
+  }, [registration, reviewCount, reviews.length]);
 
   useEffect(() => {
     const loadTeam = async () => {
@@ -95,8 +97,9 @@ export const AdminHackathonTeamEvaluationPage = () => {
     }
   };
 
-  const handleSave = () => {
-    if (hasPostedMarks(registration)) {
+  const handleSaveReview = (index) => {
+    const posted = reviewComplete(registration?.evaluationReviews?.[index]);
+    if (posted) {
       setCodeModal({ open: true, code: '' });
       return;
     }
@@ -140,7 +143,7 @@ export const AdminHackathonTeamEvaluationPage = () => {
         <div className="grid gap-5">
           {Array.from({ length: reviewCount }, (_, index) => {
             const review = reviews[index] || { score: '', reason: '' };
-            const locked = index > nextOpenIndex;
+            const locked = index > nextPostedOpenIndex;
             const readyToPost = reviewComplete(review);
             const postedReview = registration?.evaluationReviews?.[index];
             const posted = reviewComplete(postedReview);
@@ -152,7 +155,7 @@ export const AdminHackathonTeamEvaluationPage = () => {
                   locked ? 'border-slate-200 opacity-60' : posted ? 'border-emerald-200 shadow-emerald-100' : 'border-emerald-100'
                 }`}
               >
-                <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                   <div className="flex items-center gap-3">
                     <div className={`flex h-12 w-12 items-center justify-center rounded-2xl text-xl ${
                       locked ? 'bg-slate-100 text-slate-500' : posted ? 'bg-emerald-50 text-emerald-700' : 'bg-primary text-secondary'
@@ -162,15 +165,25 @@ export const AdminHackathonTeamEvaluationPage = () => {
                     <div>
                       <h2 className="text-xl font-black text-slate-950">Review {index + 1}</h2>
                       <p className="text-sm font-bold text-slate-500">
-                        {locked ? `Complete Review ${nextOpenIndex + 1} first` : posted ? 'Completed' : readyToPost ? 'Ready to post' : `Maximum ${reviewMaxScores[index]} marks`}
+                        {locked ? `Post Review ${nextPostedOpenIndex + 1} first` : posted ? 'Completed' : readyToPost ? 'Ready to post' : `Maximum ${reviewMaxScores[index]} marks`}
                       </p>
                     </div>
                   </div>
-                  {posted && review.evaluatorName && (
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
-                      By {review.evaluatorName}
-                    </span>
-                  )}
+                  <div className="flex flex-col gap-2 sm:items-end">
+                    {posted && review.evaluatorName && (
+                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
+                        By {review.evaluatorName}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleSaveReview(index)}
+                      disabled={saving || locked || !readyToPost}
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-black text-secondary shadow-sm transition hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <FiSave /> {saving ? 'Saving...' : posted ? 'Update Marks' : 'Post Marks'}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-[180px_1fr]">
@@ -201,21 +214,6 @@ export const AdminHackathonTeamEvaluationPage = () => {
               </section>
             );
           })}
-        </div>
-
-        <div className="mt-6 rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
-          <button
-            onClick={handleSave}
-            disabled={saving || !registration}
-            className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-lg font-black text-secondary shadow-lg shadow-emerald-200/60 transition hover:bg-primary/80 disabled:opacity-60"
-          >
-            <FiSave /> {saving ? 'Saving...' : hasPostedMarks(registration) ? 'Update Marks' : 'Post Marks'}
-          </button>
-          {hasPostedMarks(registration) && (
-            <p className="mt-3 text-center text-xs font-bold text-slate-500">
-              Updating posted marks requires the admin code.
-            </p>
-          )}
         </div>
       </div>
 

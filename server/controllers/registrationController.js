@@ -531,13 +531,6 @@ export const updateHackathonEvaluation = async (req, res) => {
       return res.status(400).json({ message: 'Evaluation is available only for hackathons' });
     }
 
-    const hasExistingMarks = registration.evaluationReviews?.some(review => (
-      Number(review?.score) > 0 && Boolean(String(review?.reason || '').trim())
-    ));
-    if (hasExistingMarks && code !== ADMIN_SCORE_CODE) {
-      return res.status(403).json({ message: 'Invalid admin code' });
-    }
-
     const reviewCount = Math.min(20, Math.max(1, Number(workshop.hackathonReviewCount) || 3));
     const reviewMaxScores = Array.from({ length: reviewCount }, (_, index) => (
       Math.min(1000, Math.max(1, Number(workshop.hackathonReviewMaxScores?.[index]) || 100))
@@ -561,6 +554,18 @@ export const updateHackathonEvaluation = async (req, res) => {
         reviewedAt: hasContent && (changed || !previousReview.reviewedAt) ? new Date() : previousReview.reviewedAt
       };
     });
+
+    const changesPostedReview = normalizedReviews.some((review, index) => {
+      const previousReview = previousReviews[index] || {};
+      const wasPosted = Number(previousReview.score) > 0 && Boolean(String(previousReview.reason || '').trim());
+      const changed = Number(review.score) !== Number(previousReview.score || 0) ||
+        String(review.reason || '') !== String(previousReview.reason || '');
+      return wasPosted && changed;
+    });
+
+    if (changesPostedReview && code !== ADMIN_SCORE_CODE) {
+      return res.status(403).json({ message: 'Invalid admin code' });
+    }
 
     for (let index = 0; index < normalizedReviews.length; index += 1) {
       const review = normalizedReviews[index];
