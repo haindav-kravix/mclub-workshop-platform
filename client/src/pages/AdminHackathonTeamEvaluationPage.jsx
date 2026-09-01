@@ -130,20 +130,13 @@ export const AdminHackathonTeamEvaluationPage = () => {
         {success && <SuccessMessage message={success} onDismiss={() => setSuccess('')} />}
 
         <div className="mb-6 rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
             <div>
               <p className="text-lg font-black text-slate-950">Review order</p>
               <p className="mt-1 text-sm font-semibold text-slate-600">
                 Complete Review 1 first, then Review 2, and continue in order.
               </p>
             </div>
-            <button
-              onClick={handleSave}
-              disabled={saving || !registration}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-black text-secondary shadow-sm transition hover:bg-primary/80 disabled:opacity-60"
-            >
-              <FiSave /> {saving ? 'Saving...' : hasSavedMarks(registration) ? 'Update Evaluation' : 'Save Evaluation'}
-            </button>
           </div>
         </div>
 
@@ -210,6 +203,21 @@ export const AdminHackathonTeamEvaluationPage = () => {
             );
           })}
         </div>
+
+        <div className="mt-6 rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
+          <button
+            onClick={handleSave}
+            disabled={saving || !registration}
+            className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-lg font-black text-secondary shadow-lg shadow-emerald-200/60 transition hover:bg-primary/80 disabled:opacity-60"
+          >
+            <FiSave /> {saving ? 'Saving...' : hasSavedMarks(registration) ? 'Update Marks' : 'Post Marks'}
+          </button>
+          {hasSavedMarks(registration) && (
+            <p className="mt-3 text-center text-xs font-bold text-slate-500">
+              Updating posted marks requires the admin code.
+            </p>
+          )}
+        </div>
       </div>
 
       {codeModal.open && (
@@ -248,7 +256,7 @@ export const AdminHackathonTeamEvaluationPage = () => {
                 disabled={saving}
                 className="h-12 rounded-xl bg-primary font-black text-secondary shadow-sm transition hover:bg-primary/80 disabled:opacity-60"
               >
-                {saving ? 'Saving...' : 'Save Marks'}
+                {saving ? 'Saving...' : 'Update Marks'}
               </button>
             </div>
           </div>
