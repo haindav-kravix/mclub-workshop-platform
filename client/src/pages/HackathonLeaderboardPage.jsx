@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiAward, FiStar, FiTrendingUp } from 'react-icons/fi';
+import { FiArrowLeft, FiAward, FiTrendingUp } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner } from '../components/UI';
 import { registrationAPI } from '../utils/api';
 
@@ -38,6 +38,9 @@ export const HackathonLeaderboardPage = () => {
 
   if (loading) return <LoadingSpinner />;
 
+  const topTeams = leaderboard.slice(0, 3);
+  const remainingTeams = leaderboard.slice(3);
+
   return (
     <div className="hackathon-leaderboard-page min-h-screen">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
@@ -62,9 +65,9 @@ export const HackathonLeaderboardPage = () => {
               <p>Rankings are calculated from review averages and published only after admin approval.</p>
             </section>
 
-            {leaderboard.length > 0 && (
-              <div className="leaderboard-podium">
-                {leaderboard.slice(0, 3).map((registration, index) => (
+            {topTeams.length > 0 && (
+              <div className={`leaderboard-podium team-count-${topTeams.length}`}>
+                {topTeams.map((registration, index) => (
                   <div key={registration._id} className={`podium-card rank-${index + 1}`}>
                     <div className="podium-rank">{index === 0 ? <FiAward /> : `#${index + 1}`}</div>
                     <p>{getTeamName(registration)}</p>
@@ -75,33 +78,37 @@ export const HackathonLeaderboardPage = () => {
               </div>
             )}
 
-            <div className="mt-6 grid gap-4">
-              {leaderboard.map((registration, index) => (
-                <div
-                  key={registration._id}
-                  className="leaderboard-row"
-                  style={{ '--score-width': `${Math.min(100, Math.max(0, Number(registration.evaluationAverage) || 0))}%` }}
-                >
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="leaderboard-rank">
-                        {index === 0 ? <FiStar /> : `#${index + 1}`}
+            {remainingTeams.length > 0 && (
+              <div className="mt-6 grid gap-4">
+                {remainingTeams.map((registration, index) => (
+                  <div
+                    key={registration._id}
+                    className="leaderboard-row"
+                    style={{ '--score-width': `${Math.min(100, Math.max(0, Number(registration.evaluationAverage) || 0))}%` }}
+                  >
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="leaderboard-rank">
+                          #{index + 4}
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-black text-slate-950">{getTeamName(registration)}</h2>
+                          <p className="text-sm font-bold tracking-widest text-slate-500">{registration.teamCode}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h2 className="text-xl font-black text-slate-950">{getTeamName(registration)}</h2>
-                        <p className="text-sm font-bold tracking-widest text-slate-500">{registration.teamCode}</p>
+                      <div className="leaderboard-score">
+                        <p className="text-xs font-black uppercase tracking-wide text-primary">Average</p>
+                        <p className="text-3xl font-black">{registration.evaluationAverage}</p>
                       </div>
                     </div>
-                    <div className="leaderboard-score">
-                      <p className="text-xs font-black uppercase tracking-wide text-primary">Average</p>
-                      <p className="text-3xl font-black">{registration.evaluationAverage}</p>
+                    <div className="leaderboard-score-bar" aria-hidden="true">
+                      <span />
                     </div>
                   </div>
-                  <div className="leaderboard-score-bar" aria-hidden="true">
-                    <span />
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+            <div>
               {leaderboard.length === 0 && (
                 <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-lg font-bold text-slate-600">
                   Scores are not published yet.
