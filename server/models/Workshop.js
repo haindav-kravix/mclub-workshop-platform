@@ -65,6 +65,10 @@ const workshopSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  coverImagePreview: {
+    type: String,
+    default: ''
+  },
   qrImage: {
     type: String,
     default: ''

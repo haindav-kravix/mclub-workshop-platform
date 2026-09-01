@@ -200,6 +200,26 @@ const sendDataUrlImage = async (res, dataUrl, options = {}) => {
   return res.send(buffer);
 };
 
+const createCoverImagePreview = async (dataUrl) => {
+  const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.*)$/);
+  if (!match) return '';
+
+  const [, mimeType, base64Data] = match;
+  if (!canOptimizeImage(mimeType)) return '';
+
+  try {
+    const preview = await sharp(Buffer.from(base64Data, 'base64'), { limitInputPixels: 80_000_000 })
+      .rotate()
+      .resize({ width: 520, height: 360, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 72, effort: 4 })
+      .toBuffer();
+    return `data:image/webp;base64,${preview.toString('base64')}`;
+  } catch (error) {
+    console.warn('Workshop preview generation failed:', error.message);
+    return '';
+  }
+};
+
 const escapeXml = (value = '') => String(value)
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
@@ -654,6 +674,7 @@ export const createWorkshop = async (req, res) => {
     }
 
     const coverImage = uploadedFileToDataUrl(coverImageFile);
+    const coverImagePreview = await createCoverImagePreview(coverImage);
     const shouldUsePayment = parseBoolean(paymentEnabled, false);
 
     if (shouldUsePayment && !qrImageFile) {
@@ -671,6 +692,7 @@ export const createWorkshop = async (req, res) => {
       title,
       description,
       coverImage,
+      coverImagePreview,
       qrImage,
       paymentEnabled: shouldUsePayment,
       entryPassEnabled: parseBoolean(entryPassEnabled, true),
@@ -701,7 +723,7 @@ export const createWorkshop = async (req, res) => {
 export const getAllWorkshops = async (req, res) => {
   try {
     const workshops = await Workshop.find({ isActive: true, isStopped: { $ne: true } })
-      .select('title eventType description date startDate endDate time duration dailyTimings venue registrationsOpen isStopped isActive paymentEnabled entryPassEnabled createdAt updatedAt')
+      .select('title eventType description date startDate endDate time duration dailyTimings venue registrationsOpen isStopped isActive paymentEnabled entryPassEnabled coverImagePreview createdAt updatedAt')
       .sort({ date: 1 })
       .lean();
     res.json(workshops.map(withCoverImageUrl));
@@ -877,6 +899,7 @@ export const updateWorkshop = async (req, res) => {
       if (coverImageFile) {
         if (existingWorkshop?.coverImage) deleteLegacyUpload(existingWorkshop.coverImage);
         updateData.coverImage = uploadedFileToDataUrl(coverImageFile);
+        updateData.coverImagePreview = await createCoverImagePreview(updateData.coverImage);
       }
       if (qrImageFile && updateData.paymentEnabled) {
         if (existingWorkshop?.qrImage) deleteLegacyUpload(existingWorkshop.qrImage);

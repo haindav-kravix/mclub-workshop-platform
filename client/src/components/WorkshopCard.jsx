@@ -22,7 +22,7 @@ export const WorkshopCard = ({ workshop, onClick }) => {
       <div className="h-48 overflow-hidden bg-slate-100 relative">
         {workshop.coverImage ? (
           <img
-            src={resolveMediaUrl(workshop.coverImage, { w: 760 })}
+            src={workshop.coverImagePreview || resolveMediaUrl(workshop.coverImage, { w: 760 })}
             alt={workshop.title}
             loading="lazy"
             decoding="async"
