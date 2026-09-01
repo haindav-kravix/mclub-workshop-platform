@@ -86,6 +86,10 @@ export const registrationAPI = {
   updateHackathonEvaluation: (registrationId, reviews, code) => axios.patch(`${API_URL}/registrations/hackathon/evaluation/${registrationId}`, { reviews, code }, {
     headers: getAuthHeaders()
   }),
+  exportHackathonEvaluation: (workshopId) => axios.get(`${API_URL}/registrations/hackathon/${workshopId}/evaluation/export`, {
+    headers: getAuthHeaders(),
+    responseType: 'blob'
+  }),
   toggleHackathonLeaderboard: (workshopId, visible) => axios.patch(`${API_URL}/registrations/hackathon/${workshopId}/leaderboard`, { visible }, {
     headers: getAuthHeaders()
   }),

@@ -35,7 +35,7 @@ export const WorkshopFormPage = ({ defaultEventType = 'workshop', allowedEventTy
   const buildFormData = (workshopData) => {
     const formData = new FormData();
     Object.keys(workshopData).forEach(key => {
-      if (key === 'registrationFormFields' || key === 'dailyTimings') {
+      if (key === 'registrationFormFields' || key === 'dailyTimings' || key === 'hackathonReviewMaxScores') {
         formData.append(key, JSON.stringify(workshopData[key]));
       } else if (key !== 'coverImage' && key !== 'qrImage' && key !== 'hasTimings') {
         formData.append(key, workshopData[key] ?? '');

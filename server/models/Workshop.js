@@ -86,6 +86,10 @@ const workshopSchema = new mongoose.Schema({
     min: 1,
     max: 20
   },
+  hackathonReviewMaxScores: {
+    type: [Number],
+    default: []
+  },
   date: {
     type: Date,
     required: true

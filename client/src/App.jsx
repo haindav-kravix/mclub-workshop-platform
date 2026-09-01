@@ -37,6 +37,7 @@ import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
 import { EntryPassPage } from './pages/EntryPassPage';
 import { AdminEntryPage } from './pages/AdminEntryPage';
 import { AdminHackathonEvaluationPage } from './pages/AdminHackathonEvaluationPage';
+import { AdminHackathonTeamEvaluationPage } from './pages/AdminHackathonTeamEvaluationPage';
 import { HackathonLeaderboardPage } from './pages/HackathonLeaderboardPage';
 import { AdminHackathonsPage } from './pages/AdminHackathonsPage';
 
@@ -250,6 +251,14 @@ const AppContent = () => {
             element={
               <PrivateRoute requireAdmin={true}>
                 <AdminHackathonEvaluationPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/hackathon/:workshopId/evaluation/:registrationId"
+            element={
+              <PrivateRoute requireAdmin={true}>
+                <AdminHackathonTeamEvaluationPage />
               </PrivateRoute>
             }
           />

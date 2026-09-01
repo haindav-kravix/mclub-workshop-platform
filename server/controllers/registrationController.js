@@ -2,6 +2,7 @@ import Registration from '../models/Registration.js';
 import Workshop from '../models/Workshop.js';
 import User from '../models/User.js';
 import { generateExcelReport } from '../utils/excelExport.js';
+import ExcelJS from 'exceljs';
 import fs from 'fs';
 import mongoose from 'mongoose';
 
@@ -82,6 +83,29 @@ const formDataToObject = (formData) => {
   if (formData instanceof Map) return Object.fromEntries(formData.entries());
   if (typeof formData.toObject === 'function') return formData.toObject();
   return { ...formData };
+};
+
+const getFieldLabel = (field = {}) => String(field.label || field.name || field.fieldName || field.fieldId || '').trim();
+
+const findFormValue = (formData = {}, formFields = [], patterns = []) => {
+  const fieldLookup = new Map(formFields.map(field => [field.fieldId, getFieldLabel(field)]));
+  const entries = Object.entries(formData);
+
+  for (const [fieldId, value] of entries) {
+    const label = `${fieldLookup.get(fieldId) || ''} ${fieldId}`;
+    if (patterns.some(pattern => pattern.test(label)) && String(value || '').trim()) {
+      return String(value).trim();
+    }
+  }
+
+  return '';
+};
+
+const getEvaluatorName = (review = {}, fallbackUser = null) => {
+  if (review.evaluatorName) return review.evaluatorName;
+  if (review.evaluator?.name || review.evaluator?.email) return review.evaluator.name || review.evaluator.email;
+  if (fallbackUser?.name || fallbackUser?.email) return fallbackUser.name || fallbackUser.email;
+  return '';
 };
 
 const summarizeUploadValue = (value, type) => {
@@ -474,7 +498,7 @@ export const getHackathonEvaluation = async (req, res) => {
   try {
     const { workshopId } = req.params;
     const workshop = await Workshop.findById(workshopId)
-      .select('title eventType hackathonReviewCount hackathonLeaderboardVisible')
+      .select('title eventType hackathonReviewCount hackathonReviewMaxScores hackathonLeaderboardVisible')
       .lean();
 
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
@@ -482,8 +506,10 @@ export const getHackathonEvaluation = async (req, res) => {
 
     const registrations = await Registration.find({ workshopId, status: 'confirmed' })
       .populate('userId', 'name email profilePhoto')
-      .select('userId formData status teamCode evaluationScores evaluationReviews evaluationAverage evaluatedAt')
-      .sort({ evaluationAverage: -1, updatedAt: -1 })
+      .populate('evaluationReviews.evaluator', 'name email')
+      .populate('evaluatedBy', 'name email')
+      .select('userId formData status teamCode evaluationScores evaluationReviews evaluationAverage evaluatedAt evaluatedBy')
+      .sort({ createdAt: 1 })
       .lean();
 
     res.json({ workshop, registrations });
@@ -500,7 +526,7 @@ export const updateHackathonEvaluation = async (req, res) => {
     const registration = await Registration.findById(registrationId);
     if (!registration) return res.status(404).json({ message: 'Registration not found' });
 
-    const workshop = await Workshop.findById(registration.workshopId).select('eventType hackathonReviewCount');
+    const workshop = await Workshop.findById(registration.workshopId).select('eventType hackathonReviewCount hackathonReviewMaxScores');
     if (!workshop || workshop.eventType !== 'hackathon') {
       return res.status(400).json({ message: 'Evaluation is available only for hackathons' });
     }
@@ -513,18 +539,45 @@ export const updateHackathonEvaluation = async (req, res) => {
     }
 
     const reviewCount = Math.min(20, Math.max(1, Number(workshop.hackathonReviewCount) || 3));
+    const reviewMaxScores = Array.from({ length: reviewCount }, (_, index) => (
+      Math.min(1000, Math.max(1, Number(workshop.hackathonReviewMaxScores?.[index]) || 100))
+    ));
+    const currentUser = await User.findById(req.user.id).select('name email').lean();
+    const evaluatorName = currentUser?.name || currentUser?.email || 'Admin';
+    const previousReviews = registration.evaluationReviews || [];
     const normalizedReviews = Array.from({ length: reviewCount }, (_, index) => {
       const review = reviews[index] || {};
+      const previousReview = previousReviews[index] || {};
       const value = Number(review.score ?? scores[index]);
-      if (!Number.isFinite(value)) return 0;
+      const score = Number.isFinite(value) ? Math.min(reviewMaxScores[index], Math.max(0, value)) : 0;
+      const reason = String(review.reason || '').trim().slice(0, 600);
+      const hasContent = score > 0 || reason;
+      const changed = score !== Number(previousReview.score || 0) || reason !== String(previousReview.reason || '');
       return {
-        score: Math.min(100, Math.max(0, value)),
-        reason: String(review.reason || '').trim().slice(0, 600)
+        score,
+        reason,
+        evaluator: hasContent && (changed || !previousReview.evaluator) ? req.user.id : previousReview.evaluator,
+        evaluatorName: hasContent && (changed || !previousReview.evaluatorName) ? evaluatorName : (previousReview.evaluatorName || ''),
+        reviewedAt: hasContent && (changed || !previousReview.reviewedAt) ? new Date() : previousReview.reviewedAt
       };
     });
+
+    for (let index = 0; index < normalizedReviews.length; index += 1) {
+      const review = normalizedReviews[index];
+      const isComplete = Number(review.score) > 0 && Boolean(String(review.reason || '').trim());
+      const hasAnyLaterReview = normalizedReviews
+        .slice(index + 1)
+        .some(nextReview => Number(nextReview.score) > 0 || Boolean(String(nextReview.reason || '').trim()));
+
+      if (!isComplete && hasAnyLaterReview) {
+        return res.status(400).json({ message: `Please complete Review ${index + 1} before moving to the next review` });
+      }
+    }
+
     const normalizedScores = normalizedReviews.map(review => review.score);
-    const average = normalizedScores.length
-      ? Math.round((normalizedScores.reduce((total, score) => total + score, 0) / normalizedScores.length) * 100) / 100
+    const totalPossible = reviewMaxScores.reduce((total, score) => total + score, 0);
+    const average = totalPossible
+      ? Math.round((normalizedScores.reduce((total, score) => total + score, 0) / totalPossible) * 10000) / 100
       : 0;
 
     registration.evaluationScores = normalizedScores;
@@ -539,6 +592,86 @@ export const updateHackathonEvaluation = async (req, res) => {
     res.json({ success: true, registration });
   } catch (error) {
     res.status(500).json({ message: 'Error saving evaluation', error: error.message });
+  }
+};
+
+export const exportHackathonEvaluation = async (req, res) => {
+  try {
+    const { workshopId } = req.params;
+    const workshop = await Workshop.findById(workshopId).lean();
+
+    if (!workshop) return res.status(404).json({ message: 'Event not found' });
+    if (workshop.eventType !== 'hackathon') {
+      return res.status(400).json({ message: 'Evaluation export is available only for hackathons' });
+    }
+
+    const reviewCount = Math.min(20, Math.max(1, Number(workshop.hackathonReviewCount) || 3));
+    const registrations = await Registration.find({ workshopId, status: 'confirmed' })
+      .populate('userId', 'name email')
+      .populate('evaluationReviews.evaluator', 'name email')
+      .populate('evaluatedBy', 'name email')
+      .sort({ createdAt: 1 })
+      .lean();
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Evaluation');
+    const baseColumns = [
+      { header: 'S.No', key: 'sno', width: 8 },
+      { header: 'Team Name', key: 'teamName', width: 24 },
+      { header: 'Team Members', key: 'teamMembers', width: 40 },
+      { header: 'College Name', key: 'collegeName', width: 32 }
+    ];
+    const reviewColumns = Array.from({ length: reviewCount }, (_, index) => ([
+      { header: `Review ${index + 1} Marks`, key: `review${index + 1}Marks`, width: 18 },
+      { header: `Review ${index + 1} Why This Mark`, key: `review${index + 1}Reason`, width: 42 },
+      { header: `Review ${index + 1} Given By`, key: `review${index + 1}GivenBy`, width: 26 }
+    ])).flat();
+
+    worksheet.columns = [...baseColumns, ...reviewColumns];
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF047857' } };
+    worksheet.getRow(1).alignment = { vertical: 'middle', wrapText: true };
+
+    registrations.forEach((registration, index) => {
+      const formData = formDataToObject(registration.formData);
+      const formFields = workshop.registrationFormFields || [];
+      const row = {
+        sno: index + 1,
+        teamName: registration.teamCode || findFormValue(formData, formFields, [/team.*name/i, /project.*name/i, /group.*name/i]) || registration.userId?.name || 'Team',
+        teamMembers: findFormValue(formData, formFields, [/team.*member/i, /member/i, /participant/i, /leader/i]) || registration.userId?.name || registration.userId?.email || '',
+        collegeName: findFormValue(formData, formFields, [/college/i, /university/i, /institution/i])
+      };
+
+      Array.from({ length: reviewCount }, (_, reviewIndex) => {
+        const review = registration.evaluationReviews?.[reviewIndex] || {};
+        row[`review${reviewIndex + 1}Marks`] = Number(review.score || registration.evaluationScores?.[reviewIndex] || 0);
+        row[`review${reviewIndex + 1}Reason`] = review.reason || '';
+        row[`review${reviewIndex + 1}GivenBy`] = getEvaluatorName(review, registration.evaluatedBy);
+      });
+
+      worksheet.addRow(row);
+    });
+
+    worksheet.eachRow(row => {
+      row.eachCell(cell => {
+        cell.alignment = { vertical: 'top', wrapText: true };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFD1FAE5' } },
+          left: { style: 'thin', color: { argb: 'FFD1FAE5' } },
+          bottom: { style: 'thin', color: { argb: 'FFD1FAE5' } },
+          right: { style: 'thin', color: { argb: 'FFD1FAE5' } }
+        };
+      });
+    });
+
+    const fileName = `${safeExportFileName(workshop.title)}-hackathon-evaluation.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Error exporting hackathon evaluation:', error);
+    res.status(500).json({ message: 'Error exporting hackathon evaluation', error: error.message });
   }
 };
 
@@ -585,12 +718,17 @@ export const getHackathonLeaderboard = async (req, res) => {
       status: 'confirmed',
       evaluationAverage: { $gt: 0 }
     })
-      .populate('userId', 'name')
-      .select('userId formData teamCode evaluationAverage')
+      .select('teamCode evaluationAverage')
       .sort({ evaluationAverage: -1, updatedAt: 1 })
       .lean();
 
-    res.json({ workshop, leaderboard: registrations });
+    res.json({
+      workshop,
+      leaderboard: registrations.map(registration => ({
+        _id: registration._id,
+        teamCode: registration.teamCode
+      }))
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error loading leaderboard', error: error.message });
   }

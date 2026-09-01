@@ -37,6 +37,17 @@ const registrationSchema = new mongoose.Schema({
       reason: {
         type: String,
         default: ''
+      },
+      evaluator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      evaluatorName: {
+        type: String,
+        default: ''
+      },
+      reviewedAt: {
+        type: Date
       }
     }],
     default: []

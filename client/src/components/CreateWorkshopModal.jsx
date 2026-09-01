@@ -85,6 +85,10 @@ export const CreateWorkshopModal = ({
     entryPassEnabled: initialData?.entryPassEnabled ?? true,
     hackathonLeaderboardVisible: initialData?.hackathonLeaderboardVisible ?? false,
     hackathonReviewCount: initialData?.hackathonReviewCount || 3,
+    hackathonReviewMaxScores: Array.from(
+      { length: Number(initialData?.hackathonReviewCount) || 3 },
+      (_, index) => initialData?.hackathonReviewMaxScores?.[index] || 100
+    ),
     registrationFormFields: initialData?.registrationFormFields || []
   });
   const [loading, setLoading] = useState(false);
@@ -102,6 +106,11 @@ export const CreateWorkshopModal = ({
         ...prev,
         [name]: value
       };
+
+      if (name === 'hackathonReviewCount') {
+        const count = Math.min(20, Math.max(1, Number(value) || 1));
+        next.hackathonReviewMaxScores = Array.from({ length: count }, (_, index) => prev.hackathonReviewMaxScores?.[index] || 100);
+      }
 
       if ((name === 'startDate' || name === 'endDate') && next.hasTimings) {
         const dates = getDatesBetween(name === 'startDate' ? value : next.startDate, name === 'endDate' ? value : next.endDate);
@@ -146,6 +155,15 @@ export const CreateWorkshopModal = ({
     setFormData(prev => ({
       ...prev,
       registrationFormFields: fields
+    }));
+  };
+
+  const handleReviewMaxScoreChange = (index, value) => {
+    setFormData(prev => ({
+      ...prev,
+      hackathonReviewMaxScores: prev.hackathonReviewMaxScores.map((score, scoreIndex) => (
+        scoreIndex === index ? value : score
+      ))
     }));
   };
 
@@ -196,10 +214,16 @@ export const CreateWorkshopModal = ({
       return;
     }
 
+    if (formData.eventType === 'hackathon' && formData.hackathonReviewMaxScores.some(score => Number(score) <= 0)) {
+      setError('Please add max marks for every hackathon review');
+      return;
+    }
+
     setLoading(true);
     try {
       await onCreate({
         ...formData,
+        hackathonReviewMaxScores: formData.hackathonReviewMaxScores.map(score => Math.min(1000, Math.max(1, Number(score) || 100))),
         dailyTimings: formData.hasTimings ? formData.dailyTimings : []
       });
     } catch (err) {
@@ -287,6 +311,24 @@ export const CreateWorkshopModal = ({
                     {formData.hackathonLeaderboardVisible ? 'Leaderboard Visible' : 'Leaderboard Hidden'}
                   </button>
                 </div>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {Array.from({ length: Math.min(20, Math.max(1, Number(formData.hackathonReviewCount) || 1)) }, (_, index) => (
+                  <label key={index} className="block rounded-lg border border-emerald-100 bg-white p-3">
+                    <span className="mb-2 block text-xs font-black uppercase tracking-wide text-slate-500">
+                      Review {index + 1} max marks
+                    </span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="1000"
+                      value={formData.hackathonReviewMaxScores[index] || 100}
+                      onChange={(event) => handleReviewMaxScoreChange(index, event.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-black focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="100"
+                    />
+                  </label>
+                ))}
               </div>
             </div>
           )}

@@ -35,6 +35,19 @@ const parseDailyTimings = (timings) => {
   }
 };
 
+const parseJsonArray = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value !== 'string') return [];
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 const uploadedFileToDataUrl = (file) => {
   const fileBuffer = fs.readFileSync(file.path);
   fs.unlink(file.path, (err) => {
@@ -526,7 +539,8 @@ export const createWorkshop = async (req, res) => {
       paymentEnabled,
       entryPassEnabled,
       hackathonLeaderboardVisible,
-      hackathonReviewCount
+      hackathonReviewCount,
+      hackathonReviewMaxScores
     } = req.body;
     const parsedTimings = parseDailyTimings(dailyTimings)
       .filter(item => item?.date)
@@ -536,6 +550,10 @@ export const createWorkshop = async (req, res) => {
         endTime: item.endTime || ''
       }));
     const firstTiming = parsedTimings[0];
+    const reviewCount = Math.min(20, Math.max(1, Number(hackathonReviewCount) || 3));
+    const reviewMaxScores = parseJsonArray(hackathonReviewMaxScores)
+      .slice(0, reviewCount)
+      .map(value => Math.min(1000, Math.max(1, Number(value) || 100)));
 
     const coverImageFile = getUploadedFile(req, 'coverImage');
     const qrImageFile = getUploadedFile(req, 'qrImage');
@@ -566,7 +584,8 @@ export const createWorkshop = async (req, res) => {
       paymentEnabled: shouldUsePayment,
       entryPassEnabled: parseBoolean(entryPassEnabled, true),
       hackathonLeaderboardVisible: parseBoolean(hackathonLeaderboardVisible, false),
-      hackathonReviewCount: Math.min(20, Math.max(1, Number(hackathonReviewCount) || 3)),
+      hackathonReviewCount: reviewCount,
+      hackathonReviewMaxScores: Array.from({ length: reviewCount }, (_, index) => reviewMaxScores[index] || 100),
       date: startDate || date,
       startDate: startDate || date,
       endDate: endDate || startDate || date,
@@ -666,7 +685,8 @@ export const updateWorkshop = async (req, res) => {
       paymentEnabled,
       entryPassEnabled,
       hackathonLeaderboardVisible,
-      hackathonReviewCount
+      hackathonReviewCount,
+      hackathonReviewMaxScores
     } = req.body;
     const parsedTimings = parseDailyTimings(dailyTimings)
       .filter(item => item?.date)
@@ -676,6 +696,10 @@ export const updateWorkshop = async (req, res) => {
         endTime: item.endTime || ''
       }));
     const firstTiming = parsedTimings[0];
+    const reviewCount = Math.min(20, Math.max(1, Number(hackathonReviewCount) || 3));
+    const reviewMaxScores = parseJsonArray(hackathonReviewMaxScores)
+      .slice(0, reviewCount)
+      .map(value => Math.min(1000, Math.max(1, Number(value) || 100)));
 
     const updateData = {
       title,
@@ -693,7 +717,8 @@ export const updateWorkshop = async (req, res) => {
       paymentEnabled: parseBoolean(paymentEnabled, false),
       entryPassEnabled: parseBoolean(entryPassEnabled, true),
       hackathonLeaderboardVisible: parseBoolean(hackathonLeaderboardVisible, false),
-      hackathonReviewCount: Math.min(20, Math.max(1, Number(hackathonReviewCount) || 3)),
+      hackathonReviewCount: reviewCount,
+      hackathonReviewMaxScores: Array.from({ length: reviewCount }, (_, index) => reviewMaxScores[index] || 100),
       registrationFormFields: parseRegistrationFormFields(registrationFormFields),
       updatedAt: new Date()
     };
