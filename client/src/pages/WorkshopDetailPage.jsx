@@ -84,7 +84,7 @@ export const WorkshopDetailPage = () => {
         <div className="mb-8 rounded-lg overflow-hidden shadow-lg h-64 sm:h-80 md:h-96 bg-slate-100 panel">
           {workshop.coverImage ? (
             <img
-              src={resolveMediaUrl(workshop.coverImage)}
+              src={resolveMediaUrl(workshop.coverImage, { w: 1400 })}
               alt={workshop.title}
               loading="eager"
               decoding="async"

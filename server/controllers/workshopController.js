@@ -2,12 +2,19 @@ import Workshop from '../models/Workshop.js';
 import Registration from '../models/Registration.js';
 import Attendance from '../models/Attendance.js';
 import JSZip from 'jszip';
+import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
+import sharp from 'sharp';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const workshopImageCacheDir = path.join('/tmp', 'mclub-workshop-image-cache');
+
+if (!fs.existsSync(workshopImageCacheDir)) {
+  fs.mkdirSync(workshopImageCacheDir, { recursive: true });
+}
 
 const parseRegistrationFormFields = (fields) => {
   if (!fields) return [];
@@ -101,8 +108,46 @@ const withWorkshopImageUrls = (workshop) => ({
     : ''
 });
 
-const sendDataUrlImage = (res, dataUrl) => {
+const clampImageWidth = (value, fallback = 900) => {
+  const requested = Number(value || 0);
+  if (!Number.isFinite(requested) || requested <= 0) return fallback;
+  return Math.max(260, Math.min(1800, Math.round(requested)));
+};
+
+const canOptimizeImage = (mimeType = '') => ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif', 'image/heic', 'image/heif'].includes(mimeType);
+
+const workshopImageCacheKey = (parts = []) => crypto
+  .createHash('sha1')
+  .update(parts.map(part => String(part || '')).join(':'))
+  .digest('hex');
+
+const sendCachedWorkshopImage = (req, res, options = {}) => {
+  const width = clampImageWidth(options.width, options.qr ? 900 : 900);
+  const etag = options.cacheKey ? workshopImageCacheKey([options.cacheKey, width, options.qr ? 'qr' : 'cover']) : '';
+  if (!etag) return false;
+
+  const extension = options.qr ? 'png' : 'webp';
+  const cachePath = path.join(workshopImageCacheDir, `${etag}.${extension}`);
+  res.setHeader('ETag', `"${etag}"`);
   res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
+  if (req.headers['if-none-match'] === `"${etag}"`) {
+    res.status(304).end();
+    return true;
+  }
+
+  if (!fs.existsSync(cachePath)) return false;
+  const cached = fs.readFileSync(cachePath);
+  res.setHeader('Content-Type', options.qr ? 'image/png' : 'image/webp');
+  res.setHeader('Content-Length', String(cached.length));
+  res.send(cached);
+  return true;
+};
+
+const sendDataUrlImage = async (res, dataUrl, options = {}) => {
+  res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   if (dataUrl?.startsWith('/uploads/') || dataUrl?.startsWith('http')) {
     return res.redirect(dataUrl);
   }
@@ -114,7 +159,44 @@ const sendDataUrlImage = (res, dataUrl) => {
 
   const [, mimeType, base64Data] = match;
   const buffer = Buffer.from(base64Data, 'base64');
+  const width = clampImageWidth(options.width, options.qr ? 900 : 900);
+  const etag = options.cacheKey ? workshopImageCacheKey([options.cacheKey, width, options.qr ? 'qr' : 'cover']) : '';
+
+  if (etag) {
+    res.setHeader('ETag', `"${etag}"`);
+    if (res.req?.headers?.['if-none-match'] === `"${etag}"`) return res.status(304).end();
+  }
+
+  if (canOptimizeImage(mimeType)) {
+    const extension = options.qr ? 'png' : 'webp';
+    const cachePath = etag ? path.join(workshopImageCacheDir, `${etag}.${extension}`) : '';
+
+    try {
+      if (cachePath && fs.existsSync(cachePath)) {
+        const cached = fs.readFileSync(cachePath);
+        res.setHeader('Content-Type', options.qr ? 'image/png' : 'image/webp');
+        res.setHeader('Content-Length', String(cached.length));
+        return res.send(cached);
+      }
+
+      const pipeline = sharp(buffer, { limitInputPixels: 80_000_000 })
+        .rotate()
+        .resize({ width, height: Math.round(width * 1.35), fit: 'inside', withoutEnlargement: true });
+      const optimized = options.qr
+        ? await pipeline.png({ compressionLevel: 8 }).toBuffer()
+        : await pipeline.webp({ quality: 78, effort: 4 }).toBuffer();
+
+      if (cachePath) fs.writeFile(cachePath, optimized, () => {});
+      res.setHeader('Content-Type', options.qr ? 'image/png' : 'image/webp');
+      res.setHeader('Content-Length', String(optimized.length));
+      return res.send(optimized);
+    } catch (error) {
+      console.warn('Workshop image optimization failed:', error.message);
+    }
+  }
+
   res.setHeader('Content-Type', mimeType || 'image/png');
+  res.setHeader('Content-Length', String(buffer.length));
   return res.send(buffer);
 };
 
@@ -630,6 +712,14 @@ export const getAllWorkshops = async (req, res) => {
 
 export const getWorkshopCoverImage = async (req, res) => {
   try {
+    const metadata = await Workshop.findById(req.params.id)
+      .select('updatedAt createdAt')
+      .lean();
+    if (!metadata) return res.status(404).json({ message: 'Image not found' });
+
+    const cacheKey = `${metadata._id}:cover:${metadata.updatedAt || metadata.createdAt || ''}`;
+    if (sendCachedWorkshopImage(req, res, { width: req.query.w, cacheKey })) return;
+
     const workshop = await Workshop.findById(req.params.id)
       .select('coverImage')
       .lean();
@@ -638,7 +728,10 @@ export const getWorkshopCoverImage = async (req, res) => {
       return res.status(404).json({ message: 'Image not found' });
     }
 
-    return sendDataUrlImage(res, workshop.coverImage);
+    return sendDataUrlImage(res, workshop.coverImage, {
+      width: req.query.w,
+      cacheKey
+    });
   } catch (error) {
     return res.status(500).json({ message: 'Error fetching image', error: error.message });
   }
@@ -646,6 +739,14 @@ export const getWorkshopCoverImage = async (req, res) => {
 
 export const getWorkshopQrImage = async (req, res) => {
   try {
+    const metadata = await Workshop.findById(req.params.id)
+      .select('updatedAt createdAt')
+      .lean();
+    if (!metadata) return res.status(404).json({ message: 'Image not found' });
+
+    const cacheKey = `${metadata._id}:qr:${metadata.updatedAt || metadata.createdAt || ''}`;
+    if (sendCachedWorkshopImage(req, res, { width: req.query.w, qr: true, cacheKey })) return;
+
     const workshop = await Workshop.findById(req.params.id)
       .select('qrImage')
       .lean();
@@ -654,7 +755,11 @@ export const getWorkshopQrImage = async (req, res) => {
       return res.status(404).json({ message: 'Image not found' });
     }
 
-    return sendDataUrlImage(res, workshop.qrImage);
+    return sendDataUrlImage(res, workshop.qrImage, {
+      width: req.query.w,
+      qr: true,
+      cacheKey
+    });
   } catch (error) {
     return res.status(500).json({ message: 'Error fetching image', error: error.message });
   }

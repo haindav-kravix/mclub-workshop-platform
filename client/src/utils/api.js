@@ -8,10 +8,14 @@ export const resolveMediaUrl = (url, options = {}) => {
   const resolved = url.startsWith('/uploads') || url.startsWith('/api/') || url.startsWith('/media/')
     ? `${API_ORIGIN}${url}`
     : url;
-  if (!options.w || !resolved.includes('/media/highlights/')) return resolved;
-  const mediaUrl = new URL(resolved);
-  mediaUrl.searchParams.set('w', String(options.w));
-  return mediaUrl.toString();
+  if (!options.w) return resolved;
+  try {
+    const mediaUrl = new URL(resolved);
+    mediaUrl.searchParams.set('w', String(options.w));
+    return mediaUrl.toString();
+  } catch {
+    return resolved;
+  }
 };
 
 const getAuthHeaders = () => {

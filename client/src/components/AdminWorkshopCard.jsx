@@ -33,7 +33,7 @@ export const AdminWorkshopCard = ({
       <div className="h-44 sm:h-48 overflow-hidden bg-slate-100 relative">
         {workshop.coverImage ? (
           <img
-            src={resolveMediaUrl(workshop.coverImage)}
+            src={resolveMediaUrl(workshop.coverImage, { w: 720 })}
             alt={workshop.title}
             loading="lazy"
             decoding="async"

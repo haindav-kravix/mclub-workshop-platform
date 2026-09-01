@@ -539,7 +539,7 @@ export const CreateWorkshopModal = ({
                 {initialData?.qrImage && !formData.qrImage && (
                   <div className="mb-3 flex flex-col gap-3 rounded-lg border border-emerald-100 bg-white p-3 sm:flex-row sm:items-center">
                     <img
-                      src={resolveMediaUrl(initialData.qrImage)}
+                      src={resolveMediaUrl(initialData.qrImage, { w: 900 })}
                       alt={`Current ${eventLower} QR`}
                       className="h-24 w-24 rounded-lg border border-slate-200 object-contain"
                     />
