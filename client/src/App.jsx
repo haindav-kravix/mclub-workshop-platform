@@ -209,7 +209,7 @@ const AppContent = () => {
             path="/admin/hackathons/new"
             element={
               <PrivateRoute requireAdmin={true}>
-                <WorkshopFormPage defaultEventType="hackathon" />
+                <WorkshopFormPage defaultEventType="hackathon" allowedEventTypes={['hackathon']} />
               </PrivateRoute>
             }
           />

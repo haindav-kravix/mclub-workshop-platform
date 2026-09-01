@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiAward, FiTrendingUp } from 'react-icons/fi';
+import { FiArrowLeft, FiAward, FiStar, FiTrendingUp } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner } from '../components/UI';
 import { registrationAPI } from '../utils/api';
 
@@ -39,7 +39,7 @@ export const HackathonLeaderboardPage = () => {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen app-shell">
+    <div className="hackathon-leaderboard-page min-h-screen">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
         <button
           onClick={() => navigate(-1)}
@@ -52,41 +52,53 @@ export const HackathonLeaderboardPage = () => {
           <ErrorMessage message={error} onDismiss={() => setError('')} />
         ) : (
           <>
-            <section className="overflow-hidden rounded-3xl bg-slate-950 p-6 text-white shadow-2xl sm:p-10">
+            <section className="leaderboard-hero">
               <div className="leaderboard-glow" aria-hidden="true" />
-              <p className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-black uppercase tracking-wide text-secondary">
+              <div className="leaderboard-orbits" aria-hidden="true" />
+              <p className="leaderboard-pill">
                 <FiTrendingUp /> Live leaderboard
               </p>
-              <h1 className="mt-5 text-4xl font-black leading-tight sm:text-6xl">{workshop?.title}</h1>
-              <p className="mt-3 max-w-2xl text-base font-semibold text-slate-300">
-                Rankings are calculated from admin review averages.
-              </p>
+              <h1>{workshop?.title}</h1>
+              <p>Rankings are calculated from review averages and published only after admin approval.</p>
             </section>
+
+            {leaderboard.length > 0 && (
+              <div className="leaderboard-podium">
+                {leaderboard.slice(0, 3).map((registration, index) => (
+                  <div key={registration._id} className={`podium-card rank-${index + 1}`}>
+                    <div className="podium-rank">{index === 0 ? <FiAward /> : `#${index + 1}`}</div>
+                    <p>{getTeamName(registration)}</p>
+                    <strong>{registration.evaluationAverage}</strong>
+                    <span>{registration.teamCode}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="mt-6 grid gap-4">
               {leaderboard.map((registration, index) => (
                 <div
                   key={registration._id}
-                  className={`rounded-2xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg ${
-                    index === 0 ? 'border-amber-200 bg-amber-50' : 'border-emerald-100 bg-white'
-                  }`}
+                  className="leaderboard-row"
+                  style={{ '--score-width': `${Math.min(100, Math.max(0, Number(registration.evaluationAverage) || 0))}%` }}
                 >
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-4">
-                      <div className={`flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-black ${
-                        index === 0 ? 'bg-amber-200 text-amber-900' : 'bg-emerald-50 text-emerald-700'
-                      }`}>
-                        {index === 0 ? <FiAward /> : `#${index + 1}`}
+                      <div className="leaderboard-rank">
+                        {index === 0 ? <FiStar /> : `#${index + 1}`}
                       </div>
                       <div>
                         <h2 className="text-xl font-black text-slate-950">{getTeamName(registration)}</h2>
                         <p className="text-sm font-bold tracking-widest text-slate-500">{registration.teamCode}</p>
                       </div>
                     </div>
-                    <div className="rounded-2xl bg-slate-950 px-6 py-3 text-center text-white">
+                    <div className="leaderboard-score">
                       <p className="text-xs font-black uppercase tracking-wide text-primary">Average</p>
                       <p className="text-3xl font-black">{registration.evaluationAverage}</p>
                     </div>
+                  </div>
+                  <div className="leaderboard-score-bar" aria-hidden="true">
+                    <span />
                   </div>
                 </div>
               ))}

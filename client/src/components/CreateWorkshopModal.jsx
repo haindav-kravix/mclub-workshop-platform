@@ -57,7 +57,14 @@ const hasConfiguredTimings = (initialData) => {
   );
 };
 
-export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, layout = 'modal', defaultEventType = 'workshop' }) => {
+export const CreateWorkshopModal = ({
+  onClose,
+  onCreate,
+  initialData = null,
+  layout = 'modal',
+  defaultEventType = 'workshop',
+  allowedEventTypes = ['workshop', 'internship']
+}) => {
   const initialHasTimings = hasConfiguredTimings(initialData);
   const initialPaymentEnabled = initialData?.paymentEnabled ?? Boolean(initialData?.qrImage);
   const [formData, setFormData] = useState({
@@ -84,6 +91,9 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
   const [error, setError] = useState('');
   const eventLabel = getEventLabelByType(formData.eventType);
   const eventLower = getEventLabelByType(formData.eventType, 'lower');
+  const visibleEventTypes = allowedEventTypes.includes(formData.eventType)
+    ? allowedEventTypes
+    : [formData.eventType, ...allowedEventTypes];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -228,7 +238,7 @@ export const CreateWorkshopModal = ({ onClose, onCreate, initialData = null, lay
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Creation Type *</label>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {['workshop', 'internship', 'hackathon'].map(type => (
+              {visibleEventTypes.map(type => (
                 <button
                   key={type}
                   type="button"

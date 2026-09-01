@@ -6,7 +6,7 @@ import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { workshopAPI } from '../utils/api';
 import { getEventLabel } from '../utils/eventLabels';
 
-export const WorkshopFormPage = ({ defaultEventType = 'workshop' }) => {
+export const WorkshopFormPage = ({ defaultEventType = 'workshop', allowedEventTypes = ['workshop', 'internship'] }) => {
   const { workshopId } = useParams();
   const navigate = useNavigate();
   const isEditing = Boolean(workshopId);
@@ -93,7 +93,7 @@ export const WorkshopFormPage = ({ defaultEventType = 'workshop' }) => {
             {isEditing ? `Edit ${eventLabel}` : 'Create New Event'}
           </h1>
           <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-600 sm:text-base">
-            {isEditing ? `Update ${eventLower} details, optional timings, images, and registration questions.` : 'Choose workshop, internship, or hackathon, then add details, optional timings, images, and registration questions.'}
+            {isEditing ? `Update ${eventLower} details, optional timings, images, and registration questions.` : 'Choose the event type, then add details, optional timings, images, and registration questions.'}
           </p>
         </div>
       </div>
@@ -106,6 +106,7 @@ export const WorkshopFormPage = ({ defaultEventType = 'workshop' }) => {
           layout="page"
           initialData={workshop}
           defaultEventType={defaultEventType}
+          allowedEventTypes={allowedEventTypes}
           onClose={() => navigate('/admin')}
           onCreate={handleSubmit}
         />

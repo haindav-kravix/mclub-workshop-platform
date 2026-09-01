@@ -15,8 +15,8 @@ export const AdminHackathonsPage = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await workshopAPI.getAdminWorkshops();
-      setEvents(response.data.filter(event => event.eventType === 'hackathon'));
+      const response = await workshopAPI.getAdminWorkshops({ eventType: 'hackathon' });
+      setEvents(response.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load hackathons');
     } finally {

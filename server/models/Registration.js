@@ -28,6 +28,19 @@ const registrationSchema = new mongoose.Schema({
     type: [Number],
     default: []
   },
+  evaluationReviews: {
+    type: [{
+      score: {
+        type: Number,
+        default: 0
+      },
+      reason: {
+        type: String,
+        default: ''
+      }
+    }],
+    default: []
+  },
   evaluationAverage: {
     type: Number,
     default: 0

@@ -757,13 +757,27 @@ export const deleteWorkshop = async (req, res) => {
 
 export const getAdminWorkshops = async (req, res) => {
   try {
-    const workshops = await Workshop.find({})
+    const validEventTypes = ['workshop', 'internship', 'hackathon'];
+    const filter = {};
+    if (validEventTypes.includes(req.query.eventType)) {
+      filter.eventType = req.query.eventType;
+    } else if (validEventTypes.includes(req.query.excludeEventType)) {
+      filter.eventType = { $ne: req.query.excludeEventType };
+    }
+
+    const workshops = await Workshop.find(filter)
       .select('-coverImage -qrImage')
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 })
       .lean();
+    const workshopIds = workshops.map(workshop => workshop._id);
 
-    const registrationCounts = await Registration.aggregate([
+    const registrationCounts = workshopIds.length ? await Registration.aggregate([
+      {
+        $match: {
+          workshopId: { $in: workshopIds }
+        }
+      },
       {
         $group: {
           _id: {
@@ -773,7 +787,7 @@ export const getAdminWorkshops = async (req, res) => {
           count: { $sum: 1 }
         }
       }
-    ]);
+    ]) : [];
 
     const countsByWorkshop = registrationCounts.reduce((counts, item) => {
       const workshopId = item._id.workshopId.toString();

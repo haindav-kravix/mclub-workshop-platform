@@ -17,9 +17,13 @@ const eventLabel = (workshop, lower = false) => {
 
 const ADMIN_SCORE_CODE = 'KLHAZ';
 const generateTeamCode = () => {
-  const length = 6 + Math.floor(Math.random() * 3);
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  return Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+  const syllables = ['MO', 'NO', 'VA', 'DA', 'TA', 'NE', 'XO', 'LU', 'MI', 'RA', 'ZO', 'KA', 'VI', 'SA', 'RO', 'BI'];
+  const targetLength = 6 + Math.floor(Math.random() * 3);
+  let code = '';
+  while (code.length < targetLength) {
+    code += syllables[Math.floor(Math.random() * syllables.length)];
+  }
+  return code.slice(0, targetLength);
 };
 
 const generateUniqueTeamCode = async (workshopId) => {
@@ -159,6 +163,7 @@ const buildRegistrationListProjection = (formFields = []) => {
     updatedAt: 1,
     teamCode: 1,
     evaluationScores: 1,
+    evaluationReviews: 1,
     evaluationAverage: 1,
     formData: formDataProjection,
     paymentScreenshot: {
@@ -479,7 +484,7 @@ export const getHackathonEvaluation = async (req, res) => {
 
     const registrations = await Registration.find({ workshopId, status: 'confirmed' })
       .populate('userId', 'name email profilePhoto')
-      .select('userId formData status teamCode evaluationScores evaluationAverage evaluatedAt')
+      .select('userId formData status teamCode evaluationScores evaluationReviews evaluationAverage evaluatedAt')
       .sort({ evaluationAverage: -1, updatedAt: -1 })
       .lean();
 
@@ -492,11 +497,7 @@ export const getHackathonEvaluation = async (req, res) => {
 export const updateHackathonEvaluation = async (req, res) => {
   try {
     const { registrationId } = req.params;
-    const { scores = [], code } = req.body;
-
-    if (code !== ADMIN_SCORE_CODE) {
-      return res.status(403).json({ message: 'Invalid admin code' });
-    }
+    const { scores = [], reviews = [], code } = req.body;
 
     const registration = await Registration.findById(registrationId);
     if (!registration) return res.status(404).json({ message: 'Registration not found' });
@@ -506,17 +507,30 @@ export const updateHackathonEvaluation = async (req, res) => {
       return res.status(400).json({ message: 'Evaluation is available only for hackathons' });
     }
 
+    const hasExistingMarks = registration.evaluatedAt ||
+      registration.evaluationScores?.some(score => Number(score) > 0) ||
+      registration.evaluationReviews?.some(review => Number(review?.score) > 0 || String(review?.reason || '').trim());
+    if (hasExistingMarks && code !== ADMIN_SCORE_CODE) {
+      return res.status(403).json({ message: 'Invalid admin code' });
+    }
+
     const reviewCount = Math.min(20, Math.max(1, Number(workshop.hackathonReviewCount) || 3));
-    const normalizedScores = Array.from({ length: reviewCount }, (_, index) => {
-      const value = Number(scores[index]);
+    const normalizedReviews = Array.from({ length: reviewCount }, (_, index) => {
+      const review = reviews[index] || {};
+      const value = Number(review.score ?? scores[index]);
       if (!Number.isFinite(value)) return 0;
-      return Math.min(100, Math.max(0, value));
+      return {
+        score: Math.min(100, Math.max(0, value)),
+        reason: String(review.reason || '').trim().slice(0, 600)
+      };
     });
+    const normalizedScores = normalizedReviews.map(review => review.score);
     const average = normalizedScores.length
       ? Math.round((normalizedScores.reduce((total, score) => total + score, 0) / normalizedScores.length) * 100) / 100
       : 0;
 
     registration.evaluationScores = normalizedScores;
+    registration.evaluationReviews = normalizedReviews;
     registration.evaluationAverage = average;
     registration.evaluatedAt = new Date();
     registration.evaluatedBy = req.user.id;

@@ -37,8 +37,9 @@ export const workshopAPI = {
   deleteWorkshop: (id) => axios.delete(`${API_URL}/workshops/${id}`, {
     headers: getAuthHeaders()
   }),
-  getAdminWorkshops: () => axios.get(`${API_URL}/workshops/admin/my-workshops`, {
-    headers: getAuthHeaders()
+  getAdminWorkshops: (params = {}) => axios.get(`${API_URL}/workshops/admin/my-workshops`, {
+    headers: getAuthHeaders(),
+    params
   }),
   downloadReport: (id) => axios.get(`${API_URL}/workshops/${id}/report`, {
     headers: getAuthHeaders(),
@@ -82,7 +83,7 @@ export const registrationAPI = {
   getHackathonEvaluation: (workshopId) => axios.get(`${API_URL}/registrations/hackathon/${workshopId}/evaluation`, {
     headers: getAuthHeaders()
   }),
-  updateHackathonEvaluation: (registrationId, scores, code) => axios.patch(`${API_URL}/registrations/hackathon/evaluation/${registrationId}`, { scores, code }, {
+  updateHackathonEvaluation: (registrationId, reviews, code) => axios.patch(`${API_URL}/registrations/hackathon/evaluation/${registrationId}`, { reviews, code }, {
     headers: getAuthHeaders()
   }),
   toggleHackathonLeaderboard: (workshopId, visible) => axios.patch(`${API_URL}/registrations/hackathon/${workshopId}/leaderboard`, { visible }, {

@@ -14,12 +14,18 @@ const getTeamName = (registration) => {
   return priorityValue || fallbackValue || registration.userId?.name || registration.userId?.email || 'Confirmed team';
 };
 
+const hasSavedMarks = (registration) => Boolean(
+  registration?.evaluatedAt ||
+  registration?.evaluationScores?.some(score => Number(score) > 0) ||
+  registration?.evaluationReviews?.some(review => Number(review?.score) > 0 || String(review?.reason || '').trim())
+);
+
 export const AdminHackathonEvaluationPage = () => {
   const { workshopId } = useParams();
   const navigate = useNavigate();
   const [workshop, setWorkshop] = useState(null);
   const [registrations, setRegistrations] = useState([]);
-  const [scores, setScores] = useState({});
+  const [reviews, setReviews] = useState({});
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState('');
   const [codeModal, setCodeModal] = useState({ open: false, registrationId: '', code: '' });
@@ -35,11 +41,14 @@ export const AdminHackathonEvaluationPage = () => {
         const response = await registrationAPI.getHackathonEvaluation(workshopId);
         setWorkshop(response.data.workshop);
         setRegistrations(response.data.registrations);
-        const nextScores = {};
+        const nextReviews = {};
         response.data.registrations.forEach(registration => {
-          nextScores[registration._id] = Array.from({ length: Number(response.data.workshop.hackathonReviewCount) || 3 }, (_, index) => registration.evaluationScores?.[index] ?? '');
+          nextReviews[registration._id] = Array.from({ length: Number(response.data.workshop.hackathonReviewCount) || 3 }, (_, index) => ({
+            score: registration.evaluationReviews?.[index]?.score ?? registration.evaluationScores?.[index] ?? '',
+            reason: registration.evaluationReviews?.[index]?.reason || ''
+          }));
         });
-        setScores(nextScores);
+        setReviews(nextReviews);
       } catch (err) {
         setError(err.response?.data?.message || 'Unable to load hackathon evaluation');
       } finally {
@@ -50,11 +59,11 @@ export const AdminHackathonEvaluationPage = () => {
     loadEvaluation();
   }, [workshopId]);
 
-  const updateScore = (registrationId, index, value) => {
-    setScores(prev => ({
+  const updateReview = (registrationId, index, updates) => {
+    setReviews(prev => ({
       ...prev,
-      [registrationId]: (prev[registrationId] || Array.from({ length: reviewCount }, () => '')).map((score, scoreIndex) => (
-        scoreIndex === index ? value : score
+      [registrationId]: (prev[registrationId] || Array.from({ length: reviewCount }, () => ({ score: '', reason: '' }))).map((review, reviewIndex) => (
+        reviewIndex === index ? { ...review, ...updates } : review
       ))
     }));
   };
@@ -64,17 +73,15 @@ export const AdminHackathonEvaluationPage = () => {
     setError('');
   };
 
-  const saveScores = async () => {
-    const { registrationId, code } = codeModal;
-    if (code !== ADMIN_CODE) {
+  const persistScores = async (registrationId, code = '') => {
+    if (code && code !== ADMIN_CODE) {
       setError('Wrong code. Marks were not changed.');
       return;
     }
-
     setSavingId(registrationId);
     setError('');
     try {
-      const response = await registrationAPI.updateHackathonEvaluation(registrationId, scores[registrationId] || [], code);
+      const response = await registrationAPI.updateHackathonEvaluation(registrationId, reviews[registrationId] || [], code);
       setRegistrations(prev => prev.map(registration => registration._id === registrationId ? response.data.registration : registration));
       setSuccess('Marks saved and leaderboard updated');
       setCodeModal({ open: false, registrationId: '', code: '' });
@@ -83,6 +90,22 @@ export const AdminHackathonEvaluationPage = () => {
     } finally {
       setSavingId('');
     }
+  };
+
+  const saveScores = async () => {
+    if (codeModal.code !== ADMIN_CODE) {
+      setError('Wrong code. Marks were not changed.');
+      return;
+    }
+    persistScores(codeModal.registrationId, codeModal.code);
+  };
+
+  const handleSaveClick = (registration) => {
+    if (hasSavedMarks(registration)) {
+      openCodeModal(registration._id);
+      return;
+    }
+    persistScores(registration._id);
   };
 
   const toggleLeaderboard = async () => {
@@ -170,27 +193,38 @@ export const AdminHackathonEvaluationPage = () => {
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-4 grid gap-4 lg:grid-cols-2">
                 {Array.from({ length: reviewCount }, (_, scoreIndex) => (
-                  <label key={scoreIndex} className="block">
-                    <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">Review {scoreIndex + 1}</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={scores[registration._id]?.[scoreIndex] ?? ''}
-                      onChange={event => updateScore(registration._id, scoreIndex, event.target.value)}
-                      className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-base font-black outline-none focus:border-emerald-400 focus:bg-white"
-                      placeholder="0-100"
-                    />
-                  </label>
+                  <div key={scoreIndex} className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-3">
+                    <label className="block">
+                      <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">Review {scoreIndex + 1} marks</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={reviews[registration._id]?.[scoreIndex]?.score ?? ''}
+                        onChange={event => updateReview(registration._id, scoreIndex, { score: event.target.value })}
+                        className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-base font-black outline-none focus:border-emerald-400"
+                        placeholder="0-100"
+                      />
+                    </label>
+                    <label className="mt-3 block">
+                      <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">Why this mark?</span>
+                      <textarea
+                        value={reviews[registration._id]?.[scoreIndex]?.reason ?? ''}
+                        onChange={event => updateReview(registration._id, scoreIndex, { reason: event.target.value })}
+                        className="min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-400"
+                        placeholder="Short evaluation note for this review"
+                      />
+                    </label>
+                  </div>
                 ))}
                 <button
-                  onClick={() => openCodeModal(registration._id)}
+                  onClick={() => handleSaveClick(registration)}
                   disabled={savingId === registration._id}
-                  className="flex h-12 items-center justify-center gap-2 self-end rounded-xl bg-primary px-4 font-black text-secondary shadow-sm transition hover:bg-primary/80 disabled:opacity-60"
+                  className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-black text-secondary shadow-sm transition hover:bg-primary/80 disabled:opacity-60 lg:col-span-2"
                 >
-                  <FiSave /> {savingId === registration._id ? 'Saving...' : 'Save Marks'}
+                  <FiSave /> {savingId === registration._id ? 'Saving...' : hasSavedMarks(registration) ? 'Update Marks' : 'Save Marks'}
                 </button>
               </div>
             </div>

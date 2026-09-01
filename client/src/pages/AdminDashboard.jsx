@@ -22,7 +22,7 @@ export const AdminDashboard = () => {
 
   const fetchWorkshops = async () => {
     try {
-      const response = await workshopAPI.getAdminWorkshops();
+      const response = await workshopAPI.getAdminWorkshops({ excludeEventType: 'hackathon' });
       setWorkshops(response.data);
     } catch (err) {
       setError('Failed to load workshops');
