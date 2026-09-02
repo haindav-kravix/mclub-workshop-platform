@@ -210,6 +210,25 @@ const buildRegistrationListProjection = (formFields = []) => {
   };
 };
 
+const buildSafeUserFormDataExpression = () => ({
+  $arrayToObject: {
+    $filter: {
+      input: { $objectToArray: { $ifNull: ['$formData', {}] } },
+      as: 'field',
+      cond: {
+        $not: [
+          {
+            $regexMatch: {
+              input: { $ifNull: ['$$field.v', ''] },
+              regex: '(^data:)|("dataUrl"\\s*:\\s*"data:)'
+            }
+          }
+        ]
+      }
+    }
+  }
+});
+
 const attachRegistrationUploads = async (formData, files = [], formFields = []) => {
   const nextFormData = { ...formData };
   const fieldsById = new Map(formFields.map(field => [field.fieldId, field]));
@@ -324,14 +343,74 @@ export const registerForWorkshop = async (req, res) => {
 
 export const getUserRegistrations = async (req, res) => {
   try {
-    const registrations = await Registration.find({ userId: req.user.id })
-      .populate('workshopId', 'title eventType date startDate endDate time duration dailyTimings venue telegramLink registrationFormFields entryPassEnabled hackathonLeaderboardVisible')
-      .sort({ createdAt: -1 })
-      .allowDiskUse(true);
+    const registrations = await Registration.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(req.user.id) } },
+      { $sort: { createdAt: -1 } },
+      {
+        $project: {
+          _id: 1,
+          workshopId: 1,
+          userId: 1,
+          status: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          teamCode: 1,
+          formData: buildSafeUserFormDataExpression(),
+          paymentScreenshot: {
+            $cond: [hasStringValueExpression('$paymentScreenshot'), 'uploaded', '']
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: 'workshops',
+          localField: 'workshopId',
+          foreignField: '_id',
+          as: 'workshop'
+        }
+      },
+      { $unwind: { path: '$workshop', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          status: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          teamCode: 1,
+          formData: 1,
+          paymentScreenshot: 1,
+          workshopId: {
+            _id: '$workshop._id',
+            title: '$workshop.title',
+            eventType: '$workshop.eventType',
+            date: '$workshop.date',
+            startDate: '$workshop.startDate',
+            endDate: '$workshop.endDate',
+            time: '$workshop.time',
+            duration: '$workshop.duration',
+            dailyTimings: '$workshop.dailyTimings',
+            venue: '$workshop.venue',
+            telegramLink: '$workshop.telegramLink',
+            entryPassEnabled: '$workshop.entryPassEnabled',
+            hackathonLeaderboardVisible: '$workshop.hackathonLeaderboardVisible',
+            registrationFormFields: {
+              $map: {
+                input: { $ifNull: ['$workshop.registrationFormFields', []] },
+                as: 'field',
+                in: {
+                  fieldId: '$$field.fieldId',
+                  label: '$$field.label',
+                  type: '$$field.type'
+                }
+              }
+            }
+          }
+        }
+      }
+    ]).allowDiskUse(true);
 
-    res.json(registrations.map(registration => (
-      summarizeRegistrationUploads(registration, registration.workshopId?.registrationFormFields || [])
-    )));
+    res.json(registrations);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching registrations', error: error.message });
   }
