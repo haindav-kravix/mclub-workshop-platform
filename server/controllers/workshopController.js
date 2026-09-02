@@ -181,10 +181,12 @@ const sendDataUrlImage = async (res, dataUrl, options = {}) => {
 
       const pipeline = sharp(buffer, { limitInputPixels: 80_000_000 })
         .rotate()
-        .resize({ width, height: Math.round(width * 1.35), fit: 'inside', withoutEnlargement: true });
+        .resize(options.qr
+          ? { width, height: Math.round(width * 1.35), fit: 'inside', withoutEnlargement: true }
+          : { width, withoutEnlargement: true });
       const optimized = options.qr
         ? await pipeline.png({ compressionLevel: 8 }).toBuffer()
-        : await pipeline.webp({ quality: 78, effort: 4 }).toBuffer();
+        : await pipeline.webp({ quality: 92, effort: 4 }).toBuffer();
 
       if (cachePath) fs.writeFile(cachePath, optimized, () => {});
       res.setHeader('Content-Type', options.qr ? 'image/png' : 'image/webp');
