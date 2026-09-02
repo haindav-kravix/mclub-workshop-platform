@@ -5,6 +5,7 @@ import { generateExcelReport } from '../utils/excelExport.js';
 import ExcelJS from 'exceljs';
 import fs from 'fs';
 import mongoose from 'mongoose';
+import sharp from 'sharp';
 
 const safeExportFileName = (value = 'registrations') => String(value)
   .replace(/[^a-z0-9]+/gi, '-')
@@ -46,12 +47,27 @@ const parseFormData = (formData) => {
   }
 };
 
-const uploadedFileToDataUrl = (file) => {
-  const fileBuffer = fs.readFileSync(file.path);
+const uploadedFileToDataUrl = async (file) => {
+  let fileBuffer = await fs.promises.readFile(file.path);
+  let mimeType = file.mimetype || 'application/octet-stream';
+
+  if (mimeType.startsWith('image/') && mimeType !== 'image/gif') {
+    try {
+      fileBuffer = await sharp(fileBuffer)
+        .rotate()
+        .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 82 })
+        .toBuffer();
+      mimeType = 'image/webp';
+    } catch (error) {
+      console.error('Error optimizing uploaded image:', error.message);
+    }
+  }
+
   fs.unlink(file.path, (err) => {
     if (err) console.error('Error deleting temporary upload:', err);
   });
-  return `data:${file.mimetype};base64,${fileBuffer.toString('base64')}`;
+  return `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
 };
 
 const cleanupUploadedFile = (file) => {
@@ -71,8 +87,8 @@ const cleanupUploadedFiles = (req) => {
   (req.files || []).forEach(cleanupUploadedFile);
 };
 
-const serializeUploadedDocument = (file) => JSON.stringify({
-  dataUrl: uploadedFileToDataUrl(file),
+const serializeUploadedDocument = async (file) => JSON.stringify({
+  dataUrl: await uploadedFileToDataUrl(file),
   name: file.originalname || 'uploaded-file',
   mimeType: file.mimetype || 'application/octet-stream',
   size: file.size || 0
@@ -194,17 +210,15 @@ const buildRegistrationListProjection = (formFields = []) => {
   };
 };
 
-const attachRegistrationUploads = (formData, files = [], formFields = []) => {
+const attachRegistrationUploads = async (formData, files = [], formFields = []) => {
   const nextFormData = { ...formData };
   const fieldsById = new Map(formFields.map(field => [field.fieldId, field]));
-  files
-    .filter(file => file.fieldname !== 'paymentScreenshot')
-    .forEach(file => {
-      const field = fieldsById.get(file.fieldname);
-      nextFormData[file.fieldname] = field?.type === 'file'
-        ? serializeUploadedDocument(file)
-        : uploadedFileToDataUrl(file);
-    });
+  for (const file of files.filter(item => item.fieldname !== 'paymentScreenshot')) {
+    const field = fieldsById.get(file.fieldname);
+    nextFormData[file.fieldname] = field?.type === 'file'
+      ? await serializeUploadedDocument(file)
+      : await uploadedFileToDataUrl(file);
+  }
   return nextFormData;
 };
 
@@ -278,13 +292,13 @@ export const registerForWorkshop = async (req, res) => {
       }
     }
 
-    parsedFormData = attachRegistrationUploads(parsedFormData, req.files || [], workshop.registrationFormFields || []);
+    parsedFormData = await attachRegistrationUploads(parsedFormData, req.files || [], workshop.registrationFormFields || []);
 
     const registration = new Registration({
       workshopId,
       userId: req.user.id,
       formData: parsedFormData,
-      paymentScreenshot: isPaymentEnabled(workshop) && paymentScreenshotFile ? uploadedFileToDataUrl(paymentScreenshotFile) : '',
+      paymentScreenshot: isPaymentEnabled(workshop) && paymentScreenshotFile ? await uploadedFileToDataUrl(paymentScreenshotFile) : '',
       teamCode: workshop.eventType === 'hackathon' ? await generateUniqueTeamCode(workshopId) : '',
       status: 'pending'
     });
@@ -315,9 +329,52 @@ export const getUserRegistrations = async (req, res) => {
       .sort({ createdAt: -1 })
       .allowDiskUse(true);
 
-    res.json(registrations);
+    res.json(registrations.map(registration => (
+      summarizeRegistrationUploads(registration, registration.workshopId?.registrationFormFields || [])
+    )));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching registrations', error: error.message });
+  }
+};
+
+export const getUserWorkshopRegistrationStatus = async (req, res) => {
+  try {
+    const { workshopId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(workshopId)) {
+      return res.status(400).json({ message: 'Invalid event id' });
+    }
+
+    const registration = await Registration.findOne({
+      workshopId,
+      userId: req.user.id
+    })
+      .select('status teamCode createdAt updatedAt')
+      .lean();
+
+    res.json({
+      registered: Boolean(registration),
+      status: registration?.status || '',
+      registration
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching registration status', error: error.message });
+  }
+};
+
+export const getUserRegisteredWorkshopIds = async (req, res) => {
+  try {
+    const registrations = await Registration.find({
+      userId: req.user.id,
+      status: 'confirmed'
+    })
+      .select('workshopId')
+      .lean();
+
+    res.json({
+      workshopIds: registrations.map(registration => String(registration.workshopId))
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching registered events', error: error.message });
   }
 };
 

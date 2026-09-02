@@ -68,6 +68,12 @@ export const registrationAPI = {
   getUserRegistrations: () => axios.get(`${API_URL}/registrations/my-registrations`, {
     headers: getAuthHeaders()
   }),
+  getUserRegisteredWorkshopIds: () => axios.get(`${API_URL}/registrations/my-workshop-ids`, {
+    headers: getAuthHeaders()
+  }),
+  getUserWorkshopStatus: (workshopId) => axios.get(`${API_URL}/registrations/my-status/${workshopId}`, {
+    headers: getAuthHeaders()
+  }),
   getWorkshopRegistrations: (workshopId) => axios.get(`${API_URL}/registrations/workshop/${workshopId}`, {
     headers: getAuthHeaders()
   }),

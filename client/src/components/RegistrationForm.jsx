@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FiX } from 'react-icons/fi';
 
 const getOptionLabel = (index) => {
@@ -20,6 +20,10 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
   const [error, setError] = useState('');
   const isModal = variant === 'modal';
   const requiresPaymentScreenshot = Boolean(workshop.paymentEnabled !== false && workshop.qrImage);
+  const sortedFields = useMemo(
+    () => [...(workshop.registrationFormFields || [])].sort((a, b) => (a.order || 0) - (b.order || 0)),
+    [workshop.registrationFormFields]
+  );
 
   useEffect(() => {
     if (!isModal) return undefined;
@@ -75,7 +79,7 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
       return;
     }
 
-    const missingRequiredImageField = (workshop.registrationFormFields || []).find(field =>
+    const missingRequiredImageField = sortedFields.find(field =>
       field.type === 'image' && field.required && !imageFiles[field.fieldId]
     );
     if (missingRequiredImageField) {
@@ -84,7 +88,7 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
       return;
     }
 
-    const missingRequiredFileField = (workshop.registrationFormFields || []).find(field =>
+    const missingRequiredFileField = sortedFields.find(field =>
       field.type === 'file' && field.required && !documentFiles[field.fieldId]
     );
     if (missingRequiredFileField) {
@@ -125,10 +129,8 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
           </div>
         )}
 
-        {workshop.registrationFormFields && workshop.registrationFormFields.length > 0 ? (
-          workshop.registrationFormFields
-            .sort((a, b) => a.order - b.order)
-            .map(field => (
+        {sortedFields.length > 0 ? (
+          sortedFields.map(field => (
               <div key={field.fieldId} className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {field.label}

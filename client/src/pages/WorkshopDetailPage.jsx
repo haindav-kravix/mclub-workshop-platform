@@ -21,16 +21,12 @@ export const WorkshopDetailPage = () => {
   useEffect(() => {
     const fetchWorkshop = async () => {
       try {
-        const [workshopResponse, registrationsResponse] = await Promise.all([
+        const [workshopResponse, statusResponse] = await Promise.all([
           workshopAPI.getWorkshopById(id),
-          isAuthenticated ? registrationAPI.getUserRegistrations() : Promise.resolve({ data: [] })
+          isAuthenticated ? registrationAPI.getUserWorkshopStatus(id) : Promise.resolve({ data: { status: '' } })
         ]);
         setWorkshop(workshopResponse.data);
-        const currentRegistration = registrationsResponse.data.find(registration => {
-          const registeredWorkshopId = registration.workshopId?._id || registration.workshopId;
-          return registeredWorkshopId === id;
-        });
-        setRegistrationStatus(currentRegistration?.status || '');
+        setRegistrationStatus(statusResponse.data?.status || '');
       } catch (err) {
         setError('Failed to load workshop details');
         console.error(err);

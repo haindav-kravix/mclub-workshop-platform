@@ -18,15 +18,11 @@ export const WorkshopsPage = () => {
   useEffect(() => {
     const fetchWorkshops = async () => {
       try {
-        const [workshopsResponse, registrationsResponse] = await Promise.all([
+        const [workshopsResponse, registrationIdsResponse] = await Promise.all([
           workshopAPI.getAllWorkshops(),
-          isAuthenticated ? registrationAPI.getUserRegistrations() : Promise.resolve({ data: [] })
+          isAuthenticated ? registrationAPI.getUserRegisteredWorkshopIds() : Promise.resolve({ data: { workshopIds: [] } })
         ]);
-        const registeredIds = new Set(
-          registrationsResponse.data
-            .filter(registration => registration.status === 'confirmed')
-            .map(registration => registration.workshopId?._id || registration.workshopId)
-        );
+        const registeredIds = new Set(registrationIdsResponse.data?.workshopIds || []);
         const decoratedWorkshops = workshopsResponse.data.map(workshop => ({
           ...workshop,
           isRegistered: registeredIds.has(workshop._id)

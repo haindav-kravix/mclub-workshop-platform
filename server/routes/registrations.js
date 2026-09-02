@@ -7,6 +7,8 @@ const router = express.Router();
 
 // User routes
 router.post('/', authenticateToken, upload.any(), registrationController.registerForWorkshop);
+router.get('/my-workshop-ids', authenticateToken, registrationController.getUserRegisteredWorkshopIds);
+router.get('/my-status/:workshopId', authenticateToken, registrationController.getUserWorkshopRegistrationStatus);
 router.get('/my-registrations', authenticateToken, registrationController.getUserRegistrations);
 router.delete('/:registrationId', authenticateToken, registrationController.cancelRegistration);
 

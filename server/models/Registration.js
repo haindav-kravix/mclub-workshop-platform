@@ -82,6 +82,7 @@ const registrationSchema = new mongoose.Schema({
 registrationSchema.index({ workshopId: 1, userId: 1 }, { unique: true });
 registrationSchema.index({ workshopId: 1, createdAt: -1 });
 registrationSchema.index({ userId: 1, createdAt: -1 });
+registrationSchema.index({ userId: 1, status: 1 });
 registrationSchema.index({ workshopId: 1, status: 1 });
 registrationSchema.index({ workshopId: 1, teamCode: 1 });
 registrationSchema.index({ workshopId: 1, evaluationAverage: -1 });
