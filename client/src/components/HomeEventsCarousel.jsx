@@ -53,7 +53,7 @@ export const HomeEventsCarousel = ({ events }) => {
           <div className="relative h-56 overflow-hidden bg-emerald-50 sm:h-72 lg:h-full">
             {event.coverImage ? (
               <img
-                src={event.coverImagePreview || resolveMediaUrl(event.coverImage, { w: 1100 })}
+                src={resolveMediaUrl(event.coverImage, { w: 1400 })}
                 alt={event.title}
                 loading="eager"
                 decoding="async"
