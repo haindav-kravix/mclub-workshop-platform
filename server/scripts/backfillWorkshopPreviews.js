@@ -1,26 +1,11 @@
 import mongoose from 'mongoose';
-import sharp from 'sharp';
 import dotenv from 'dotenv';
 import Workshop from '../models/Workshop.js';
 
 dotenv.config();
 
-const canOptimizeImage = (mimeType = '') => ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif', 'image/heic', 'image/heif'].includes(mimeType);
-
 const createCoverImagePreview = async (dataUrl) => {
-  const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.*)$/);
-  if (!match) return '';
-
-  const [, mimeType, base64Data] = match;
-  if (!canOptimizeImage(mimeType)) return '';
-
-  const preview = await sharp(Buffer.from(base64Data, 'base64'), { limitInputPixels: 80_000_000 })
-    .rotate()
-    .resize({ width: 520, height: 360, fit: 'inside', withoutEnlargement: true })
-    .webp({ quality: 72, effort: 4 })
-    .toBuffer();
-
-  return `data:image/webp;base64,${preview.toString('base64')}`;
+  return String(dataUrl || '');
 };
 
 const run = async () => {
@@ -30,11 +15,7 @@ const run = async () => {
 
   await mongoose.connect(process.env.MONGODB_URI);
   const workshops = await Workshop.find({
-    coverImage: /^data:image\//,
-    $or: [
-      { coverImagePreview: { $exists: false } },
-      { coverImagePreview: '' }
-    ]
+    coverImage: /^data:image\//
   }).select('title coverImage').lean();
 
   let updated = 0;

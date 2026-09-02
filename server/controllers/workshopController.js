@@ -203,23 +203,7 @@ const sendDataUrlImage = async (res, dataUrl, options = {}) => {
 };
 
 const createCoverImagePreview = async (dataUrl) => {
-  const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.*)$/);
-  if (!match) return '';
-
-  const [, mimeType, base64Data] = match;
-  if (!canOptimizeImage(mimeType)) return '';
-
-  try {
-    const preview = await sharp(Buffer.from(base64Data, 'base64'), { limitInputPixels: 80_000_000 })
-      .rotate()
-      .resize({ width: 520, height: 360, fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 72, effort: 4 })
-      .toBuffer();
-    return `data:image/webp;base64,${preview.toString('base64')}`;
-  } catch (error) {
-    console.warn('Workshop preview generation failed:', error.message);
-    return '';
-  }
+  return String(dataUrl || '');
 };
 
 const escapeXml = (value = '') => String(value)
