@@ -20,6 +20,7 @@ router.post('/', authenticateToken, adminOnly, workshopImageUpload, workshopCont
 router.get('/admin/my-workshops', authenticateToken, adminOnly, workshopController.getAdminWorkshops);
 router.get('/admin/:id', authenticateToken, adminOnly, workshopController.getAdminWorkshopById);
 router.get('/:id/problem-statements/admin', authenticateToken, adminOnly, problemStatementController.getAdminProblemStatements);
+router.get('/:id/problem-statements/selections', authenticateToken, adminOnly, problemStatementController.getProblemStatementSelections);
 router.post('/:id/problem-statements', authenticateToken, adminOnly, problemStatementController.createProblemStatement);
 router.patch('/:id/problem-statements/:statementId', authenticateToken, adminOnly, problemStatementController.setProblemStatementPublished);
 router.delete('/:id/problem-statements/:statementId', authenticateToken, adminOnly, problemStatementController.deleteProblemStatement);

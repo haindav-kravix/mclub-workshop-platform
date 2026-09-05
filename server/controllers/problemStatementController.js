@@ -19,6 +19,77 @@ export const getAdminProblemStatements = async (req, res) => {
   }
 };
 
+export const getProblemStatementSelections = async (req, res) => {
+  try {
+    const { id: workshopId } = req.params;
+    const workshop = await getHackathon(workshopId, 'title eventType problemStatements');
+    if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
+    if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Problem statements are available only for hackathons' });
+
+    const registrations = await Registration.find({ workshopId, status: 'confirmed' })
+      .select('teamCode selectedProblemStatement createdAt')
+      .sort({ createdAt: 1 })
+      .lean();
+
+    const selectionsByStatement = new Map();
+    const pendingTeams = [];
+
+    registrations.forEach((registration) => {
+      const team = {
+        registrationId: registration._id,
+        teamName: registration.teamCode || 'Confirmed team',
+        selectedAt: registration.selectedProblemStatement?.selectedAt || null
+      };
+      const statementId = registration.selectedProblemStatement?.statementId?.toString();
+      if (!statementId) {
+        pendingTeams.push(team);
+        return;
+      }
+
+      if (!selectionsByStatement.has(statementId)) selectionsByStatement.set(statementId, []);
+      selectionsByStatement.get(statementId).push(team);
+    });
+
+    const problemStatements = workshop.problemStatements.map((statement) => {
+      const teams = selectionsByStatement.get(statement._id.toString()) || [];
+      selectionsByStatement.delete(statement._id.toString());
+      return {
+        _id: statement._id,
+        title: statement.title,
+        isPublished: statement.isPublished,
+        selectedCount: teams.length,
+        teams
+      };
+    });
+
+    selectionsByStatement.forEach((teams, statementId) => {
+      const registration = registrations.find(item => item.selectedProblemStatement?.statementId?.toString() === statementId);
+      problemStatements.push({
+        _id: statementId,
+        title: registration?.selectedProblemStatement?.title || 'Deleted problem statement',
+        isPublished: false,
+        isDeleted: true,
+        selectedCount: teams.length,
+        teams
+      });
+    });
+
+    const selectedCount = registrations.length - pendingTeams.length;
+    res.json({
+      workshop: { _id: workshop._id, title: workshop.title },
+      summary: {
+        confirmedTeams: registrations.length,
+        selectedTeams: selectedCount,
+        pendingTeams: pendingTeams.length
+      },
+      problemStatements,
+      pendingTeams
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to load problem statement selections', error: error.message });
+  }
+};
+
 export const createProblemStatement = async (req, res) => {
   try {
     const title = String(req.body.title || '').trim();

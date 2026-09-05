@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiBookOpen, FiEye, FiEyeOff, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiArrowLeft, FiBookOpen, FiEye, FiEyeOff, FiPlus, FiUsers, FiTrash2 } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { workshopAPI } from '../utils/api';
 
@@ -81,6 +81,12 @@ export const AdminHackathonProblemStatementsPage = () => {
           <p className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-emerald-300"><FiBookOpen /> Problem statement desk</p>
           <h1 className="mt-3 break-words text-3xl font-black sm:text-5xl">{workshopTitle}</h1>
           <p className="mt-3 max-w-2xl font-semibold text-slate-300">Add statements as drafts, then publish each one when it is ready for confirmed teams.</p>
+          <button
+            onClick={() => navigate(`/admin/hackathon/${workshopId}/problem-statements/selections`)}
+            className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 font-black text-secondary shadow-lg transition hover:bg-primary/80"
+          >
+            <FiUsers /> Selection Overview
+          </button>
         </div>
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
         {success && <SuccessMessage message={success} onDismiss={() => setSuccess('')} />}

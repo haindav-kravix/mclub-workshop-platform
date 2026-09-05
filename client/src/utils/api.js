@@ -61,6 +61,9 @@ export const workshopAPI = {
   getAdminProblemStatements: (id) => axios.get(`${API_URL}/workshops/${id}/problem-statements/admin`, {
     headers: getAuthHeaders()
   }),
+  getProblemStatementSelections: (id) => axios.get(`${API_URL}/workshops/${id}/problem-statements/selections`, {
+    headers: getAuthHeaders()
+  }),
   createProblemStatement: (id, data) => axios.post(`${API_URL}/workshops/${id}/problem-statements`, data, {
     headers: getAuthHeaders()
   }),
