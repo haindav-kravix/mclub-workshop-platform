@@ -2,23 +2,11 @@ import mongoose from 'mongoose';
 import Workshop from '../models/Workshop.js';
 import Registration from '../models/Registration.js';
 import HackathonAttendanceSession from '../models/HackathonAttendanceSession.js';
+import { ensureHackathonTeamMembers } from '../utils/hackathonTeam.js';
 
 const loadHackathon = async (workshopId) => {
   if (!mongoose.isValidObjectId(workshopId)) return null;
-  return Workshop.findOne({ _id: workshopId, eventType: 'hackathon' }).select('title eventType').lean();
-};
-
-const createUniquePin = async (workshopId, reserved) => {
-  for (let attempt = 0; attempt < 10000; attempt += 1) {
-    const pin = String(Math.floor(1000 + Math.random() * 9000));
-    if (reserved.has(pin)) continue;
-    const exists = await Registration.exists({ workshopId, 'teamMembers.pin': pin });
-    if (!exists) {
-      reserved.add(pin);
-      return pin;
-    }
-  }
-  throw new Error('Unable to generate a unique member PIN');
+  return Workshop.findOne({ _id: workshopId, eventType: 'hackathon' }).select('title eventType registrationFormFields').lean();
 };
 
 const serializeTeam = (registration) => ({
@@ -33,72 +21,34 @@ export const getTeams = async (req, res) => {
     const workshop = await loadHackathon(req.params.workshopId);
     if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
     const registrations = await Registration.find({ workshopId: workshop._id, status: 'confirmed' })
-      .select('teamCode teamMembers userId createdAt')
+      .select('teamCode teamMembers formData userId createdAt')
       .populate('userId', 'name email')
-      .sort({ createdAt: 1 })
-      .lean();
+      .sort({ createdAt: 1 });
+    await Promise.all(registrations.map(registration => ensureHackathonTeamMembers(registration, workshop)));
     res.json({ workshop, teams: registrations.map(serializeTeam) });
   } catch (error) {
     res.status(500).json({ message: 'Unable to load hackathon teams', error: error.message });
   }
 };
 
-export const saveTeamMembers = async (req, res) => {
-  try {
-    const { workshopId, registrationId } = req.params;
-    const workshop = await loadHackathon(workshopId);
-    if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
-    const registration = await Registration.findOne({ _id: registrationId, workshopId, status: 'confirmed' });
-    if (!registration) return res.status(404).json({ message: 'Confirmed team not found' });
-    const supplied = Array.isArray(req.body.members) ? req.body.members.slice(0, 4) : [];
-    if (supplied.length !== 4 || supplied.some(member => !String(member.name || '').trim())) {
-      return res.status(400).json({ message: 'Enter the names of all four team members' });
-    }
-
-    const ownPins = new Set((registration.teamMembers || []).map(member => member.pin).filter(Boolean));
-    const reserved = new Set();
-    const members = [];
-    for (let index = 0; index < supplied.length; index += 1) {
-      const member = supplied[index];
-      const existing = registration.teamMembers?.id(member._id) || registration.teamMembers?.[index];
-      let pin = existing?.pin;
-      if (!pin || reserved.has(pin)) pin = await createUniquePin(workshopId, reserved);
-      else {
-        reserved.add(pin);
-        ownPins.delete(pin);
-      }
-      members.push({
-        _id: existing?._id || new mongoose.Types.ObjectId(),
-        name: String(member.name).trim().slice(0, 120),
-        email: String(member.email || '').trim().toLowerCase().slice(0, 180),
-        rollNumber: String(member.rollNumber || '').trim().slice(0, 80),
-        college: String(member.college || '').trim().slice(0, 180),
-        pin
-      });
-    }
-    registration.teamMembers = members;
-    registration.updatedAt = new Date();
-    await registration.save();
-    res.json({ success: true, team: serializeTeam(registration) });
-  } catch (error) {
-    res.status(500).json({ message: 'Unable to save team members', error: error.message });
-  }
-};
-
 const buildRoster = async (session) => {
+  const workshop = await loadHackathon(session.workshopId);
   const teams = await Registration.find({ workshopId: session.workshopId, status: 'confirmed' })
-    .select('teamCode teamMembers userId createdAt')
+    .select('teamCode teamMembers formData userId createdAt')
     .populate('userId', 'name email')
-    .sort({ createdAt: 1 })
-    .lean();
+    .sort({ createdAt: 1 });
+  await Promise.all(teams.map(team => ensureHackathonTeamMembers(team, workshop)));
   const entryMap = new Map(session.entries.map(entry => [`${entry.registrationId}:${entry.memberId}`, entry]));
-  return teams.map(team => ({
-    ...serializeTeam(team),
+  return teams.map(teamDocument => {
+    const team = teamDocument.toObject();
+    return ({
+    ...serializeTeam(teamDocument),
     teamMembers: (team.teamMembers || []).map(member => {
       const entry = entryMap.get(`${team._id}:${member._id}`);
       return { ...member, status: entry?.status || 'absent', source: entry?.source || '', markedAt: entry?.markedAt || null };
     })
-  }));
+  });
+  });
 };
 
 export const getSessions = async (req, res) => {
@@ -196,11 +146,10 @@ export const memberCheckIn = async (req, res) => {
     const session = await HackathonAttendanceSession.findById(req.params.sessionId);
     if (!session) return res.status(404).json({ message: 'Attendance session not found' });
     if (!session.qrEnabled) return res.status(403).json({ message: 'QR attendance is currently closed' });
-    const teamCode = String(req.body.teamCode || '').trim().toUpperCase();
     const pin = String(req.body.pin || '').trim();
     if (!/^\d{4}$/.test(pin)) return res.status(400).json({ message: 'Enter your four-digit PIN' });
-    const registration = await Registration.findOne({ workshopId: session.workshopId, status: 'confirmed', teamCode, 'teamMembers.pin': pin }).select('teamCode teamMembers');
-    if (!registration) return res.status(404).json({ message: 'Team name or PIN is incorrect' });
+    const registration = await Registration.findOne({ workshopId: session.workshopId, status: 'confirmed', 'teamMembers.pin': pin }).select('teamCode teamMembers');
+    if (!registration) return res.status(404).json({ message: 'PIN is incorrect' });
     const member = registration.teamMembers.find(item => item.pin === pin);
     const existing = session.entries.find(entry => String(entry.registrationId) === String(registration._id) && String(entry.memberId) === String(member._id));
     if (existing?.status === 'present') return res.status(409).json({ message: `${member.name} is already marked present`, alreadyMarked: true });

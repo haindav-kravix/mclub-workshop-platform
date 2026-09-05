@@ -10,6 +10,7 @@ import Registration from '../models/Registration.js';
 import Attendance from '../models/Attendance.js';
 import HackathonAttendanceSession from '../models/HackathonAttendanceSession.js';
 import HackathonCertificate from '../models/HackathonCertificate.js';
+import { ensureHackathonTeamMembers } from '../utils/hackathonTeam.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -210,11 +211,11 @@ export const getEligibleRecipients = async (req, res) => {
         Registration.find({ workshopId, status: 'confirmed' })
           .select('userId teamCode teamMembers createdAt')
           .populate('userId', 'name email profilePhoto')
-          .sort({ createdAt: 1 })
-          .lean(),
+          .sort({ createdAt: 1 }),
         HackathonAttendanceSession.find({ workshopId }).select('entries').lean(),
         HackathonCertificate.find({ workshopId }).select('registrationId memberId issuedAt').lean()
       ]);
+      await Promise.all(registrations.map(registration => ensureHackathonTeamMembers(registration, workshop)));
       const attendance = new Map();
       sessions.forEach(session => session.entries.forEach(entry => {
         const key = `${entry.registrationId}:${entry.memberId}`;

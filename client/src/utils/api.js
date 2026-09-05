@@ -135,7 +135,6 @@ export const registrationAPI = {
 
 export const attendanceAPI = {
   getHackathonTeams: (workshopId) => axios.get(`${API_URL}/attendance/hackathon/${workshopId}/teams`, { headers: getAuthHeaders() }),
-  saveHackathonTeam: (workshopId, registrationId, members) => axios.put(`${API_URL}/attendance/hackathon/${workshopId}/teams/${registrationId}`, { members }, { headers: getAuthHeaders() }),
   getHackathonSessions: (workshopId) => axios.get(`${API_URL}/attendance/hackathon/${workshopId}/sessions`, { headers: getAuthHeaders() }),
   createHackathonSession: (workshopId, data) => axios.post(`${API_URL}/attendance/hackathon/${workshopId}/sessions`, data, { headers: getAuthHeaders() }),
   getHackathonSession: (workshopId, sessionId) => axios.get(`${API_URL}/attendance/hackathon/${workshopId}/sessions/${sessionId}`, { headers: getAuthHeaders() }),

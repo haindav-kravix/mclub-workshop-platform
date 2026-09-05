@@ -24,6 +24,14 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
     () => [...(workshop.registrationFormFields || [])].sort((a, b) => (a.order || 0) - (b.order || 0)),
     [workshop.registrationFormFields]
   );
+  const hasFourTeamNameFields = useMemo(() => {
+    const matching = sortedFields.filter(field => {
+      const label = `${field.label || ''} ${field.fieldId || ''}`.toLowerCase();
+      return /name/.test(label) && /leader|captain|member|teammate|participant|student/.test(label) && !/team\s*name|college|university|institution/.test(label);
+    });
+    return matching.length >= 4;
+  }, [sortedFields]);
+  const showHackathonTeamFields = workshop.eventType === 'hackathon' && !hasFourTeamNameFields;
 
   useEffect(() => {
     if (!isModal) return undefined;
@@ -127,6 +135,26 @@ export const RegistrationForm = ({ workshop, onClose, onSubmit, variant = 'modal
           <div className="bg-red-50 border border-red-200 rounded p-3 text-red-700 text-sm">
             {error}
           </div>
+        )}
+
+        {showHackathonTeamFields && (
+          <section className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 sm:p-5">
+            <p className="text-sm font-black uppercase text-emerald-700">Hackathon team members</p>
+            <p className="mt-1 text-sm text-slate-600">Enter names exactly as they must appear on entry passes and certificates. Unique PINs are created after confirmation.</p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {[
+                ['__hackathonLeaderName', '__hackathonLeaderEmail', 'Team leader'],
+                ['__hackathonMember1Name', '__hackathonMember1Email', 'Member 1'],
+                ['__hackathonMember2Name', '__hackathonMember2Email', 'Member 2'],
+                ['__hackathonMember3Name', '__hackathonMember3Email', 'Member 3']
+              ].map(([nameKey, emailKey, label]) => (
+                <div key={nameKey} className="rounded-lg border border-emerald-100 bg-white p-3">
+                  <label className="block text-sm font-black text-slate-800">{label} full name <span className="text-red-500">*</span><input required value={formData[nameKey] || ''} onChange={e => handleChange(nameKey, e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-secondary" /></label>
+                  <label className="mt-3 block text-xs font-bold text-slate-600">Email (optional)<input type="email" value={formData[emailKey] || ''} onChange={e => handleChange(emailKey, e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-secondary" /></label>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
         {sortedFields.length > 0 ? (

@@ -356,7 +356,9 @@ export const AdminEntryPage = () => {
               <div className="entry-empty-mini">No one has entered yet.</div>
             )}
             <button onClick={handleExport} className="entry-action-button mt-5"><FiDownload /> Export Entry Report</button>
-            <div className="entry-attendance-post mt-4">
+            {report.workshop.eventType === 'hackathon' ? (
+              <div className="entry-attendance-post mt-4"><label>Hackathon attendance</label><button onClick={() => navigate(`/admin/hackathon/${workshopId}/attendance`)} className="entry-action-button w-full"><FiUsers /> Open Attendance Sessions</button><p>Entry scans and hackathon attendance are stored separately for all four team members.</p></div>
+            ) : <div className="entry-attendance-post mt-4">
               <label>Post entry scans to attendance</label>
               <select
                 value={attendanceDate}
@@ -384,7 +386,7 @@ export const AdminEntryPage = () => {
                 <FiEdit3 /> Modify in Attendance
               </button>
               <p>New scans can be posted again later. Existing manual edits are kept unless the student entered.</p>
-            </div>
+            </div>}
           </div>
         </section>
 
@@ -408,7 +410,7 @@ const EntryList = ({ title, items, entered = false }) => (
         <div key={item._id} className="entry-row">
           <div>
             <strong>{item.user?.name}</strong>
-            <span>{item.user?.email}</span>
+            <span>{item.teamCode ? `${item.teamCode} · PIN ${item.pin}` : item.user?.email}</span>
           </div>
           {entered ? (
             <p>{new Date(item.entry.checkedInAt).toLocaleString()}</p>

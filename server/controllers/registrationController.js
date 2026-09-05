@@ -6,6 +6,7 @@ import ExcelJS from 'exceljs';
 import fs from 'fs';
 import mongoose from 'mongoose';
 import sharp from 'sharp';
+import { buildHackathonTeamMembers, ensureHackathonTeamMembers } from '../utils/hackathonTeam.js';
 
 const safeExportFileName = (value = 'registrations') => String(value)
   .replace(/[^a-z0-9]+/gi, '-')
@@ -312,7 +313,6 @@ export const registerForWorkshop = async (req, res) => {
     }
 
     parsedFormData = await attachRegistrationUploads(parsedFormData, req.files || [], workshop.registrationFormFields || []);
-
     const registration = new Registration({
       workshopId,
       userId: req.user.id,
@@ -343,6 +343,15 @@ export const registerForWorkshop = async (req, res) => {
 
 export const getUserRegistrations = async (req, res) => {
   try {
+    const incompleteHackathonRegistrations = await Registration.find({
+      userId: req.user.id,
+      'teamMembers.3': { $exists: false }
+    })
+      .populate('workshopId', 'eventType registrationFormFields')
+      .populate('userId', 'name email');
+    await Promise.all(incompleteHackathonRegistrations.map(registration => (
+      ensureHackathonTeamMembers(registration, registration.workshopId)
+    )));
     const registrations = await Registration.aggregate([
       { $match: { userId: new mongoose.Types.ObjectId(req.user.id) } },
       { $sort: { createdAt: -1 } },
@@ -617,7 +626,7 @@ export const updateRegistrationStatus = async (req, res) => {
     }
 
     const workshop = await Workshop.findById(registration.workshopId)
-      .select('capacity registrationCount')
+      .select('capacity registrationCount eventType registrationFormFields')
       .lean();
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
@@ -634,6 +643,20 @@ export const updateRegistrationStatus = async (req, res) => {
       if (confirmedCount >= workshop.capacity) {
         return res.status(400).json({ message: 'Workshop is full' });
       }
+    }
+
+    if (status === 'confirmed' && workshop.eventType === 'hackathon' && registration.teamMembers.length !== 4) {
+      const leaderUser = await User.findById(registration.userId).select('name email').lean();
+      const teamMembers = await buildHackathonTeamMembers({
+        workshopId: registration.workshopId,
+        formData: registration.formData,
+        formFields: workshop.registrationFormFields || [],
+        leaderUser
+      });
+      if (teamMembers.length !== 4) {
+        return res.status(400).json({ message: 'The registration must contain the leader and all three member names before confirmation' });
+      }
+      registration.teamMembers = teamMembers;
     }
 
     registration.status = status;
