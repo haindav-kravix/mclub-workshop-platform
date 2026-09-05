@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import ExcelJS from 'exceljs';
 import Workshop from '../models/Workshop.js';
 import Registration from '../models/Registration.js';
 import HackathonAttendanceSession from '../models/HackathonAttendanceSession.js';
@@ -15,6 +16,34 @@ const serializeTeam = (registration) => ({
   leader: registration.userId,
   teamMembers: registration.teamMembers || []
 });
+
+const safeFileName = (value = 'attendance') => String(value).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'attendance';
+
+const loadReportData = async (workshopId) => {
+  const workshop = await loadHackathon(workshopId);
+  if (!workshop) return null;
+  const [registrations, sessions] = await Promise.all([
+    Registration.find({ workshopId, status: 'confirmed' }).select('teamCode teamMembers formData userId createdAt').populate('userId', 'name email').sort({ createdAt: 1 }),
+    HackathonAttendanceSession.find({ workshopId }).sort({ date: 1, createdAt: 1 }).lean()
+  ]);
+  await Promise.all(registrations.map(registration => ensureHackathonTeamMembers(registration, workshop)));
+  const teams = registrations.map(registration => ({
+    _id: registration._id,
+    teamCode: registration.teamCode,
+    teamMembers: registration.teamMembers.map(member => {
+      const attendance = sessions.map(session => {
+        const entry = (session.entries || []).find(item => String(item.registrationId) === String(registration._id) && String(item.memberId) === String(member._id));
+        return { sessionId: session._id, status: entry?.status || 'absent', source: entry?.source || '', markedAt: entry?.markedAt || null };
+      });
+      const present = attendance.filter(item => item.status === 'present').length;
+      return { _id: member._id, name: member.name, email: member.email, rollNumber: member.rollNumber, college: member.college, pin: member.pin, attendance, present, total: sessions.length, percentage: sessions.length ? Math.round((present / sessions.length) * 100) : 0 };
+    })
+  }));
+  const members = teams.flatMap(team => team.teamMembers);
+  const presentMarks = members.reduce((total, member) => total + member.present, 0);
+  const possibleMarks = members.length * sessions.length;
+  return { workshop, sessions: sessions.map(({ entries = [], ...session }) => ({ ...session, present: entries.filter(entry => entry.status === 'present').length, total: members.length })), teams, totals: { teams: teams.length, members: members.length, sessions: sessions.length, presentMarks, possibleMarks, percentage: possibleMarks ? Math.round((presentMarks / possibleMarks) * 100) : 0 } };
+};
 
 export const getTeams = async (req, res) => {
   try {
@@ -79,6 +108,16 @@ export const createSession = async (req, res) => {
   }
 };
 
+export const deleteSession = async (req, res) => {
+  try {
+    const session = await HackathonAttendanceSession.findOneAndDelete({ _id: req.params.sessionId, workshopId: req.params.workshopId });
+    if (!session) return res.status(404).json({ message: 'Attendance session not found' });
+    res.json({ success: true, message: 'Attendance session deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to delete attendance session', error: error.message });
+  }
+};
+
 export const getSessionRoster = async (req, res) => {
   try {
     const session = await HackathonAttendanceSession.findOne({ _id: req.params.sessionId, workshopId: req.params.workshopId }).lean();
@@ -128,6 +167,76 @@ export const saveManualAttendance = async (req, res) => {
     res.json({ success: true, teams: await buildRoster(session.toObject()) });
   } catch (error) {
     res.status(500).json({ message: 'Unable to save attendance', error: error.message });
+  }
+};
+
+export const getAttendanceReports = async (req, res) => {
+  try {
+    const report = await loadReportData(req.params.workshopId);
+    if (!report) return res.status(404).json({ message: 'Hackathon not found' });
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to load hackathon attendance reports', error: error.message });
+  }
+};
+
+const styleWorksheet = (worksheet) => {
+  worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+  worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF047857' } };
+  worksheet.eachRow(row => row.eachCell(cell => { cell.alignment = { vertical: 'top', wrapText: true }; }));
+};
+
+export const exportAttendanceReport = async (req, res) => {
+  try {
+    const report = await loadReportData(req.params.workshopId);
+    if (!report) return res.status(404).json({ message: 'Hackathon not found' });
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Overall Attendance');
+    worksheet.columns = [
+      { header: 'S.No', key: 'sno', width: 8 }, { header: 'Team Name', key: 'team', width: 22 },
+      { header: 'Member Name', key: 'name', width: 28 }, { header: 'PIN', key: 'pin', width: 10 },
+      { header: 'Email', key: 'email', width: 32 }, { header: 'Roll Number', key: 'rollNumber', width: 18 },
+      ...report.sessions.map((session, index) => ({ header: `${index + 1}. ${session.title} (${new Date(session.date).toLocaleDateString('en-IN')})`, key: `session${index}`, width: 24 })),
+      { header: 'Present', key: 'present', width: 12 }, { header: 'Total Sessions', key: 'total', width: 15 }, { header: 'Attendance %', key: 'percentage', width: 15 }
+    ];
+    let sno = 0;
+    report.teams.forEach(team => team.teamMembers.forEach(member => {
+      const row = { sno: ++sno, team: team.teamCode, name: member.name, pin: member.pin, email: member.email || '', rollNumber: member.rollNumber || '', present: member.present, total: member.total, percentage: member.percentage };
+      member.attendance.forEach((item, index) => { row[`session${index}`] = item.status === 'present' ? 'Present' : 'Absent'; });
+      worksheet.addRow(row);
+    }));
+    styleWorksheet(worksheet);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName(report.workshop.title)}-attendance-report.xlsx"`);
+    await workbook.xlsx.write(res); res.end();
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to export attendance report', error: error.message });
+  }
+};
+
+export const exportSessionAttendance = async (req, res) => {
+  try {
+    const session = await HackathonAttendanceSession.findOne({ _id: req.params.sessionId, workshopId: req.params.workshopId }).lean();
+    if (!session) return res.status(404).json({ message: 'Attendance session not found' });
+    const workshop = await loadHackathon(req.params.workshopId);
+    if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
+    const teams = await buildRoster(session);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Session Attendance');
+    worksheet.columns = [
+      { header: 'S.No', key: 'sno', width: 8 }, { header: 'Team Name', key: 'team', width: 22 },
+      { header: 'Member Name', key: 'name', width: 28 }, { header: 'PIN', key: 'pin', width: 10 },
+      { header: 'Status', key: 'status', width: 14 }, { header: 'Marked Through', key: 'source', width: 18 }, { header: 'Marked Time', key: 'markedAt', width: 26 }
+    ];
+    let sno = 0;
+    teams.forEach(team => team.teamMembers.forEach(member => worksheet.addRow({ sno: ++sno, team: team.teamCode, name: member.name, pin: member.pin, status: member.status === 'present' ? 'Present' : 'Absent', source: member.source ? member.source.toUpperCase() : '', markedAt: member.markedAt ? new Date(member.markedAt).toLocaleString('en-IN') : '' })));
+    styleWorksheet(worksheet);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName(workshop.title)}-${safeFileName(session.title)}.xlsx"`);
+    await workbook.xlsx.write(res); res.end();
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to export attendance session', error: error.message });
   }
 };
 

@@ -10,7 +10,11 @@ router.post('/hackathon/session/:sessionId/check-in', hackathonAttendanceControl
 router.get('/hackathon/:workshopId/teams', authenticateToken, adminOnly, hackathonAttendanceController.getTeams);
 router.get('/hackathon/:workshopId/sessions', authenticateToken, adminOnly, hackathonAttendanceController.getSessions);
 router.post('/hackathon/:workshopId/sessions', authenticateToken, adminOnly, hackathonAttendanceController.createSession);
+router.get('/hackathon/:workshopId/reports', authenticateToken, adminOnly, hackathonAttendanceController.getAttendanceReports);
+router.get('/hackathon/:workshopId/reports/export', authenticateToken, adminOnly, hackathonAttendanceController.exportAttendanceReport);
 router.get('/hackathon/:workshopId/sessions/:sessionId', authenticateToken, adminOnly, hackathonAttendanceController.getSessionRoster);
+router.delete('/hackathon/:workshopId/sessions/:sessionId', authenticateToken, adminOnly, hackathonAttendanceController.deleteSession);
+router.get('/hackathon/:workshopId/sessions/:sessionId/export', authenticateToken, adminOnly, hackathonAttendanceController.exportSessionAttendance);
 router.patch('/hackathon/:workshopId/sessions/:sessionId/qr', authenticateToken, adminOnly, hackathonAttendanceController.setQrEnabled);
 router.put('/hackathon/:workshopId/sessions/:sessionId/attendance', authenticateToken, adminOnly, hackathonAttendanceController.saveManualAttendance);
 

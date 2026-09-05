@@ -192,7 +192,7 @@ export const AdminHackathonsPage = () => {
                 onToggleRegistrations={toggleRegistrations}
                 onToggleStopped={toggleStopped}
                 onTakeAttendance={(eventId) => navigate(`/admin/hackathon/${eventId}/attendance`)}
-                onAttendanceReports={(eventId) => navigate(`/admin/hackathon/${eventId}/teams`)}
+                onAttendanceReports={(eventId) => navigate(`/admin/hackathon/${eventId}/attendance/reports`)}
                 onEntryManagement={(eventId) => navigate(`/admin/entry/${eventId}`)}
                 onCertificates={(eventId) => navigate(`/admin/certificates/${eventId}`)}
                 onHackathonEvaluation={(eventId) => navigate(`/admin/hackathon/${eventId}/evaluation`)}

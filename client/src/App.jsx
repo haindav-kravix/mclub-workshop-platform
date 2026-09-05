@@ -46,6 +46,7 @@ import { AdminProblemStatementSelectionsPage } from './pages/AdminProblemStateme
 import { AdminHackathonTeamsPage } from './pages/AdminHackathonTeamsPage';
 import { AdminHackathonAttendancePage } from './pages/AdminHackathonAttendancePage';
 import { HackathonAttendanceCheckInPage } from './pages/HackathonAttendanceCheckInPage';
+import { AdminHackathonAttendanceReportsPage } from './pages/AdminHackathonAttendanceReportsPage';
 
 // Styles
 import './styles/globals.css';
@@ -268,6 +269,10 @@ const AppContent = () => {
           <Route
             path="/admin/hackathon/:workshopId/attendance"
             element={<PrivateRoute requireAdmin={true}><AdminHackathonAttendancePage /></PrivateRoute>}
+          />
+          <Route
+            path="/admin/hackathon/:workshopId/attendance/reports"
+            element={<PrivateRoute requireAdmin={true}><AdminHackathonAttendanceReportsPage /></PrivateRoute>}
           />
           <Route
             path="/admin/hackathon/:workshopId/evaluation"
