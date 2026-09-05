@@ -134,6 +134,15 @@ export const registrationAPI = {
 };
 
 export const attendanceAPI = {
+  getHackathonTeams: (workshopId) => axios.get(`${API_URL}/attendance/hackathon/${workshopId}/teams`, { headers: getAuthHeaders() }),
+  saveHackathonTeam: (workshopId, registrationId, members) => axios.put(`${API_URL}/attendance/hackathon/${workshopId}/teams/${registrationId}`, { members }, { headers: getAuthHeaders() }),
+  getHackathonSessions: (workshopId) => axios.get(`${API_URL}/attendance/hackathon/${workshopId}/sessions`, { headers: getAuthHeaders() }),
+  createHackathonSession: (workshopId, data) => axios.post(`${API_URL}/attendance/hackathon/${workshopId}/sessions`, data, { headers: getAuthHeaders() }),
+  getHackathonSession: (workshopId, sessionId) => axios.get(`${API_URL}/attendance/hackathon/${workshopId}/sessions/${sessionId}`, { headers: getAuthHeaders() }),
+  setHackathonQr: (workshopId, sessionId, enabled) => axios.patch(`${API_URL}/attendance/hackathon/${workshopId}/sessions/${sessionId}/qr`, { enabled }, { headers: getAuthHeaders() }),
+  saveHackathonAttendance: (workshopId, sessionId, entries) => axios.put(`${API_URL}/attendance/hackathon/${workshopId}/sessions/${sessionId}/attendance`, { entries }, { headers: getAuthHeaders() }),
+  getPublicHackathonSession: (sessionId) => axios.get(`${API_URL}/attendance/hackathon/session/${sessionId}`),
+  hackathonCheckIn: (sessionId, data) => axios.post(`${API_URL}/attendance/hackathon/session/${sessionId}/check-in`, data),
   getRoster: (workshopId, date) => axios.get(`${API_URL}/attendance/workshop/${workshopId}/roster`, {
     headers: getAuthHeaders(),
     params: { date }
@@ -227,7 +236,7 @@ export const certificateAPI = {
   getEligible: (workshopId) => axios.get(`${API_URL}/certificates/admin/workshop/${workshopId}/eligible`, { headers: getAuthHeaders() }),
   generate: (workshopId, userIds) => axios.post(`${API_URL}/certificates/admin/workshop/${workshopId}/generate`, { userIds }, { headers: getAuthHeaders() }),
   getMy: () => axios.get(`${API_URL}/certificates/my`, { headers: getAuthHeaders() }),
-  getFile: (id, download = false) => axios.get(`${API_URL}/certificates/${id}/file`, {
+  getFile: (id, download = false, type = 'standard') => axios.get(`${API_URL}/certificates/${type === 'hackathon-member' ? 'hackathon/' : ''}${id}/file`, {
     headers: getAuthHeaders(),
     params: download ? { download: 1 } : {},
     responseType: 'blob'

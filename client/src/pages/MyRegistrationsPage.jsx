@@ -159,6 +159,16 @@ export const MyRegistrationsPage = () => {
                   <div className="bg-emerald-50 px-6 py-4 border-t border-emerald-100">
                     <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Hackathon team name</p>
                     <p className="mt-1 text-2xl font-black tracking-widest text-slate-950">{registration.teamCode}</p>
+                    {registration.teamMembers?.length > 0 && (
+                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                        {registration.teamMembers.map((member, index) => (
+                          <div key={member._id || index} className="flex items-center justify-between gap-3 rounded-lg border border-emerald-100 bg-white px-3 py-2">
+                            <div className="min-w-0"><p className="truncate text-sm font-black">{member.name}</p><p className="text-xs text-slate-500">Member {index + 1}</p></div>
+                            <span className="rounded-md bg-slate-950 px-3 py-1 font-mono text-lg font-black text-white">{member.pin}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 {registration.selectedProblemStatement?.statementId && (

@@ -27,7 +27,7 @@ export const ProfileCertificates = ({ onError }) => {
 
   const openPreview = async (certificate) => {
     try {
-      const response = await certificateAPI.getFile(certificate._id);
+      const response = await certificateAPI.getFile(certificate._id, false, certificate.certificateType);
       if (preview?.url) URL.revokeObjectURL(preview.url);
       setPreview({ certificate, url: URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' })) });
     } catch (err) { onError?.(err.response?.data?.message || 'Unable to preview certificate'); }
@@ -35,7 +35,7 @@ export const ProfileCertificates = ({ onError }) => {
 
   const download = async (certificate) => {
     try {
-      const response = await certificateAPI.getFile(certificate._id, true);
+      const response = await certificateAPI.getFile(certificate._id, true, certificate.certificateType);
       const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
@@ -61,6 +61,7 @@ export const ProfileCertificates = ({ onError }) => {
             <article key={certificate._id} className="rounded-lg border border-emerald-100 bg-emerald-50 p-4">
               <p className="text-xs font-black uppercase text-secondary">Issued {new Date(certificate.issuedAt).toLocaleDateString('en-IN')}</p>
               <h3 className="mt-2 font-black text-slate-950">{certificate.title}</h3>
+              {certificate.recipientName && <p className="mt-1 text-sm font-bold text-secondary">For {certificate.recipientName}</p>}
               <div className="mt-4 grid grid-cols-2 gap-2"><button onClick={() => openPreview(certificate)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-black text-secondary"><FiEye /> Preview</button><button onClick={() => download(certificate)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-black text-white"><FiDownload /> Download</button></div>
             </article>
           ))}

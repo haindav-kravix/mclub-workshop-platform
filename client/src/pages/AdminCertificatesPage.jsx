@@ -82,6 +82,7 @@ export const AdminCertificatesPage = () => {
       item.certificateName,
       item.user?.name,
       item.user?.email,
+      item.teamCode,
       item.attendancePercentage === null ? 'no attendance yet' : `${item.attendancePercentage}% attendance`,
       item.certificateIssuedAt ? 'issued' : 'not issued'
     ].filter(Boolean).join(' ').toLowerCase().includes(normalizedRecipientSearch));
@@ -219,7 +220,7 @@ export const AdminCertificatesPage = () => {
 
         <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div><p className="text-sm font-black uppercase text-secondary">Eligible confirmed participants</p><h2 className="mt-1 text-2xl font-black">Choose certificate recipients</h2></div>
+            <div><p className="text-sm font-black uppercase text-secondary">Eligible confirmed participants</p><h2 className="mt-1 text-2xl font-black">Choose certificate recipients</h2>{workshop?.eventType === 'hackathon' && <p className="mt-1 text-sm font-bold text-slate-500">Each teammate receives an individual PDF in the registered leader's profile.</p>}</div>
             <div className="flex flex-wrap gap-2"><button onClick={() => setSelected(filteredRecipients.map(item => item.user._id))} className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-black text-secondary">Select visible</button><button onClick={() => setSelected(recipients.map(item => item.user._id))} className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-black text-secondary">Select all</button><button onClick={() => setSelected([])} className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-black">Clear</button></div>
           </div>
           {recipients.length > 0 && (
@@ -253,7 +254,7 @@ export const AdminCertificatesPage = () => {
               return (
                 <label key={item.user._id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 ${checked ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
                   <input type="checkbox" checked={checked} onChange={() => setSelected(prev => checked ? prev.filter(id => id !== item.user._id) : [...prev, item.user._id])} />
-                  <div className="min-w-0 flex-1"><p className="truncate font-black">{item.certificateName || item.user.name}</p><p className="truncate text-sm text-slate-500">{item.user.email}</p><div className="mt-2 flex flex-wrap gap-2 text-xs font-black"><span className="rounded-full bg-white px-2 py-1">{item.attendancePercentage === null ? 'No attendance yet' : `${item.attendancePercentage}% attendance`}</span>{item.certificateIssuedAt && <span className="rounded-full bg-emerald-100 px-2 py-1 text-emerald-700"><FiCheck className="inline" /> Issued</span>}</div></div>
+                  <div className="min-w-0 flex-1"><p className="truncate font-black">{item.certificateName || item.user.name}</p><p className="truncate text-sm text-slate-500">{item.user.email}</p>{item.teamCode && <p className="mt-1 text-xs font-black uppercase text-secondary">Team {item.teamCode}</p>}<div className="mt-2 flex flex-wrap gap-2 text-xs font-black"><span className="rounded-full bg-white px-2 py-1">{item.attendancePercentage === null ? 'No attendance yet' : `${item.attendancePercentage}% attendance`}</span>{item.certificateIssuedAt && <span className="rounded-full bg-emerald-100 px-2 py-1 text-emerald-700"><FiCheck className="inline" /> Issued</span>}</div></div>
                 </label>
               );
             })}

@@ -24,6 +24,16 @@ const registrationSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  teamMembers: {
+    type: [{
+      name: { type: String, trim: true, required: true },
+      email: { type: String, trim: true, lowercase: true, default: '' },
+      rollNumber: { type: String, trim: true, default: '' },
+      college: { type: String, trim: true, default: '' },
+      pin: { type: String, match: /^\d{4}$/, required: true }
+    }],
+    default: []
+  },
   selectedProblemStatement: {
     statementId: {
       type: mongoose.Schema.Types.ObjectId
@@ -101,6 +111,10 @@ registrationSchema.index({ userId: 1, createdAt: -1 });
 registrationSchema.index({ userId: 1, status: 1 });
 registrationSchema.index({ workshopId: 1, status: 1 });
 registrationSchema.index({ workshopId: 1, teamCode: 1 });
+registrationSchema.index(
+  { workshopId: 1, 'teamMembers.pin': 1 },
+  { unique: true, partialFilterExpression: { 'teamMembers.pin': { $type: 'string' } } }
+);
 registrationSchema.index({ workshopId: 1, evaluationAverage: -1 });
 
 export default mongoose.model('Registration', registrationSchema);

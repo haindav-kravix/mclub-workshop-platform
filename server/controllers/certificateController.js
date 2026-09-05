@@ -8,6 +8,8 @@ import CertificateTemplate from '../models/CertificateTemplate.js';
 import Workshop from '../models/Workshop.js';
 import Registration from '../models/Registration.js';
 import Attendance from '../models/Attendance.js';
+import HackathonAttendanceSession from '../models/HackathonAttendanceSession.js';
+import HackathonCertificate from '../models/HackathonCertificate.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -201,8 +203,45 @@ export const saveTemplateSetup = async (req, res) => {
 export const getEligibleRecipients = async (req, res) => {
   try {
     const workshopId = req.params.workshopId;
-    const workshop = await Workshop.findById(workshopId).select('registrationFormFields');
+    const workshop = await Workshop.findById(workshopId).select('registrationFormFields eventType');
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
+    if (workshop.eventType === 'hackathon') {
+      const [registrations, sessions, existing] = await Promise.all([
+        Registration.find({ workshopId, status: 'confirmed' })
+          .select('userId teamCode teamMembers createdAt')
+          .populate('userId', 'name email profilePhoto')
+          .sort({ createdAt: 1 })
+          .lean(),
+        HackathonAttendanceSession.find({ workshopId }).select('entries').lean(),
+        HackathonCertificate.find({ workshopId }).select('registrationId memberId issuedAt').lean()
+      ]);
+      const attendance = new Map();
+      sessions.forEach(session => session.entries.forEach(entry => {
+        const key = `${entry.registrationId}:${entry.memberId}`;
+        const value = attendance.get(key) || { present: 0, total: 0 };
+        value.total += 1;
+        if (entry.status === 'present') value.present += 1;
+        attendance.set(key, value);
+      }));
+      const issued = new Map(existing.map(item => [`${item.registrationId}:${item.memberId}`, item.issuedAt]));
+      const recipients = registrations.flatMap(registration => (registration.teamMembers || []).map(member => {
+        const recipientId = `${registration._id}:${member._id}`;
+        const totals = attendance.get(recipientId) || { present: 0, total: sessions.length };
+        return {
+          recipientId,
+          registrationId: registration._id,
+          memberId: member._id,
+          teamCode: registration.teamCode,
+          user: { _id: recipientId, name: member.name, email: member.email || registration.userId?.email || '' },
+          certificateName: member.name,
+          attendancePresent: totals.present,
+          attendanceTotal: totals.total,
+          attendancePercentage: totals.total ? Math.round((totals.present / totals.total) * 100) : null,
+          certificateIssuedAt: issued.get(recipientId) || null
+        };
+      }));
+      return res.json(recipients);
+    }
     const registrations = await Registration.find({ workshopId, status: 'confirmed' })
       .select('userId createdAt formData')
       .populate('userId', 'name email profilePhoto')
@@ -241,15 +280,34 @@ export const generateCertificates = async (req, res) => {
     const { workshopId } = req.params;
     const userIds = Array.isArray(req.body.userIds) ? [...new Set(req.body.userIds)] : [];
     if (!userIds.length) return res.status(400).json({ message: 'Select at least one eligible participant' });
-    const [workshop, template, registrations] = await Promise.all([
-      Workshop.findById(workshopId).select('title registrationFormFields'),
-      CertificateTemplate.findOne({ workshopId }),
-      Registration.find({ workshopId, status: 'confirmed', userId: { $in: userIds } })
-        .select('userId formData')
-        .populate('userId', 'name email')
+    const [workshop, template] = await Promise.all([
+      Workshop.findById(workshopId).select('title eventType registrationFormFields'),
+      CertificateTemplate.findOne({ workshopId })
     ]);
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
     if (!template) return res.status(400).json({ message: 'Save the certificate design before generating certificates' });
+    if (workshop.eventType === 'hackathon') {
+      const recipientKeys = userIds.map(value => String(value).split(':')).filter(parts => parts.length === 2);
+      if (!recipientKeys.length) return res.status(400).json({ message: 'Select at least one team member' });
+      let generatedCount = 0;
+      for (const [registrationId, memberId] of recipientKeys) {
+        const registration = await Registration.findOne({ _id: registrationId, workshopId, status: 'confirmed', 'teamMembers._id': memberId }).select('userId teamMembers');
+        const member = registration?.teamMembers?.id(memberId);
+        if (!registration || !member) continue;
+        const pdfData = await generateCertificatePdf(template, member.name);
+        const fileName = `${safeFileName(workshop.title)}-${safeFileName(member.name)}.pdf`;
+        await HackathonCertificate.findOneAndUpdate(
+          { workshopId, registrationId, memberId },
+          { workshopId, registrationId, ownerUserId: registration.userId, memberId, recipientName: member.name, title: workshop.title, fileName, pdfData, generatedBy: req.user.id, issuedAt: new Date() },
+          { upsert: true, new: true, runValidators: true }
+        );
+        generatedCount += 1;
+      }
+      return res.json({ success: true, generatedCount, message: `${generatedCount} certificate${generatedCount === 1 ? '' : 's'} generated` });
+    }
+    const registrations = await Registration.find({ workshopId, status: 'confirmed', userId: { $in: userIds } })
+      .select('userId formData')
+      .populate('userId', 'name email');
     if (!registrations.length) return res.status(400).json({ message: 'No eligible confirmed participants selected' });
 
     for (const registration of registrations) {
@@ -278,14 +336,31 @@ export const generateCertificates = async (req, res) => {
 
 export const getMyCertificates = async (req, res) => {
   try {
-    const certificates = await Certificate.find({ userId: req.user.id })
-      .select('-pdfData')
-      .populate('workshopId', 'title eventType date startDate')
-      .sort({ issuedAt: -1 })
-      .lean();
-    res.json(certificates);
+    const [certificates, teamCertificates] = await Promise.all([
+      Certificate.find({ userId: req.user.id }).select('-pdfData').populate('workshopId', 'title eventType date startDate').lean(),
+      HackathonCertificate.find({ ownerUserId: req.user.id }).select('-pdfData').populate('workshopId', 'title eventType date startDate').lean()
+    ]);
+    res.json([
+      ...certificates.map(item => ({ ...item, certificateType: 'standard' })),
+      ...teamCertificates.map(item => ({ ...item, certificateType: 'hackathon-member' }))
+    ].sort((a, b) => new Date(b.issuedAt) - new Date(a.issuedAt)));
   } catch (error) {
     res.status(500).json({ message: 'Unable to load certificates', error: error.message });
+  }
+};
+
+export const getHackathonCertificateFile = async (req, res) => {
+  try {
+    const certificate = await HackathonCertificate.findById(req.params.id);
+    if (!certificate) return res.status(404).json({ message: 'Certificate not found' });
+    const isOwner = String(certificate.ownerUserId) === String(req.user.id);
+    if (!isOwner && !req.user.isAdmin) return res.status(403).json({ message: 'Access denied' });
+    const disposition = req.query.download === '1' ? 'attachment' : 'inline';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `${disposition}; filename="${certificate.fileName}"`);
+    res.send(certificate.pdfData);
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to load certificate', error: error.message });
   }
 };
 

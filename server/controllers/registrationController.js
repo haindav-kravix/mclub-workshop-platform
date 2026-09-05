@@ -355,6 +355,7 @@ export const getUserRegistrations = async (req, res) => {
           createdAt: 1,
           updatedAt: 1,
           teamCode: 1,
+          teamMembers: 1,
           selectedProblemStatement: 1,
           formData: buildSafeUserFormDataExpression(),
           paymentScreenshot: {
@@ -379,6 +380,7 @@ export const getUserRegistrations = async (req, res) => {
           createdAt: 1,
           updatedAt: 1,
           teamCode: 1,
+          teamMembers: 1,
           selectedProblemStatement: 1,
           formData: 1,
           paymentScreenshot: 1,

@@ -6,6 +6,7 @@ import * as certificateController from '../controllers/certificateController.js'
 const router = express.Router();
 
 router.get('/my', authenticateToken, certificateController.getMyCertificates);
+router.get('/hackathon/:id/file', authenticateToken, certificateController.getHackathonCertificateFile);
 router.get('/:id/file', authenticateToken, certificateController.getCertificateFile);
 router.get('/admin/workshop/:workshopId/setup', authenticateToken, adminOnly, certificateController.getTemplateSetup);
 router.put('/admin/workshop/:workshopId/setup', authenticateToken, adminOnly, upload.single('template'), certificateController.saveTemplateSetup);

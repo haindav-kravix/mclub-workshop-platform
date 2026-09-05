@@ -1,8 +1,19 @@
 import express from 'express';
 import * as attendanceController from '../controllers/attendanceController.js';
 import { authenticateToken, adminOnly } from '../middleware/auth.js';
+import * as hackathonAttendanceController from '../controllers/hackathonAttendanceController.js';
 
 const router = express.Router();
+
+router.get('/hackathon/session/:sessionId', hackathonAttendanceController.getPublicSession);
+router.post('/hackathon/session/:sessionId/check-in', hackathonAttendanceController.memberCheckIn);
+router.get('/hackathon/:workshopId/teams', authenticateToken, adminOnly, hackathonAttendanceController.getTeams);
+router.put('/hackathon/:workshopId/teams/:registrationId', authenticateToken, adminOnly, hackathonAttendanceController.saveTeamMembers);
+router.get('/hackathon/:workshopId/sessions', authenticateToken, adminOnly, hackathonAttendanceController.getSessions);
+router.post('/hackathon/:workshopId/sessions', authenticateToken, adminOnly, hackathonAttendanceController.createSession);
+router.get('/hackathon/:workshopId/sessions/:sessionId', authenticateToken, adminOnly, hackathonAttendanceController.getSessionRoster);
+router.patch('/hackathon/:workshopId/sessions/:sessionId/qr', authenticateToken, adminOnly, hackathonAttendanceController.setQrEnabled);
+router.put('/hackathon/:workshopId/sessions/:sessionId/attendance', authenticateToken, adminOnly, hackathonAttendanceController.saveManualAttendance);
 
 router.get('/workshop/:workshopId/roster', authenticateToken, adminOnly, attendanceController.getAttendanceRoster);
 router.post('/workshop/:workshopId', authenticateToken, adminOnly, attendanceController.submitAttendance);

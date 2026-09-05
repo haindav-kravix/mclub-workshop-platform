@@ -43,6 +43,9 @@ import { AdminHackathonsPage } from './pages/AdminHackathonsPage';
 import { AdminHackathonProblemStatementsPage } from './pages/AdminHackathonProblemStatementsPage';
 import { HackathonProblemStatementsPage } from './pages/HackathonProblemStatementsPage';
 import { AdminProblemStatementSelectionsPage } from './pages/AdminProblemStatementSelectionsPage';
+import { AdminHackathonTeamsPage } from './pages/AdminHackathonTeamsPage';
+import { AdminHackathonAttendancePage } from './pages/AdminHackathonAttendancePage';
+import { HackathonAttendanceCheckInPage } from './pages/HackathonAttendanceCheckInPage';
 
 // Styles
 import './styles/globals.css';
@@ -61,7 +64,7 @@ const ScrollToTop = () => {
 const AppContent = () => {
   const { loading } = useAuth();
   const location = useLocation();
-  const hideGlobalFooter = location.pathname.startsWith('/admin') || location.pathname.startsWith('/attendance/check-in');
+  const hideGlobalFooter = location.pathname.startsWith('/admin') || location.pathname.startsWith('/attendance/check-in') || location.pathname.startsWith('/hackathon-attendance/');
   const useBlogHeaderOnly = location.pathname === '/blogs';
 
   if (loading) {
@@ -131,6 +134,7 @@ const AppContent = () => {
             }
           />
           <Route path="/attendance/check-in/:workshopId" element={<QRCheckInPage />} />
+          <Route path="/hackathon-attendance/:sessionId" element={<HackathonAttendanceCheckInPage />} />
           <Route path="/achievements" element={<AchievementsPage />} />
           <Route path="/achievements/:highlightId" element={<HighlightDetailPage />} />
           <Route
@@ -256,6 +260,14 @@ const AppContent = () => {
                 <AdminEntryPage />
               </PrivateRoute>
             }
+          />
+          <Route
+            path="/admin/hackathon/:workshopId/teams"
+            element={<PrivateRoute requireAdmin={true}><AdminHackathonTeamsPage /></PrivateRoute>}
+          />
+          <Route
+            path="/admin/hackathon/:workshopId/attendance"
+            element={<PrivateRoute requireAdmin={true}><AdminHackathonAttendancePage /></PrivateRoute>}
           />
           <Route
             path="/admin/hackathon/:workshopId/evaluation"
