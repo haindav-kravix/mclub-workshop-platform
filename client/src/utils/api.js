@@ -144,6 +144,7 @@ export const attendanceAPI = {
   getHackathonReports: (workshopId) => axios.get(`${API_URL}/attendance/hackathon/${workshopId}/reports`, { headers: getAuthHeaders() }),
   exportHackathonReport: (workshopId) => axios.get(`${API_URL}/attendance/hackathon/${workshopId}/reports/export`, { headers: getAuthHeaders(), responseType: 'blob' }),
   exportHackathonSession: (workshopId, sessionId) => axios.get(`${API_URL}/attendance/hackathon/${workshopId}/sessions/${sessionId}/export`, { headers: getAuthHeaders(), responseType: 'blob' }),
+  postHackathonEntryAttendance: (workshopId, sessionId) => axios.post(`${API_URL}/attendance/hackathon/${workshopId}/sessions/${sessionId}/from-entry`, {}, { headers: getAuthHeaders() }),
   getPublicHackathonSession: (sessionId) => axios.get(`${API_URL}/attendance/hackathon/session/${sessionId}`),
   hackathonCheckIn: (sessionId, data) => axios.post(`${API_URL}/attendance/hackathon/session/${sessionId}/check-in`, data),
   getRoster: (workshopId, date) => axios.get(`${API_URL}/attendance/workshop/${workshopId}/roster`, {

@@ -4,7 +4,7 @@ const entrySchema = new mongoose.Schema({
   registrationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Registration', required: true },
   memberId: { type: mongoose.Schema.Types.ObjectId, required: true },
   status: { type: String, enum: ['present', 'absent'], default: 'absent' },
-  source: { type: String, enum: ['qr', 'manual'], default: 'manual' },
+  source: { type: String, enum: ['qr', 'manual', 'entry'], default: 'manual' },
   markedAt: { type: Date }
 }, { _id: false });
 

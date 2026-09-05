@@ -48,6 +48,8 @@ export const AdminEntryPage = () => {
   const [cameraActive, setCameraActive] = useState(false);
   const [sessionScanCount, setSessionScanCount] = useState(0);
   const [attendanceDate, setAttendanceDate] = useState('');
+  const [hackathonSessions, setHackathonSessions] = useState([]);
+  const [hackathonSessionId, setHackathonSessionId] = useState('');
   const [postingAttendance, setPostingAttendance] = useState(false);
   const [error, setError] = useState('');
   const [feedback, setFeedback] = useState(null);
@@ -82,6 +84,17 @@ export const AdminEntryPage = () => {
     const firstDate = report.workshop.dailyTimings?.[0]?.date || report.workshop.startDate || report.workshop.date;
     setAttendanceDate(toDateInput(firstDate));
   }, [attendanceDate, report?.workshop]);
+
+  useEffect(() => {
+    if (report?.workshop?.eventType !== 'hackathon') return;
+    attendanceAPI.getHackathonSessions(workshopId)
+      .then(response => {
+        const sessions = response.data.sessions || [];
+        setHackathonSessions(sessions);
+        setHackathonSessionId(current => current || sessions[0]?._id || '');
+      })
+      .catch(err => setError(err.response?.data?.message || 'Unable to load hackathon attendance sessions'));
+  }, [report?.workshop?.eventType, workshopId]);
 
   const stopCamera = () => {
     if (scannerTimerRef.current) window.cancelAnimationFrame(scannerTimerRef.current);
@@ -262,6 +275,32 @@ export const AdminEntryPage = () => {
     }
   };
 
+  const handlePostHackathonAttendance = async () => {
+    if (!hackathonSessionId) {
+      setError('Create or select a hackathon attendance session first');
+      return;
+    }
+
+    setPostingAttendance(true);
+    setError('');
+    try {
+      const response = await attendanceAPI.postHackathonEntryAttendance(workshopId, hackathonSessionId);
+      const present = response.data.counts?.present || 0;
+      const absent = response.data.counts?.absent || 0;
+      setFeedback({
+        type: 'success',
+        title: 'Attendance updated',
+        message: `${present} present and ${absent} absent member records are ready. You can scan more entry passes and post again.`
+      });
+    } catch (err) {
+      const message = err.response?.data?.message || 'Unable to post entry scans to hackathon attendance';
+      setError(message);
+      setFeedback({ type: 'error', title: 'Post failed', message });
+    } finally {
+      setPostingAttendance(false);
+    }
+  };
+
   const entered = useMemo(() => [...(report?.entered || [])].sort((a, b) => (
     new Date(b.entry?.checkedInAt || 0) - new Date(a.entry?.checkedInAt || 0)
   )), [report?.entered]);
@@ -357,7 +396,44 @@ export const AdminEntryPage = () => {
             )}
             <button onClick={handleExport} className="entry-action-button mt-5"><FiDownload /> Export Entry Report</button>
             {report.workshop.eventType === 'hackathon' ? (
-              <div className="entry-attendance-post mt-4"><label>Hackathon attendance</label><button onClick={() => navigate(`/admin/hackathon/${workshopId}/attendance`)} className="entry-action-button w-full"><FiUsers /> Open Attendance Sessions</button><p>Entry scans and hackathon attendance are stored separately for all four team members.</p></div>
+              <div className="entry-attendance-post mt-4">
+                <label>Post entry scans to hackathon attendance</label>
+                {hackathonSessions.length ? (
+                  <select
+                    value={hackathonSessionId}
+                    onChange={event => setHackathonSessionId(event.target.value)}
+                    className="entry-attendance-select"
+                  >
+                    {hackathonSessions.map(item => (
+                      <option key={item._id} value={item._id}>
+                        {item.title} - {new Date(item.date).toLocaleDateString()}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="entry-empty-mini">Create an attendance session first.</div>
+                )}
+                <button
+                  onClick={handlePostHackathonAttendance}
+                  disabled={postingAttendance || !hackathonSessionId}
+                  className="entry-action-button w-full"
+                >
+                  <FiUploadCloud /> {postingAttendance ? 'Posting...' : 'Post / Update Entry Scans'}
+                </button>
+                <button
+                  onClick={() => navigate(`/admin/hackathon/${workshopId}/attendance`)}
+                  className="entry-action-button subtle w-full"
+                >
+                  <FiUsers /> Open Attendance Sessions
+                </button>
+                <button
+                  onClick={() => navigate(`/admin/hackathon/${workshopId}/attendance/reports`)}
+                  className="entry-action-button subtle w-full"
+                >
+                  <FiEdit3 /> View Attendance Reports
+                </button>
+                <p>New entry scans can be posted again later. Existing manual present marks are kept unless the member entered through an entry pass.</p>
+              </div>
             ) : <div className="entry-attendance-post mt-4">
               <label>Post entry scans to attendance</label>
               <select

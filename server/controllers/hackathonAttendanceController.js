@@ -3,6 +3,7 @@ import ExcelJS from 'exceljs';
 import Workshop from '../models/Workshop.js';
 import Registration from '../models/Registration.js';
 import HackathonAttendanceSession from '../models/HackathonAttendanceSession.js';
+import HackathonEntry from '../models/HackathonEntry.js';
 import { ensureHackathonTeamMembers } from '../utils/hackathonTeam.js';
 
 const loadHackathon = async (workshopId) => {
@@ -167,6 +168,59 @@ export const saveManualAttendance = async (req, res) => {
     res.json({ success: true, teams: await buildRoster(session.toObject()) });
   } catch (error) {
     res.status(500).json({ message: 'Unable to save attendance', error: error.message });
+  }
+};
+
+export const postEntryAttendance = async (req, res) => {
+  try {
+    const workshop = await loadHackathon(req.params.workshopId);
+    if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
+    const session = await HackathonAttendanceSession.findOne({ _id: req.params.sessionId, workshopId: workshop._id });
+    if (!session) return res.status(404).json({ message: 'Attendance session not found' });
+
+    const registrations = await Registration.find({ workshopId: workshop._id, status: 'confirmed' })
+      .select('teamCode teamMembers formData userId createdAt')
+      .populate('userId', 'name email')
+      .sort({ createdAt: 1 });
+    await Promise.all(registrations.map(registration => ensureHackathonTeamMembers(registration, workshop)));
+
+    const entryScans = await HackathonEntry.find({ workshopId: workshop._id }).select('registrationId memberId checkedInAt');
+    const enteredMembers = new Map(entryScans.map(entry => [`${entry.registrationId}:${entry.memberId}`, entry]));
+    const existingByMember = new Map((session.entries || []).map(entry => [`${entry.registrationId}:${entry.memberId}`, entry]));
+
+    const nextEntries = registrations.flatMap(registration => (registration.teamMembers || []).map(member => {
+      const key = `${registration._id}:${member._id}`;
+      const entered = enteredMembers.get(key);
+      const existing = existingByMember.get(key);
+      if (entered) {
+        return { registrationId: registration._id, memberId: member._id, status: 'present', source: 'entry', markedAt: entered.checkedInAt || new Date() };
+      }
+      if (existing?.status === 'present') {
+        return { registrationId: registration._id, memberId: member._id, status: 'present', source: existing.source || 'manual', markedAt: existing.markedAt || new Date() };
+      }
+      return { registrationId: registration._id, memberId: member._id, status: 'absent', source: existing?.source || 'manual', markedAt: undefined };
+    }));
+
+    session.entries = nextEntries;
+    session.updatedBy = req.user.id;
+    await session.save();
+    const teams = await buildRoster(session.toObject());
+    const present = session.entries.filter(entry => entry.status === 'present').length;
+    res.json({
+      success: true,
+      message: 'Hackathon attendance updated from entry scans',
+      session,
+      teams,
+      counts: {
+        teams: registrations.length,
+        members: session.entries.length,
+        entered: entryScans.length,
+        present,
+        absent: Math.max(0, session.entries.length - present)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to post entry scans to hackathon attendance', error: error.message });
   }
 };
 
