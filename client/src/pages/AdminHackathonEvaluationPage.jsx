@@ -91,10 +91,10 @@ export const AdminHackathonEvaluationPage = () => {
       <div className="border-b border-emerald-100 bg-white/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-5 sm:py-7">
           <button
-            onClick={() => navigate('/admin')}
+            onClick={() => navigate('/admin/hackathons')}
             className="mb-4 inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-black text-secondary transition hover:bg-emerald-100"
           >
-            <FiArrowLeft /> Back to Dashboard
+            <FiArrowLeft /> Back to Hackathons
           </button>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
