@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { registrationAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage } from '../components/UI';
-import { FiBarChart2, FiCalendar, FiMapPin, FiClock, FiSend, FiShield } from 'react-icons/fi';
+import { FiBarChart2, FiBookOpen, FiCalendar, FiMapPin, FiClock, FiSend, FiShield } from 'react-icons/fi';
 import { formatWorkshopTime } from '../utils/formatters';
 
 export const MyRegistrationsPage = () => {
@@ -117,6 +117,15 @@ export const MyRegistrationsPage = () => {
                             <span>Leaderboard</span>
                           </Link>
                         )}
+                        {registration.workshopId?.eventType === 'hackathon' && (
+                          <Link
+                            to={`/hackathon/${registration.workshopId._id}/problem-statements`}
+                            className="w-full px-4 py-2 rounded-lg transition flex items-center justify-center space-x-2 font-black bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                          >
+                            <FiBookOpen size={18} />
+                            <span>{registration.selectedProblemStatement?.statementId ? 'View Problem Statement' : 'Select Problem Statement'}</span>
+                          </Link>
+                        )}
                         {registration.workshopId.telegramLink && (
                           <a
                             href={registration.workshopId.telegramLink}
@@ -150,6 +159,13 @@ export const MyRegistrationsPage = () => {
                   <div className="bg-emerald-50 px-6 py-4 border-t border-emerald-100">
                     <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Hackathon team name</p>
                     <p className="mt-1 text-2xl font-black tracking-widest text-slate-950">{registration.teamCode}</p>
+                  </div>
+                )}
+                {registration.selectedProblemStatement?.statementId && (
+                  <div className="border-t border-emerald-100 bg-white px-6 py-4">
+                    <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Selected problem statement</p>
+                    <p className="mt-1 text-lg font-black text-slate-950">{registration.selectedProblemStatement.title}</p>
+                    <p className="mt-1 whitespace-pre-wrap text-sm font-medium text-slate-600">{registration.selectedProblemStatement.description}</p>
                   </div>
                 )}
                 {Object.keys(registration.formData).length > 0 && (

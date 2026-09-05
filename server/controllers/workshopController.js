@@ -789,7 +789,7 @@ export const getWorkshopQrImage = async (req, res) => {
 export const getWorkshopById = async (req, res) => {
   try {
     const workshop = await Workshop.findById(req.params.id)
-      .select('-coverImage -qrImage -coverImagePreview')
+      .select('-coverImage -qrImage -coverImagePreview -problemStatements')
       .populate('createdBy', 'name email')
       .lean();
     
@@ -947,7 +947,7 @@ export const getAdminWorkshops = async (req, res) => {
     }
 
     const workshops = await Workshop.find(filter)
-      .select('-coverImage -qrImage -coverImagePreview')
+      .select('-coverImage -qrImage -coverImagePreview -problemStatements')
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 })
       .lean();

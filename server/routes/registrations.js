@@ -2,6 +2,7 @@ import express from 'express';
 import * as registrationController from '../controllers/registrationController.js';
 import { authenticateToken, adminOnly } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
+import * as problemStatementController from '../controllers/problemStatementController.js';
 
 const router = express.Router();
 
@@ -10,6 +11,8 @@ router.post('/', authenticateToken, upload.any(), registrationController.registe
 router.get('/my-workshop-ids', authenticateToken, registrationController.getUserRegisteredWorkshopIds);
 router.get('/my-status/:workshopId', authenticateToken, registrationController.getUserWorkshopRegistrationStatus);
 router.get('/my-registrations', authenticateToken, registrationController.getUserRegistrations);
+router.get('/hackathon/:workshopId/problem-statements', authenticateToken, problemStatementController.getTeamProblemStatements);
+router.patch('/hackathon/:workshopId/problem-statement', authenticateToken, problemStatementController.selectProblemStatement);
 router.delete('/:registrationId', authenticateToken, registrationController.cancelRegistration);
 
 // Admin routes

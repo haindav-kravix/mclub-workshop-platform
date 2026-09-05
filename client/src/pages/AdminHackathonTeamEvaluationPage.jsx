@@ -122,6 +122,13 @@ export const AdminHackathonTeamEvaluationPage = () => {
           <h1 className="mt-2 break-words text-3xl font-black text-slate-950 sm:text-5xl">
             {registration ? getTeamName(registration) : 'Team'}
           </h1>
+          {registration?.selectedProblemStatement?.statementId && (
+            <div className="mt-5 max-w-3xl rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+              <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Selected problem statement</p>
+              <p className="mt-1 text-lg font-black text-slate-950">{registration.selectedProblemStatement.title}</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm font-semibold text-slate-600">{registration.selectedProblemStatement.description}</p>
+            </div>
+          )}
         </div>
       </div>
 

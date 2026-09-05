@@ -168,6 +168,9 @@ export const AdminHackathonEvaluationPage = () => {
               <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
                 <div className="min-w-0">
                   <p className="break-words text-xl font-black text-slate-950">{getTeamName(registration)}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-500">
+                    {registration.selectedProblemStatement?.title || 'Problem statement not selected'}
+                  </p>
                 </div>
                 <button
                   onClick={() => navigate(`/admin/hackathon/${workshopId}/evaluation/${registration._id}`)}

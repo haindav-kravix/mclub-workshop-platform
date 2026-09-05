@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiAward, FiBarChart2, FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiFileText, FiList, FiLogIn, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
+import { FiAward, FiBarChart2, FiBookOpen, FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiFileText, FiList, FiLogIn, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
 import { formatWorkshopTime } from '../utils/formatters';
 import { getEventLabel } from '../utils/eventLabels';
@@ -19,6 +19,7 @@ export const AdminWorkshopCard = ({
   onEntryManagement,
   onCertificates,
   onHackathonEvaluation,
+  onProblemStatements,
   showEmail = true
 }) => {
   const registrationsOpen = workshop.registrationsOpen !== false;
@@ -130,13 +131,22 @@ export const AdminWorkshopCard = ({
           )}
 
           {workshop.eventType === 'hackathon' && (
-            <button
-              onClick={() => onHackathonEvaluation(workshop._id)}
-              className="col-span-2 px-3 py-2 bg-violet-50 text-violet-700 rounded-lg hover:bg-violet-100 transition text-sm font-semibold flex items-center justify-center space-x-1"
-            >
-              <FiBarChart2 size={16} />
-              <span>Evaluation & Leaderboard</span>
-            </button>
+            <>
+              <button
+                onClick={() => onProblemStatements(workshop._id)}
+                className="col-span-2 px-3 py-2 bg-emerald-50 text-emerald-800 rounded-lg hover:bg-emerald-100 transition text-sm font-semibold flex items-center justify-center space-x-1"
+              >
+                <FiBookOpen size={16} />
+                <span>Problem Statements</span>
+              </button>
+              <button
+                onClick={() => onHackathonEvaluation(workshop._id)}
+                className="col-span-2 px-3 py-2 bg-violet-50 text-violet-700 rounded-lg hover:bg-violet-100 transition text-sm font-semibold flex items-center justify-center space-x-1"
+              >
+                <FiBarChart2 size={16} />
+                <span>Evaluation & Leaderboard</span>
+              </button>
+            </>
           )}
 
           <button

@@ -196,6 +196,7 @@ export const AdminHackathonsPage = () => {
                 onEntryManagement={(eventId) => navigate(`/admin/entry/${eventId}`)}
                 onCertificates={(eventId) => navigate(`/admin/certificates/${eventId}`)}
                 onHackathonEvaluation={(eventId) => navigate(`/admin/hackathon/${eventId}/evaluation`)}
+                onProblemStatements={(eventId) => navigate(`/admin/hackathon/${eventId}/problem-statements`)}
               />
             ))}
           </div>

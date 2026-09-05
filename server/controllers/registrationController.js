@@ -355,6 +355,7 @@ export const getUserRegistrations = async (req, res) => {
           createdAt: 1,
           updatedAt: 1,
           teamCode: 1,
+          selectedProblemStatement: 1,
           formData: buildSafeUserFormDataExpression(),
           paymentScreenshot: {
             $cond: [hasStringValueExpression('$paymentScreenshot'), 'uploaded', '']
@@ -378,6 +379,7 @@ export const getUserRegistrations = async (req, res) => {
           createdAt: 1,
           updatedAt: 1,
           teamCode: 1,
+          selectedProblemStatement: 1,
           formData: 1,
           paymentScreenshot: 1,
           workshopId: {
@@ -677,7 +679,7 @@ export const getHackathonEvaluation = async (req, res) => {
     const registrations = await Registration.find({ workshopId, status: 'confirmed' })
       .populate('evaluationReviews.evaluator', 'name email')
       .populate('evaluatedBy', 'name email')
-      .select('status teamCode evaluationScores evaluationReviews evaluationAverage evaluatedAt evaluatedBy createdAt updatedAt')
+      .select('status teamCode selectedProblemStatement evaluationScores evaluationReviews evaluationAverage evaluatedAt evaluatedBy createdAt updatedAt')
       .sort({ createdAt: 1 })
       .lean();
 
@@ -795,7 +797,8 @@ export const exportHackathonEvaluation = async (req, res) => {
       { header: 'S.No', key: 'sno', width: 8 },
       { header: 'Team Name', key: 'teamName', width: 24 },
       { header: 'Team Members', key: 'teamMembers', width: 40 },
-      { header: 'College Name', key: 'collegeName', width: 32 }
+      { header: 'College Name', key: 'collegeName', width: 32 },
+      { header: 'Problem Statement', key: 'problemStatement', width: 44 }
     ];
     const reviewColumns = Array.from({ length: reviewCount }, (_, index) => ([
       { header: `Review ${index + 1} Marks`, key: `review${index + 1}Marks`, width: 18 },
@@ -815,7 +818,8 @@ export const exportHackathonEvaluation = async (req, res) => {
         sno: index + 1,
         teamName: registration.teamCode || findFormValue(formData, formFields, [/team.*name/i, /project.*name/i, /group.*name/i]) || registration.userId?.name || 'Team',
         teamMembers: findFormValue(formData, formFields, [/team.*member/i, /member/i, /participant/i, /leader/i]) || registration.userId?.name || registration.userId?.email || '',
-        collegeName: findFormValue(formData, formFields, [/college/i, /university/i, /institution/i])
+        collegeName: findFormValue(formData, formFields, [/college/i, /university/i, /institution/i]),
+        problemStatement: registration.selectedProblemStatement?.title || 'Not selected'
       };
 
       Array.from({ length: reviewCount }, (_, reviewIndex) => {

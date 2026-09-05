@@ -57,6 +57,18 @@ export const workshopAPI = {
   }),
   toggleStoppedStatus: (id) => axios.patch(`${API_URL}/workshops/${id}/stop/toggle`, {}, {
     headers: getAuthHeaders()
+  }),
+  getAdminProblemStatements: (id) => axios.get(`${API_URL}/workshops/${id}/problem-statements/admin`, {
+    headers: getAuthHeaders()
+  }),
+  createProblemStatement: (id, data) => axios.post(`${API_URL}/workshops/${id}/problem-statements`, data, {
+    headers: getAuthHeaders()
+  }),
+  setProblemStatementPublished: (id, statementId, isPublished) => axios.patch(`${API_URL}/workshops/${id}/problem-statements/${statementId}`, { isPublished }, {
+    headers: getAuthHeaders()
+  }),
+  deleteProblemStatement: (id, statementId) => axios.delete(`${API_URL}/workshops/${id}/problem-statements/${statementId}`, {
+    headers: getAuthHeaders()
   })
 };
 
@@ -104,6 +116,12 @@ export const registrationAPI = {
     headers: getAuthHeaders()
   }),
   getHackathonLeaderboard: (workshopId) => axios.get(`${API_URL}/registrations/hackathon/${workshopId}/leaderboard`, {
+    headers: getAuthHeaders()
+  }),
+  getHackathonProblemStatements: (workshopId) => axios.get(`${API_URL}/registrations/hackathon/${workshopId}/problem-statements`, {
+    headers: getAuthHeaders()
+  }),
+  selectHackathonProblemStatement: (workshopId, statementId) => axios.patch(`${API_URL}/registrations/hackathon/${workshopId}/problem-statement`, { statementId }, {
     headers: getAuthHeaders()
   }),
   exportRegistrations: (workshopId) => axios.get(`${API_URL}/registrations/workshop/${workshopId}/export`, {

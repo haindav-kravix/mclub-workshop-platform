@@ -1,5 +1,6 @@
 import express from 'express';
 import * as workshopController from '../controllers/workshopController.js';
+import * as problemStatementController from '../controllers/problemStatementController.js';
 import { authenticateToken, adminOnly } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
 
@@ -18,6 +19,10 @@ router.get('/:id/qr-image', workshopController.getWorkshopQrImage);
 router.post('/', authenticateToken, adminOnly, workshopImageUpload, workshopController.createWorkshop);
 router.get('/admin/my-workshops', authenticateToken, adminOnly, workshopController.getAdminWorkshops);
 router.get('/admin/:id', authenticateToken, adminOnly, workshopController.getAdminWorkshopById);
+router.get('/:id/problem-statements/admin', authenticateToken, adminOnly, problemStatementController.getAdminProblemStatements);
+router.post('/:id/problem-statements', authenticateToken, adminOnly, problemStatementController.createProblemStatement);
+router.patch('/:id/problem-statements/:statementId', authenticateToken, adminOnly, problemStatementController.setProblemStatementPublished);
+router.delete('/:id/problem-statements/:statementId', authenticateToken, adminOnly, problemStatementController.deleteProblemStatement);
 router.get('/:id/report', authenticateToken, adminOnly, workshopController.generateWorkshopReport);
 router.put('/:id', authenticateToken, adminOnly, workshopImageUpload, workshopController.updateWorkshop);
 router.delete('/:id', authenticateToken, adminOnly, workshopController.deleteWorkshop);

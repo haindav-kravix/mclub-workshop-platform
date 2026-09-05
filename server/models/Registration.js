@@ -24,6 +24,22 @@ const registrationSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  selectedProblemStatement: {
+    statementId: {
+      type: mongoose.Schema.Types.ObjectId
+    },
+    title: {
+      type: String,
+      default: ''
+    },
+    description: {
+      type: String,
+      default: ''
+    },
+    selectedAt: {
+      type: Date
+    }
+  },
   evaluationScores: {
     type: [Number],
     default: []

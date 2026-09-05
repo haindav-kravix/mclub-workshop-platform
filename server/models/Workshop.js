@@ -47,6 +47,37 @@ const dailyTimingSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
+const problemStatementSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 180
+  },
+  description: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 5000
+  },
+  isPublished: {
+    type: Boolean,
+    default: false
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const workshopSchema = new mongoose.Schema({
   eventType: {
     type: String,
@@ -92,6 +123,10 @@ const workshopSchema = new mongoose.Schema({
   },
   hackathonReviewMaxScores: {
     type: [Number],
+    default: []
+  },
+  problemStatements: {
+    type: [problemStatementSchema],
     default: []
   },
   date: {
