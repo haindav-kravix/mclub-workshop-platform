@@ -37,7 +37,7 @@ export const WorkshopFormPage = ({ defaultEventType = 'workshop', allowedEventTy
     Object.keys(workshopData).forEach(key => {
       if (key === 'registrationFormFields' || key === 'dailyTimings' || key === 'hackathonReviewMaxScores') {
         formData.append(key, JSON.stringify(workshopData[key]));
-      } else if (key !== 'coverImage' && key !== 'qrImage' && key !== 'hasTimings') {
+      } else if (key !== 'coverImage' && key !== 'qrImage' && key !== 'hackathonDescriptionImages' && key !== 'hasTimings') {
         formData.append(key, workshopData[key] ?? '');
       }
     });
@@ -48,6 +48,9 @@ export const WorkshopFormPage = ({ defaultEventType = 'workshop', allowedEventTy
     if (workshopData.qrImage) {
       formData.append('qrImage', workshopData.qrImage);
     }
+    workshopData.hackathonDescriptionImages?.forEach(image => {
+      formData.append('hackathonDescriptionImages', image);
+    });
 
     return formData;
   };

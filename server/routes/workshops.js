@@ -7,13 +7,15 @@ import upload from '../middleware/upload.js';
 const router = express.Router();
 const workshopImageUpload = upload.fields([
   { name: 'coverImage', maxCount: 1 },
-  { name: 'qrImage', maxCount: 1 }
+  { name: 'qrImage', maxCount: 1 },
+  { name: 'hackathonDescriptionImages', maxCount: 8 }
 ]);
 
 // Public routes
 router.get('/', workshopController.getAllWorkshops);
 router.get('/:id/cover-image', workshopController.getWorkshopCoverImage);
 router.get('/:id/qr-image', workshopController.getWorkshopQrImage);
+router.get('/:id/description-image/:index', workshopController.getHackathonDescriptionImage);
 
 // Admin routes
 router.post('/', authenticateToken, adminOnly, workshopImageUpload, workshopController.createWorkshop);

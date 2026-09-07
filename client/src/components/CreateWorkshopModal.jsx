@@ -82,6 +82,7 @@ export const CreateWorkshopModal = ({
     capacity: initialData?.capacity || '',
     coverImage: null,
     qrImage: null,
+    hackathonDescriptionImages: [],
     paymentEnabled: initialPaymentEnabled,
     entryPassEnabled: initialData?.entryPassEnabled ?? true,
     hackathonLeaderboardVisible: initialData?.hackathonLeaderboardVisible ?? false,
@@ -134,6 +135,15 @@ export const CreateWorkshopModal = ({
     setFormData(prev => ({
       ...prev,
       qrImage: e.target.files[0]
+    }));
+  };
+
+  const handleHackathonDescriptionImagesChange = (e) => {
+    const remainingSlots = Math.max(0, 8 - (initialData?.hackathonDescriptionImages?.length || 0));
+    const selectedImages = Array.from(e.target.files || []).slice(0, remainingSlots);
+    setFormData(prev => ({
+      ...prev,
+      hackathonDescriptionImages: selectedImages
     }));
   };
 
@@ -510,6 +520,31 @@ export const CreateWorkshopModal = ({
             />
             <p className="text-xs text-gray-500 mt-1">Max 10MB. Supported formats: JPG, PNG, GIF, WebP, AVIF, HEIC, HEIF</p>
           </div>
+
+          {formData.eventType === 'hackathon' && (
+            <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 p-4">
+              <label className="block text-sm font-black text-slate-900">Hackathon detail images</label>
+              <p className="mt-1 text-xs font-semibold text-slate-500">Add up to 8 clear photos or posters. They appear below the description in View Details and open at full size when clicked.</p>
+              {initialData?.hackathonDescriptionImages?.length > 0 && !formData.hackathonDescriptionImages.length && (
+                <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
+                  {initialData.hackathonDescriptionImages.map((image, index) => (
+                    <img key={image} src={resolveMediaUrl(image, { w: 320 })} alt={`Current detail ${index + 1}`} className="aspect-square w-full rounded-lg border border-emerald-100 bg-white object-cover" />
+                  ))}
+                </div>
+              )}
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.gif,.webp,.avif,.heic,.heif,image/*"
+                multiple
+                onChange={handleHackathonDescriptionImagesChange}
+                className="mt-3 w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                disabled={(initialData?.hackathonDescriptionImages?.length || 0) >= 8}
+              />
+              {formData.hackathonDescriptionImages.length > 0 && (
+                <p className="mt-2 text-xs font-bold text-emerald-700">{formData.hackathonDescriptionImages.length} new image{formData.hackathonDescriptionImages.length === 1 ? '' : 's'} ready to add.</p>
+              )}
+            </div>
+          )}
 
           {/* Payment Setup */}
           <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 p-4">

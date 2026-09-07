@@ -104,6 +104,10 @@ const workshopSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  hackathonDescriptionImages: {
+    type: [String],
+    default: []
+  },
   paymentEnabled: {
     type: Boolean
   },

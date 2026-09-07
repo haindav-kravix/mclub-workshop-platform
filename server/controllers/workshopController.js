@@ -81,6 +81,8 @@ const getUploadedFile = (req, fieldName) => {
   return req.files?.[fieldName]?.[0] || null;
 };
 
+const getUploadedFiles = (req, fieldName) => req.files?.[fieldName] || [];
+
 const cleanupUploadedFiles = (req) => {
   cleanupUploadedFile(req.file);
   Object.values(req.files || {}).flat().forEach(cleanupUploadedFile);
@@ -102,6 +104,12 @@ const getWorkshopImageUrl = (workshop, kind, options = {}) => {
   return `/api/workshops/${workshop._id}/${kind}-image?v=${version}${width}`;
 };
 
+const getHackathonDescriptionImageUrl = (workshop, index, options = {}) => {
+  const version = new Date(workshop.updatedAt || workshop.createdAt || Date.now()).getTime();
+  const width = options.width ? `&w=${options.width}` : '';
+  return `/api/workshops/${workshop._id}/description-image/${index}?v=${version}${width}`;
+};
+
 const withCoverImageUrl = (workshop, req) => {
   const coverImage = workshop.coverImage === undefined || workshop.coverImage
     ? getWorkshopImageUrl(workshop, 'cover')
@@ -118,7 +126,10 @@ const withWorkshopImageUrls = (workshop, req) => ({
   ...withCoverImageUrl(workshop, req),
   qrImage: workshop.paymentEnabled !== false && (workshop.qrImage === undefined || workshop.qrImage)
     ? getWorkshopImageUrl(workshop, 'qr')
-    : ''
+    : '',
+  hackathonDescriptionImages: workshop.eventType === 'hackathon'
+    ? (workshop.hackathonDescriptionImages || []).map((_, index) => getHackathonDescriptionImageUrl(workshop, index))
+    : []
 });
 
 const clampImageWidth = (value, fallback = 900) => {
@@ -667,6 +678,7 @@ export const createWorkshop = async (req, res) => {
 
     const coverImageFile = getUploadedFile(req, 'coverImage');
     const qrImageFile = getUploadedFile(req, 'qrImage');
+    const descriptionImageFiles = getUploadedFiles(req, 'hackathonDescriptionImages');
 
     if (!coverImageFile) {
       return res.status(400).json({ message: 'Cover image is required' });
@@ -685,6 +697,9 @@ export const createWorkshop = async (req, res) => {
     }
 
     const qrImage = shouldUsePayment && qrImageFile ? uploadedFileToDataUrl(qrImageFile) : '';
+    const hackathonDescriptionImages = eventType === 'hackathon'
+      ? descriptionImageFiles.map(uploadedFileToDataUrl)
+      : [];
 
     const workshop = new Workshop({
       eventType: ['workshop', 'internship', 'hackathon'].includes(eventType) ? eventType : 'workshop',
@@ -693,6 +708,7 @@ export const createWorkshop = async (req, res) => {
       coverImage,
       coverImagePreview,
       qrImage,
+      hackathonDescriptionImages,
       paymentEnabled: shouldUsePayment,
       entryPassEnabled: parseBoolean(entryPassEnabled, true),
       hackathonLeaderboardVisible: parseBoolean(hackathonLeaderboardVisible, false),
@@ -781,6 +797,35 @@ export const getWorkshopQrImage = async (req, res) => {
       qr: true,
       cacheKey
     });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error fetching image', error: error.message });
+  }
+};
+
+export const getHackathonDescriptionImage = async (req, res) => {
+  try {
+    const index = Number(req.params.index);
+    if (!Number.isInteger(index) || index < 0 || index >= 8) {
+      return res.status(404).json({ message: 'Image not found' });
+    }
+
+    const metadata = await Workshop.findById(req.params.id)
+      .select('eventType updatedAt createdAt')
+      .lean();
+    if (!metadata || metadata.eventType !== 'hackathon') {
+      return res.status(404).json({ message: 'Image not found' });
+    }
+
+    const cacheKey = `${metadata._id}:description:${index}:${metadata.updatedAt || metadata.createdAt || ''}`;
+    if (sendCachedWorkshopImage(req, res, { width: req.query.w, cacheKey })) return;
+
+    const workshop = await Workshop.findById(req.params.id)
+      .select('hackathonDescriptionImages')
+      .lean();
+    const image = workshop?.hackathonDescriptionImages?.[index];
+    if (!image) return res.status(404).json({ message: 'Image not found' });
+
+    return sendDataUrlImage(res, image, { width: req.query.w, cacheKey });
   } catch (error) {
     return res.status(500).json({ message: 'Error fetching image', error: error.message });
   }
@@ -880,6 +925,7 @@ export const updateWorkshop = async (req, res) => {
 
     const coverImageFile = getUploadedFile(req, 'coverImage');
     const qrImageFile = getUploadedFile(req, 'qrImage');
+    const descriptionImageFiles = getUploadedFiles(req, 'hackathonDescriptionImages');
 
     const existingWorkshop = await Workshop.findById(id);
 
@@ -904,6 +950,16 @@ export const updateWorkshop = async (req, res) => {
         if (existingWorkshop?.qrImage) deleteLegacyUpload(existingWorkshop.qrImage);
         updateData.qrImage = uploadedFileToDataUrl(qrImageFile);
       }
+    }
+
+    if (updateData.eventType === 'hackathon' && descriptionImageFiles.length) {
+      updateData.hackathonDescriptionImages = [
+        ...(existingWorkshop?.hackathonDescriptionImages || []),
+        ...descriptionImageFiles.map(uploadedFileToDataUrl)
+      ].slice(0, 8);
+    } else if (updateData.eventType !== 'hackathon') {
+      descriptionImageFiles.forEach(cleanupUploadedFile);
+      updateData.hackathonDescriptionImages = [];
     }
 
     const workshop = await Workshop.findByIdAndUpdate(id, updateData, { new: true })
