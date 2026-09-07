@@ -154,30 +154,33 @@ export const WorkshopDetailPage = () => {
             )}
           </div>
 
+          {workshop.eventType === 'hackathon' && workshop.hackathonDescriptionImages?.length > 0 && (
+            <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {workshop.hackathonDescriptionImages.map((image, index) => (
+                <a
+                  key={image}
+                  href={resolveMediaUrl(image, { w: 1800 })}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group overflow-hidden rounded-lg border border-emerald-100 bg-emerald-50 p-2 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
+                >
+                  <img
+                    src={resolveMediaUrl(image, { w: 700 })}
+                    alt={`${workshop.title} detail ${index + 1}`}
+                    loading="lazy"
+                    decoding="async"
+                    className="aspect-[3/4] w-full rounded-md bg-white object-contain"
+                  />
+                </a>
+              ))}
+            </div>
+          )}
+
           {/* Description */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">About This {eventLabel}</h2>
             <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{workshop.description}</p>
           </div>
-
-          {workshop.eventType === 'hackathon' && workshop.hackathonDescriptionImages?.length > 0 && (
-            <div className="mb-8 border-t border-slate-200 pt-8">
-              <h2 className="mb-4 text-2xl font-bold text-gray-900">Hackathon Details</h2>
-              <div className="space-y-5">
-                {workshop.hackathonDescriptionImages.map((image, index) => (
-                  <a key={image} href={resolveMediaUrl(image, { w: 1800 })} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-                    <img
-                      src={resolveMediaUrl(image, { w: 1600 })}
-                      alt={`${workshop.title} detail ${index + 1}`}
-                      loading="lazy"
-                      decoding="async"
-                      className="mx-auto block h-auto w-full max-w-full object-contain"
-                    />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
 
           {workshop.dailyTimings?.some(timing => timing.startTime || timing.endTime) && (
             <div className="mb-8">
