@@ -108,6 +108,10 @@ const workshopSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  hackathonDescriptionImageCount: {
+    type: Number,
+    default: 0
+  },
   paymentEnabled: {
     type: Boolean
   },

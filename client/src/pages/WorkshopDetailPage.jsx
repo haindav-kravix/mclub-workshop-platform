@@ -165,10 +165,11 @@ export const WorkshopDetailPage = () => {
                   className="group overflow-hidden rounded-lg border border-emerald-100 bg-emerald-50 p-2 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
                 >
                   <img
-                    src={resolveMediaUrl(image, { w: 700 })}
+                    src={resolveMediaUrl(image, { w: 1200 })}
                     alt={`${workshop.title} detail ${index + 1}`}
                     loading="lazy"
                     decoding="async"
+                    fetchPriority="low"
                     className="aspect-[3/4] w-full rounded-md bg-white object-contain"
                   />
                 </a>

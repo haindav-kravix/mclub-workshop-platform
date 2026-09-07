@@ -128,7 +128,10 @@ const withWorkshopImageUrls = (workshop, req) => ({
     ? getWorkshopImageUrl(workshop, 'qr')
     : '',
   hackathonDescriptionImages: workshop.eventType === 'hackathon'
-    ? (workshop.hackathonDescriptionImages || []).map((_, index) => getHackathonDescriptionImageUrl(workshop, index))
+    ? Array.from(
+      { length: Math.min(8, Math.max(0, Number(workshop.hackathonDescriptionImageCount) || 0)) },
+      (_, index) => getHackathonDescriptionImageUrl(workshop, index)
+    )
     : []
 });
 
@@ -709,6 +712,7 @@ export const createWorkshop = async (req, res) => {
       coverImagePreview,
       qrImage,
       hackathonDescriptionImages,
+      hackathonDescriptionImageCount: hackathonDescriptionImages.length,
       paymentEnabled: shouldUsePayment,
       entryPassEnabled: parseBoolean(entryPassEnabled, true),
       hackathonLeaderboardVisible: parseBoolean(hackathonLeaderboardVisible, false),
@@ -834,7 +838,7 @@ export const getHackathonDescriptionImage = async (req, res) => {
 export const getWorkshopById = async (req, res) => {
   try {
     const workshop = await Workshop.findById(req.params.id)
-      .select('-coverImage -qrImage -coverImagePreview -problemStatements')
+      .select('-coverImage -qrImage -coverImagePreview -problemStatements -hackathonDescriptionImages')
       .populate('createdBy', 'name email')
       .lean();
     
@@ -851,7 +855,7 @@ export const getWorkshopById = async (req, res) => {
 export const getAdminWorkshopById = async (req, res) => {
   try {
     const workshop = await Workshop.findById(req.params.id)
-      .select('-coverImage -qrImage -coverImagePreview')
+      .select('-coverImage -qrImage -coverImagePreview -hackathonDescriptionImages')
       .populate('createdBy', 'name email')
       .lean();
 
@@ -957,9 +961,13 @@ export const updateWorkshop = async (req, res) => {
         ...(existingWorkshop?.hackathonDescriptionImages || []),
         ...descriptionImageFiles.map(uploadedFileToDataUrl)
       ].slice(0, 8);
+      updateData.hackathonDescriptionImageCount = updateData.hackathonDescriptionImages.length;
+    } else if (updateData.eventType === 'hackathon') {
+      updateData.hackathonDescriptionImageCount = existingWorkshop?.hackathonDescriptionImages?.length || 0;
     } else if (updateData.eventType !== 'hackathon') {
       descriptionImageFiles.forEach(cleanupUploadedFile);
       updateData.hackathonDescriptionImages = [];
+      updateData.hackathonDescriptionImageCount = 0;
     }
 
     const workshop = await Workshop.findByIdAndUpdate(id, updateData, { new: true })
@@ -1003,7 +1011,7 @@ export const getAdminWorkshops = async (req, res) => {
     }
 
     const workshops = await Workshop.find(filter)
-      .select('-coverImage -qrImage -coverImagePreview -problemStatements')
+      .select('-coverImage -qrImage -coverImagePreview -problemStatements -hackathonDescriptionImages')
       .populate('createdBy', 'name email')
       .sort({ createdAt: -1 })
       .lean();
@@ -1097,7 +1105,7 @@ export const generateWorkshopReport = async (req, res) => {
 
 export const toggleWorkshopStatus = async (req, res) => {
   try {
-    const workshop = await Workshop.findById(req.params.id).select('-coverImage -qrImage -coverImagePreview');
+    const workshop = await Workshop.findById(req.params.id).select('-coverImage -qrImage -coverImagePreview -hackathonDescriptionImages');
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
@@ -1113,7 +1121,7 @@ export const toggleWorkshopStatus = async (req, res) => {
 
 export const toggleRegistrationStatus = async (req, res) => {
   try {
-    const workshop = await Workshop.findById(req.params.id).select('-coverImage -qrImage -coverImagePreview');
+    const workshop = await Workshop.findById(req.params.id).select('-coverImage -qrImage -coverImagePreview -hackathonDescriptionImages');
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
@@ -1129,7 +1137,7 @@ export const toggleRegistrationStatus = async (req, res) => {
 
 export const toggleStoppedStatus = async (req, res) => {
   try {
-    const workshop = await Workshop.findById(req.params.id).select('-coverImage -qrImage -coverImagePreview');
+    const workshop = await Workshop.findById(req.params.id).select('-coverImage -qrImage -coverImagePreview -hackathonDescriptionImages');
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
     }
