@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
+import sharp from 'sharp';
 import Certificate from '../models/Certificate.js';
 import CertificateTemplate from '../models/CertificateTemplate.js';
 import Workshop from '../models/Workshop.js';
@@ -31,6 +32,7 @@ const scriptFontPath = path.join(
   '../node_modules/@fontsource/great-vibes/files/great-vibes-latin-400-normal.woff'
 );
 let scriptFontBytes = null;
+const compactTemplateCache = new Map();
 
 const getCertificateFont = async (pdf, fontFamily) => {
   if (fontFamily === 'Great Vibes') {
@@ -90,7 +92,7 @@ const isUsableCertificateName = (value = '') => {
   return text.length > 1 && !text.includes('@') && !text.startsWith('{') && !text.startsWith('data:');
 };
 
-const getCertificateRecipientName = (registration, formFields = []) => {
+export const getCertificateRecipientName = (registration, formFields = []) => {
   const nameFields = formFields.filter(field => {
     const label = String(field.label || '').toLowerCase();
     return field.type !== 'email' && (
@@ -114,12 +116,19 @@ const getCertificateRecipientName = (registration, formFields = []) => {
   return registration.userId?.email || 'Participant';
 };
 
-const generateCertificatePdf = async (template, participantName) => {
+const getCompactTemplateImage = async (template) => {
+  const cacheKey = `${template._id}:${new Date(template.updatedAt || 0).getTime()}`;
+  if (!compactTemplateCache.has(cacheKey)) {
+    compactTemplateCache.set(cacheKey, sharp(template.templateImage, { limitInputPixels: 80_000_000 })
+      .jpeg({ quality: 92, chromaSubsampling: '4:4:4', mozjpeg: true })
+      .toBuffer());
+  }
+  return compactTemplateCache.get(cacheKey);
+};
+
+export const generateCertificatePdf = async (template, participantName) => {
   const pdf = await PDFDocument.create();
-  const imageBytes = template.templateImage;
-  const image = template.templateMimeType === 'image/png'
-    ? await pdf.embedPng(imageBytes)
-    : await pdf.embedJpg(imageBytes);
+  const image = await pdf.embedJpg(await getCompactTemplateImage(template));
   const page = pdf.addPage([image.width, image.height]);
   page.drawImage(image, { x: 0, y: 0, width: image.width, height: image.height });
 
