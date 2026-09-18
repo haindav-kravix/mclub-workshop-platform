@@ -10,6 +10,7 @@ router.get('/hackathon/:id/file', authenticateToken, certificateController.getHa
 router.get('/:id/file', authenticateToken, certificateController.getCertificateFile);
 router.get('/admin/workshop/:workshopId/setup', authenticateToken, adminOnly, certificateController.getTemplateSetup);
 router.put('/admin/workshop/:workshopId/setup', authenticateToken, adminOnly, upload.single('template'), certificateController.saveTemplateSetup);
+router.put('/admin/workshop/:workshopId/download-expiry', authenticateToken, adminOnly, certificateController.setCertificateDownloadExpiry);
 router.get('/admin/workshop/:workshopId/eligible', authenticateToken, adminOnly, certificateController.getEligibleRecipients);
 router.post('/admin/workshop/:workshopId/generate', authenticateToken, adminOnly, certificateController.generateCertificates);
 router.delete('/admin/workshop/:workshopId', authenticateToken, adminOnly, certificateController.deleteWorkshopCertificates);

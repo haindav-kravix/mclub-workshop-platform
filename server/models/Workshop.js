@@ -112,6 +112,10 @@ const workshopSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  certificateDownloadExpiresAt: {
+    type: Date,
+    default: null
+  },
   paymentEnabled: {
     type: Boolean
   },

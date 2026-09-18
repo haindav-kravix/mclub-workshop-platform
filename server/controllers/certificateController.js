@@ -92,6 +92,8 @@ const isUsableCertificateName = (value = '') => {
   return text.length > 1 && !text.includes('@') && !text.startsWith('{') && !text.startsWith('data:');
 };
 
+const isExpired = (expiresAt) => expiresAt && new Date(expiresAt).getTime() <= Date.now();
+
 export const getCertificateRecipientName = (registration, formFields = []) => {
   const nameFields = formFields.filter(field => {
     const label = String(field.label || '').toLowerCase();
@@ -156,12 +158,47 @@ export const generateCertificatePdf = async (template, participantName) => {
 export const getTemplateSetup = async (req, res) => {
   try {
     const workshop = await Workshop.findById(req.params.workshopId)
-      .select('title eventType date startDate endDate');
+      .select('title eventType date startDate endDate certificateDownloadExpiresAt');
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
     const template = await CertificateTemplate.findOne({ workshopId: workshop._id });
     res.json({ workshop, template: templateResponse(template) });
   } catch (error) {
     res.status(500).json({ message: 'Unable to load certificate setup', error: error.message });
+  }
+};
+
+export const setCertificateDownloadExpiry = async (req, res) => {
+  try {
+    const { expiresAt } = req.body;
+    const parsedExpiry = expiresAt ? new Date(expiresAt) : null;
+    if (expiresAt && Number.isNaN(parsedExpiry.getTime())) {
+      return res.status(400).json({ message: 'Choose a valid certificate download deadline' });
+    }
+    if (parsedExpiry && parsedExpiry.getTime() <= Date.now()) {
+      return res.status(400).json({ message: 'The certificate download deadline must be in the future' });
+    }
+
+    const workshop = await Workshop.findByIdAndUpdate(
+      req.params.workshopId,
+      { $set: { certificateDownloadExpiresAt: parsedExpiry } },
+      { new: true }
+    ).select('title certificateDownloadExpiresAt');
+    if (!workshop) return res.status(404).json({ message: 'Event not found' });
+
+    await Promise.all([
+      Certificate.updateMany({ workshopId: workshop._id }, { $set: { expiresAt: parsedExpiry } }),
+      HackathonCertificate.updateMany({ workshopId: workshop._id }, { $set: { expiresAt: parsedExpiry } })
+    ]);
+
+    res.json({
+      success: true,
+      expiresAt: workshop.certificateDownloadExpiresAt,
+      message: parsedExpiry
+        ? 'Certificate download deadline saved for all issued and future certificates'
+        : 'Certificate download deadline removed'
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to save certificate download deadline', error: error.message });
   }
 };
 
@@ -291,7 +328,7 @@ export const generateCertificates = async (req, res) => {
     const userIds = Array.isArray(req.body.userIds) ? [...new Set(req.body.userIds)] : [];
     if (!userIds.length) return res.status(400).json({ message: 'Select at least one eligible participant' });
     const [workshop, template] = await Promise.all([
-      Workshop.findById(workshopId).select('title eventType registrationFormFields'),
+      Workshop.findById(workshopId).select('title eventType registrationFormFields certificateDownloadExpiresAt'),
       CertificateTemplate.findOne({ workshopId })
     ]);
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
@@ -308,7 +345,7 @@ export const generateCertificates = async (req, res) => {
         const fileName = `${safeFileName(workshop.title)}-${safeFileName(member.name)}.pdf`;
         await HackathonCertificate.findOneAndUpdate(
           { workshopId, registrationId, memberId },
-          { workshopId, registrationId, ownerUserId: registration.userId, memberId, recipientName: member.name, title: workshop.title, fileName, pdfData, generatedBy: req.user.id, issuedAt: new Date() },
+          { workshopId, registrationId, ownerUserId: registration.userId, memberId, recipientName: member.name, title: workshop.title, fileName, pdfData, generatedBy: req.user.id, issuedAt: new Date(), expiresAt: workshop.certificateDownloadExpiresAt || null },
           { upsert: true, new: true, runValidators: true }
         );
         generatedCount += 1;
@@ -333,7 +370,8 @@ export const generateCertificates = async (req, res) => {
           fileName,
           pdfData,
           generatedBy: req.user.id,
-          issuedAt: new Date()
+          issuedAt: new Date(),
+          expiresAt: workshop.certificateDownloadExpiresAt || null
         },
         { upsert: true, new: true, runValidators: true }
       );
@@ -370,8 +408,8 @@ export const deleteWorkshopCertificates = async (req, res) => {
 export const getMyCertificates = async (req, res) => {
   try {
     const [certificates, teamCertificates] = await Promise.all([
-      Certificate.find({ userId: req.user.id }).select('-pdfData').populate('workshopId', 'title eventType date startDate').lean(),
-      HackathonCertificate.find({ ownerUserId: req.user.id }).select('-pdfData').populate('workshopId', 'title eventType date startDate').lean()
+      Certificate.find({ userId: req.user.id, $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }] }).select('-pdfData').populate('workshopId', 'title eventType date startDate').lean(),
+      HackathonCertificate.find({ ownerUserId: req.user.id, $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }] }).select('-pdfData').populate('workshopId', 'title eventType date startDate').lean()
     ]);
     res.json([
       ...certificates.map(item => ({ ...item, certificateType: 'standard' })),
@@ -386,6 +424,10 @@ export const getHackathonCertificateFile = async (req, res) => {
   try {
     const certificate = await HackathonCertificate.findById(req.params.id);
     if (!certificate) return res.status(404).json({ message: 'Certificate not found' });
+    if (isExpired(certificate.expiresAt)) {
+      await certificate.deleteOne();
+      return res.status(410).json({ message: 'This certificate download period has ended' });
+    }
     const isOwner = String(certificate.ownerUserId) === String(req.user.id);
     if (!isOwner && !req.user.isAdmin) return res.status(403).json({ message: 'Access denied' });
     const disposition = req.query.download === '1' ? 'attachment' : 'inline';
@@ -401,6 +443,10 @@ export const getCertificateFile = async (req, res) => {
   try {
     const certificate = await Certificate.findById(req.params.id);
     if (!certificate) return res.status(404).json({ message: 'Certificate not found' });
+    if (isExpired(certificate.expiresAt)) {
+      await certificate.deleteOne();
+      return res.status(410).json({ message: 'This certificate download period has ended' });
+    }
     const isOwner = String(certificate.userId) === String(req.user.id);
     if (!isOwner && !req.user.isAdmin) return res.status(403).json({ message: 'Access denied' });
     const disposition = req.query.download === '1' ? 'attachment' : 'inline';

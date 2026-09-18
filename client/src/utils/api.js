@@ -237,6 +237,7 @@ export const achievementAPI = {
 export const certificateAPI = {
   getSetup: (workshopId) => axios.get(`${API_URL}/certificates/admin/workshop/${workshopId}/setup`, { headers: getAuthHeaders() }),
   saveSetup: (workshopId, data) => axios.put(`${API_URL}/certificates/admin/workshop/${workshopId}/setup`, data, { headers: getAuthHeaders() }),
+  setDownloadExpiry: (workshopId, expiresAt) => axios.put(`${API_URL}/certificates/admin/workshop/${workshopId}/download-expiry`, { expiresAt }, { headers: getAuthHeaders() }),
   getEligible: (workshopId) => axios.get(`${API_URL}/certificates/admin/workshop/${workshopId}/eligible`, { headers: getAuthHeaders() }),
   generate: (workshopId, userIds) => axios.post(`${API_URL}/certificates/admin/workshop/${workshopId}/generate`, { userIds }, { headers: getAuthHeaders() }),
   removeAllForWorkshop: (workshopId) => axios.delete(`${API_URL}/certificates/admin/workshop/${workshopId}`, { headers: getAuthHeaders() }),

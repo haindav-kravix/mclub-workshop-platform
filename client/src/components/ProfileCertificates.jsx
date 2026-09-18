@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { FiAward, FiDownload, FiEye, FiX } from 'react-icons/fi';
 import { certificateAPI } from '../utils/api';
 
+const formatDeadline = (value) => new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+
 export const ProfileCertificates = ({ onError }) => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +64,7 @@ export const ProfileCertificates = ({ onError }) => {
               <p className="text-xs font-black uppercase text-secondary">Issued {new Date(certificate.issuedAt).toLocaleDateString('en-IN')}</p>
               <h3 className="mt-2 font-black text-slate-950">{certificate.title}</h3>
               {certificate.recipientName && <p className="mt-1 text-sm font-bold text-secondary">For {certificate.recipientName}</p>}
+              {certificate.expiresAt && <p className="mt-2 text-xs font-black text-amber-700">Download by {formatDeadline(certificate.expiresAt)}</p>}
               <div className="mt-4 grid grid-cols-2 gap-2"><button onClick={() => openPreview(certificate)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-black text-secondary"><FiEye /> Preview</button><button onClick={() => download(certificate)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-black text-white"><FiDownload /> Download</button></div>
             </article>
           ))}

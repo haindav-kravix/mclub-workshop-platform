@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiCheck, FiFileText, FiImage, FiSave, FiSearch, FiUsers } from 'react-icons/fi';
+import { FiArrowLeft, FiCheck, FiClock, FiFileText, FiImage, FiSave, FiSearch, FiTrash2, FiUsers } from 'react-icons/fi';
 import '@fontsource/great-vibes/latin-400.css';
 import { certificateAPI } from '../utils/api';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
@@ -38,6 +38,8 @@ export const AdminCertificatesPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [recipientSearch, setRecipientSearch] = useState('');
+  const [downloadExpiresAt, setDownloadExpiresAt] = useState('');
+  const [savingExpiry, setSavingExpiry] = useState(false);
 
   const load = async () => {
     try {
@@ -46,6 +48,7 @@ export const AdminCertificatesPage = () => {
         certificateAPI.getEligible(workshopId)
       ]);
       setWorkshop(setupResponse.data.workshop);
+      setDownloadExpiresAt(setupResponse.data.workshop?.certificateDownloadExpiresAt ? new Date(setupResponse.data.workshop.certificateDownloadExpiresAt).toISOString().slice(0, 16) : '');
       if (setupResponse.data.template) {
         const { templateImage: image, ...saved } = setupResponse.data.template;
         setTemplateImage(image);
@@ -157,6 +160,20 @@ export const AdminCertificatesPage = () => {
     }
   };
 
+  const saveDownloadExpiry = async () => {
+    setSavingExpiry(true);
+    setError('');
+    try {
+      const response = await certificateAPI.setDownloadExpiry(workshopId, downloadExpiresAt ? new Date(downloadExpiresAt).toISOString() : null);
+      setWorkshop(prev => ({ ...prev, certificateDownloadExpiresAt: response.data.expiresAt }));
+      setSuccess(response.data.message);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to save certificate download deadline');
+    } finally {
+      setSavingExpiry(false);
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -216,6 +233,13 @@ export const AdminCertificatesPage = () => {
               <button onClick={saveSetup} disabled={saving} className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-black text-white disabled:opacity-50"><FiSave /> {saving ? 'Saving...' : 'Save Design & Controls'}</button>
             </div>
           </aside>
+        </section>
+
+        <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div><div className="flex items-center gap-2 text-amber-800"><FiClock /><p className="text-sm font-black uppercase">Certificate download timer</p></div><h2 className="mt-1 text-xl font-black text-slate-950">Set the certificate download deadline</h2><p className="mt-1 max-w-2xl text-sm text-slate-600">After this time, issued certificates are automatically removed from all recipient profiles and the database. Leave it empty to keep certificates available until you delete them.</p></div>
+            <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto"><input type="datetime-local" value={downloadExpiresAt} onChange={event => setDownloadExpiresAt(event.target.value)} className="min-h-11 w-full lg:w-72" /><button type="button" onClick={saveDownloadExpiry} disabled={savingExpiry} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 font-black text-white disabled:opacity-50"><FiClock /> {savingExpiry ? 'Saving...' : 'Save timer'}</button>{downloadExpiresAt && <button type="button" onClick={() => setDownloadExpiresAt('')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-amber-300 bg-white px-4 font-black text-amber-800"><FiTrash2 /> Clear</button>}</div>
+          </div>
         </section>
 
         <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">

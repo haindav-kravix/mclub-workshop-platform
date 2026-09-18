@@ -7,10 +7,13 @@ const certificateSchema = new mongoose.Schema({
   fileName: { type: String, required: true },
   pdfData: { type: Buffer, required: true },
   generatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  issuedAt: { type: Date, default: Date.now }
+  issuedAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, default: null }
 }, { timestamps: true });
 
 certificateSchema.index({ workshopId: 1, userId: 1 }, { unique: true });
 certificateSchema.index({ userId: 1, issuedAt: -1 });
+// MongoDB removes the PDF and its certificate record after the chosen deadline.
+certificateSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export default mongoose.model('Certificate', certificateSchema);
