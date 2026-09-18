@@ -344,6 +344,29 @@ export const generateCertificates = async (req, res) => {
   }
 };
 
+export const deleteWorkshopCertificates = async (req, res) => {
+  try {
+    const workshop = await Workshop.findById(req.params.workshopId).select('_id title');
+    if (!workshop) return res.status(404).json({ message: 'Event not found' });
+
+    const [standard, hackathon] = await Promise.all([
+      Certificate.deleteMany({ workshopId: workshop._id }),
+      HackathonCertificate.deleteMany({ workshopId: workshop._id })
+    ]);
+    const deletedCount = standard.deletedCount + hackathon.deletedCount;
+
+    res.json({
+      success: true,
+      deletedCount,
+      message: deletedCount
+        ? `${deletedCount} issued certificate${deletedCount === 1 ? '' : 's'} removed from recipient profiles`
+        : 'No issued certificates found for this event'
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to delete issued certificates', error: error.message });
+  }
+};
+
 export const getMyCertificates = async (req, res) => {
   try {
     const [certificates, teamCertificates] = await Promise.all([

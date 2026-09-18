@@ -1,6 +1,8 @@
 import Workshop from '../models/Workshop.js';
 import Registration from '../models/Registration.js';
 import Attendance from '../models/Attendance.js';
+import Certificate from '../models/Certificate.js';
+import HackathonCertificate from '../models/HackathonCertificate.js';
 import JSZip from 'jszip';
 import crypto from 'crypto';
 import path from 'path';
@@ -1017,7 +1019,8 @@ export const getAdminWorkshops = async (req, res) => {
       .lean();
     const workshopIds = workshops.map(workshop => workshop._id);
 
-    const registrationCounts = workshopIds.length ? await Registration.aggregate([
+    const [registrationCounts, certificateCounts, hackathonCertificateCounts] = workshopIds.length ? await Promise.all([
+      Registration.aggregate([
       {
         $match: {
           workshopId: { $in: workshopIds }
@@ -1032,7 +1035,16 @@ export const getAdminWorkshops = async (req, res) => {
           count: { $sum: 1 }
         }
       }
-    ]) : [];
+      ]),
+      Certificate.aggregate([
+        { $match: { workshopId: { $in: workshopIds } } },
+        { $group: { _id: '$workshopId', count: { $sum: 1 } } }
+      ]),
+      HackathonCertificate.aggregate([
+        { $match: { workshopId: { $in: workshopIds } } },
+        { $group: { _id: '$workshopId', count: { $sum: 1 } } }
+      ])
+    ]) : [[], [], []];
 
     const countsByWorkshop = registrationCounts.reduce((counts, item) => {
       const workshopId = item._id.workshopId.toString();
@@ -1048,6 +1060,12 @@ export const getAdminWorkshops = async (req, res) => {
       }
       counts[workshopId][status] = item.count;
       counts[workshopId].total += item.count;
+      return counts;
+    }, {});
+
+    const certificateCountsByWorkshop = [...certificateCounts, ...hackathonCertificateCounts].reduce((counts, item) => {
+      const workshopId = item._id.toString();
+      counts[workshopId] = (counts[workshopId] || 0) + item.count;
       return counts;
     }, {});
 
@@ -1067,7 +1085,8 @@ export const getAdminWorkshops = async (req, res) => {
         confirmedRegistrationCount: counts.confirmed,
         pendingRegistrationCount: counts.pending,
         rejectedRegistrationCount: counts.rejected,
-        cancelledRegistrationCount: counts.cancelled
+        cancelledRegistrationCount: counts.cancelled,
+        certificateCount: certificateCountsByWorkshop[workshop._id.toString()] || 0
       };
     }));
   } catch (error) {

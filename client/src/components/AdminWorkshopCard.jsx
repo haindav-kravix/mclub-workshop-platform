@@ -18,6 +18,7 @@ export const AdminWorkshopCard = ({
   onAttendanceReports,
   onEntryManagement,
   onCertificates,
+  onDeleteCertificates,
   onHackathonEvaluation,
   onProblemStatements,
   showEmail = true
@@ -27,6 +28,7 @@ export const AdminWorkshopCard = ({
   const confirmedRegistrations = workshop.confirmedRegistrationCount ?? workshop.registrationStats?.confirmed ?? workshop.registrationCount ?? 0;
   const rejectedRegistrations = workshop.rejectedRegistrationCount ?? workshop.registrationStats?.rejected ?? 0;
   const eventLabel = getEventLabel(workshop);
+  const certificateCount = workshop.certificateCount || 0;
 
   return (
     <div className="panel rounded-lg overflow-hidden transition hover:-translate-y-1 hover:shadow-xl">
@@ -178,8 +180,18 @@ export const AdminWorkshopCard = ({
             className="col-span-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition text-sm font-semibold flex items-center justify-center space-x-1"
           >
             <FiAward size={16} />
-            <span>Certificates</span>
+            <span>Certificates{certificateCount ? ` (${certificateCount})` : ''}</span>
           </button>
+
+          {certificateCount > 0 && (
+            <button
+              onClick={() => onDeleteCertificates(workshop)}
+              className="col-span-2 px-3 py-2 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition text-sm font-semibold flex items-center justify-center space-x-1"
+            >
+              <FiTrash2 size={16} />
+              <span>Delete {certificateCount} Issued Certificate{certificateCount === 1 ? '' : 's'}</span>
+            </button>
+          )}
 
           {showEmail && workshop.isActive && (
             <button

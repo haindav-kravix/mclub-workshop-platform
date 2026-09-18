@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiAward, FiBarChart2, FiPlus, FiShield, FiTrendingUp, FiUsers } from 'react-icons/fi';
 import { AdminWorkshopCard } from '../components/AdminWorkshopCard';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
-import { registrationAPI, workshopAPI } from '../utils/api';
+import { certificateAPI, registrationAPI, workshopAPI } from '../utils/api';
 import { getEventLabel } from '../utils/eventLabels';
 
 export const AdminHackathonsPage = () => {
@@ -103,6 +103,17 @@ export const AdminHackathonsPage = () => {
     }
   };
 
+  const deleteCertificates = async (event) => {
+    if (!window.confirm(`Delete all ${event.certificateCount} issued certificates for ${event.title}? This removes them from every recipient profile and cannot be undone.`)) return;
+    try {
+      const response = await certificateAPI.removeAllForWorkshop(event._id);
+      updateEventInState({ ...event, certificateCount: 0 });
+      setSuccess(response.data.message);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to delete issued certificates');
+    }
+  };
+
   const totals = useMemo(() => events.reduce((stats, event) => {
     stats.total += event.totalRegistrationCount ?? event.registrationStats?.total ?? 0;
     stats.confirmed += event.confirmedRegistrationCount ?? event.registrationStats?.confirmed ?? 0;
@@ -195,6 +206,7 @@ export const AdminHackathonsPage = () => {
                 onAttendanceReports={(eventId) => navigate(`/admin/hackathon/${eventId}/attendance/reports`)}
                 onEntryManagement={(eventId) => navigate(`/admin/entry/${eventId}`)}
                 onCertificates={(eventId) => navigate(`/admin/certificates/${eventId}`)}
+                onDeleteCertificates={deleteCertificates}
                 onHackathonEvaluation={(eventId) => navigate(`/admin/hackathon/${eventId}/evaluation`)}
                 onProblemStatements={(eventId) => navigate(`/admin/hackathon/${eventId}/problem-statements`)}
               />

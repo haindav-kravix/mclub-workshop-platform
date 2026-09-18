@@ -12,5 +12,6 @@ router.get('/admin/workshop/:workshopId/setup', authenticateToken, adminOnly, ce
 router.put('/admin/workshop/:workshopId/setup', authenticateToken, adminOnly, upload.single('template'), certificateController.saveTemplateSetup);
 router.get('/admin/workshop/:workshopId/eligible', authenticateToken, adminOnly, certificateController.getEligibleRecipients);
 router.post('/admin/workshop/:workshopId/generate', authenticateToken, adminOnly, certificateController.generateCertificates);
+router.delete('/admin/workshop/:workshopId', authenticateToken, adminOnly, certificateController.deleteWorkshopCertificates);
 
 export default router;

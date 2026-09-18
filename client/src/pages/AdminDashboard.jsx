@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { workshopAPI, registrationAPI } from '../utils/api';
+import { workshopAPI, registrationAPI, certificateAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
 import { AdminWorkshopCard } from '../components/AdminWorkshopCard';
 import { FiActivity, FiAward, FiBarChart2, FiCalendar, FiCheckCircle, FiClock, FiMail, FiPlus, FiTrendingUp, FiUsers, FiX, FiXCircle } from 'react-icons/fi';
@@ -111,6 +111,17 @@ export const AdminDashboard = () => {
     } catch (err) {
       setError('Failed to update workshop status');
       console.error(err);
+    }
+  };
+
+  const handleDeleteCertificates = async (workshop) => {
+    if (!window.confirm(`Delete all ${workshop.certificateCount} issued certificates for ${workshop.title}? This removes them from every recipient profile and cannot be undone.`)) return;
+    try {
+      const response = await certificateAPI.removeAllForWorkshop(workshop._id);
+      updateWorkshopInState({ ...workshop, certificateCount: 0 });
+      setSuccess(response.data.message);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to delete issued certificates');
     }
   };
 
@@ -299,6 +310,7 @@ export const AdminDashboard = () => {
                 onAttendanceReports={(workshopId) => navigate(`/admin/attendance/${workshopId}/reports`)}
                 onEntryManagement={(workshopId) => navigate(`/admin/entry/${workshopId}`)}
                 onCertificates={(workshopId) => navigate(`/admin/certificates/${workshopId}`)}
+                onDeleteCertificates={handleDeleteCertificates}
                 onHackathonEvaluation={(workshopId) => navigate(`/admin/hackathon/${workshopId}/evaluation`)}
               />
             ))}

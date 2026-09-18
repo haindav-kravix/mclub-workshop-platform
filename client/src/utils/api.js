@@ -239,6 +239,7 @@ export const certificateAPI = {
   saveSetup: (workshopId, data) => axios.put(`${API_URL}/certificates/admin/workshop/${workshopId}/setup`, data, { headers: getAuthHeaders() }),
   getEligible: (workshopId) => axios.get(`${API_URL}/certificates/admin/workshop/${workshopId}/eligible`, { headers: getAuthHeaders() }),
   generate: (workshopId, userIds) => axios.post(`${API_URL}/certificates/admin/workshop/${workshopId}/generate`, { userIds }, { headers: getAuthHeaders() }),
+  removeAllForWorkshop: (workshopId) => axios.delete(`${API_URL}/certificates/admin/workshop/${workshopId}`, { headers: getAuthHeaders() }),
   getMy: () => axios.get(`${API_URL}/certificates/my`, { headers: getAuthHeaders() }),
   getFile: (id, download = false, type = 'standard') => axios.get(`${API_URL}/certificates/${type === 'hackathon-member' ? 'hackathon/' : ''}${id}/file`, {
     headers: getAuthHeaders(),
