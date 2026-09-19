@@ -2376,6 +2376,15 @@ button, [role="button"], input, textarea, select {
   min-height: 27.5rem;
 }
 
+.highlight-home-open-action {
+  box-shadow: 0 8px 20px rgba(0, 177, 89, 0.2);
+}
+
+.achievement-carousel-controls {
+  min-height: 2.75rem;
+  margin-top: auto !important;
+}
+
 .achievement-carousel .achievement-card .whitespace-pre-wrap {
   display: -webkit-box;
   overflow: hidden;
@@ -2605,12 +2614,17 @@ button, [role="button"], input, textarea, select {
   min-height: 0;
 }
 
-.home-achievement-stage .achievement-card > div > div:first-child {
+.home-achievement-stage .achievement-media-single-row {
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.home-achievement-stage .achievement-media-multi-row {
   grid-template-rows: repeat(2, minmax(0, 1fr));
   min-height: 0;
 }
 
-.home-achievement-stage .achievement-card > div > div:first-child > div {
+.home-achievement-stage .achievement-media > div {
   min-height: 0;
 }
 

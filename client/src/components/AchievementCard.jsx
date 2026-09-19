@@ -23,6 +23,7 @@ export const AchievementCard = ({ achievement, featured = false, showLinks = tru
   }, []);
 
   const images = achievement.images || [];
+  const mediaLayout = images.length > 2 ? 'achievement-media-multi-row' : 'achievement-media-single-row';
 
   return (
     <article
@@ -30,7 +31,7 @@ export const AchievementCard = ({ achievement, featured = false, showLinks = tru
       className={`achievement-card ${visible ? 'achievement-card-visible' : ''} overflow-hidden rounded-lg border border-emerald-100 bg-white shadow-sm`}
     >
       <div className={`grid ${featured ? 'lg:grid-cols-[1.05fr_0.95fr]' : ''}`}>
-        <div className={`grid min-h-52 gap-1 bg-emerald-50 ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        <div className={`achievement-media ${mediaLayout} grid min-h-52 gap-1 bg-emerald-50 ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
           {images.length ? images.slice(0, featured ? 4 : 2).map((image, index) => (
             <div key={image} className={`relative flex items-center justify-center overflow-hidden bg-white ${index === 0 && images.length === 3 ? 'row-span-2' : ''}`}>
               <img src={resolveMediaUrl(image, { w: featured ? 1100 : 700 })} alt={`${achievement.title} ${index + 1}`} className="h-full min-h-52 w-full object-contain p-2" loading="lazy" />
@@ -53,6 +54,11 @@ export const AchievementCard = ({ achievement, featured = false, showLinks = tru
           </div>
           <h2 className={`${featured ? 'text-3xl sm:text-4xl' : 'text-2xl'} font-black leading-tight text-slate-950`}>{achievement.title}</h2>
           <p className="mt-4 whitespace-pre-wrap text-base leading-7 text-slate-600">{achievement.summary}</p>
+          {!showLinks && (
+            <span className="highlight-home-open-action mt-5 inline-flex w-fit items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-black text-slate-950">
+              View Highlight <FiArrowUpRight />
+            </span>
+          )}
           {showLinks && achievement.links?.length > 0 && (
             <div className="mt-5 flex flex-wrap gap-2">
               {achievement.links.map(link => (
