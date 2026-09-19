@@ -2716,6 +2716,45 @@ button, [role="button"], input, textarea, select {
   }
 }
 
+@media (min-width: 641px) {
+  .home-achievement-stage {
+    height: 30.5rem;
+  }
+
+  .home-achievement-stage .achievement-carousel {
+    position: relative;
+    height: 28rem;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .home-achievement-stage .achievement-carousel-slide,
+  .home-achievement-stage .achievement-carousel-slide .achievement-card,
+  .home-achievement-stage .achievement-carousel-slide .achievement-card > div {
+    height: 28rem;
+    min-height: 0;
+  }
+
+  .home-achievement-stage .achievement-carousel-controls {
+    position: absolute;
+    right: -1.75rem;
+    bottom: -3.25rem;
+    left: -1.75rem;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    min-height: 2.75rem;
+    margin: 0 !important;
+  }
+
+  .home-achievement-stage .achievement-carousel-controls > button:first-child {
+    justify-self: start;
+  }
+
+  .home-achievement-stage .achievement-carousel-controls > button:last-child {
+    justify-self: end;
+  }
+}
+
 .blog-search-panel {
   background: #ffffff !important;
   backdrop-filter: none !important;

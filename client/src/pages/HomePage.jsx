@@ -88,7 +88,7 @@ export const HomePage = () => {
                   <HomeAchievementsCarousel achievements={achievements} />
                 )}
               </div>
-              <div className="mt-5 flex justify-center">
+              <div className="mt-12 flex justify-center sm:mt-14">
                 <Link to="/achievements" className="home-outline-action inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 font-black text-secondary">View All <FiArrowRight /></Link>
               </div>
             </ScrollReveal>
