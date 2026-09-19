@@ -2591,9 +2591,77 @@ button, [role="button"], input, textarea, select {
   overflow-wrap: anywhere;
 }
 
+/* Keep each home carousel in a stable frame while posters and slide content change. */
+.home-achievement-stage,
+.home-achievement-skeleton,
+.achievement-carousel {
+  height: 38rem;
+}
+
+.achievement-carousel-slide,
+.achievement-carousel-slide .achievement-card,
+.achievement-carousel-slide .achievement-card > div {
+  height: 32rem;
+  min-height: 0;
+}
+
+.home-achievement-stage .achievement-card > div > div:first-child {
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  min-height: 0;
+}
+
+.home-achievement-stage .achievement-card > div > div:first-child > div {
+  min-height: 0;
+}
+
+.home-event-carousel {
+  height: 36rem;
+  min-height: 0;
+}
+
+.home-event-carousel-slide,
+.home-event-carousel-slide .home-upcoming-card {
+  height: 30rem;
+  min-height: 0;
+}
+
+.home-event-carousel-slide .home-upcoming-card > div:first-child {
+  height: 16rem;
+  min-height: 0;
+}
+
+@media (max-width: 640px) {
+  .home-achievement-stage,
+  .home-achievement-skeleton,
+  .achievement-carousel {
+    height: 42rem !important;
+  }
+
+  .achievement-carousel-slide,
+  .achievement-carousel-slide .achievement-card,
+  .achievement-carousel-slide .achievement-card > div {
+    height: 36rem !important;
+  }
+
+  .home-event-carousel {
+    height: 45rem !important;
+  }
+
+  .home-event-carousel-slide,
+  .home-event-carousel-slide .home-upcoming-card {
+    height: 39rem !important;
+  }
+
+  .home-event-carousel-slide .home-upcoming-card > div:first-child {
+    height: 14rem !important;
+  }
+}
+
 @media (min-width: 1024px) {
+  .home-achievement-stage,
   .home-achievement-skeleton {
-    min-height: 34rem;
+    height: 34rem;
+    min-height: 0;
     grid-template-columns: 1.05fr 0.95fr;
   }
 
@@ -2602,13 +2670,15 @@ button, [role="button"], input, textarea, select {
   }
 
   .achievement-carousel {
-    min-height: 34rem;
+    height: 34rem;
+    min-height: 0;
   }
 
   .achievement-carousel-slide,
   .achievement-carousel-slide .achievement-card,
   .achievement-carousel-slide .achievement-card > div {
-    min-height: 28rem;
+    height: 28rem;
+    min-height: 0;
   }
 
   .achievement-carousel .achievement-card .whitespace-pre-wrap {
@@ -2616,16 +2686,19 @@ button, [role="button"], input, textarea, select {
   }
 
   .home-event-carousel {
-    min-height: 32rem;
+    height: 32rem;
+    min-height: 0;
   }
 
   .home-event-carousel-slide,
   .home-event-carousel-slide .home-upcoming-card {
-    min-height: 26rem;
+    height: 26rem;
+    min-height: 0;
   }
 
   .home-event-carousel-slide .home-upcoming-card > div:first-child {
-    min-height: 26rem;
+    height: 26rem;
+    min-height: 0;
   }
 }
 
