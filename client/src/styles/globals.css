@@ -2523,6 +2523,37 @@ button, [role="button"], input, textarea, select {
     overflow: hidden;
   }
 
+  .home-event-carousel-slide .home-event-copy {
+    justify-content: flex-start !important;
+    padding: 1.5rem !important;
+  }
+
+  .home-event-carousel-slide .home-event-title {
+    font-size: 1.55rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .home-event-carousel-slide .home-event-description {
+    margin-top: 0.75rem !important;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .home-event-carousel-slide .home-event-meta-grid {
+    margin-top: 1rem !important;
+    gap: 0.6rem !important;
+  }
+
+  .home-event-carousel-slide .home-event-meta-card {
+    padding: 0.75rem !important;
+  }
+
+  .home-event-carousel-slide .home-event-meta-card svg {
+    margin-bottom: 0.45rem !important;
+  }
+
   .home-event-carousel-slide h3 {
     font-size: 1.7rem !important;
     line-height: 1.12 !important;

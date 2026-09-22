@@ -53,7 +53,9 @@ export const HomeEventsCarousel = ({ events }) => {
           <div className="relative h-56 overflow-hidden bg-emerald-50 sm:h-72 lg:h-full">
             {event.coverImage ? (
               <img
-                src={resolveMediaUrl(event.coverImage, { w: 1800 })}
+                src={resolveMediaUrl(event.coverImage, { w: 720 })}
+                srcSet={`${resolveMediaUrl(event.coverImage, { w: 720 })} 720w, ${resolveMediaUrl(event.coverImage, { w: 1200 })} 1200w, ${resolveMediaUrl(event.coverImage, { w: 1800 })} 1800w`}
+                sizes="(max-width: 640px) 100vw, (max-width: 1023px) 92vw, 48vw"
                 alt={event.title}
                 loading="eager"
                 decoding="async"
@@ -73,24 +75,24 @@ export const HomeEventsCarousel = ({ events }) => {
               {eventLabel} Registrations {event.registrationsOpen !== false ? 'Open' : 'Closed'}
             </div>
           </div>
-          <div className="flex min-h-0 flex-col justify-center p-5 sm:p-8">
-            <h3 className="line-clamp-2 break-words text-2xl font-black leading-tight sm:text-4xl">{event.title}</h3>
-            <p className="mt-4 line-clamp-3 text-base leading-7 text-slate-600">{event.description}</p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
+          <div className="home-event-copy flex min-h-0 flex-col justify-center p-5 sm:p-8">
+            <h3 className="home-event-title line-clamp-2 break-words text-2xl font-black leading-tight sm:text-4xl">{event.title}</h3>
+            <p className="home-event-description mt-4 line-clamp-3 text-base leading-7 text-slate-600">{event.description}</p>
+            <div className="home-event-meta-grid mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div className="home-event-meta-card rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
                 <FiCalendar className="mb-2 text-primary" />
                 <p className="text-sm font-bold">{new Date(event.startDate || event.date).toLocaleDateString()}</p>
               </div>
-              <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
+              <div className="home-event-meta-card rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
                 <FiClock className="mb-2 text-primary" />
                 <p className="text-sm font-bold">{eventTime || event.duration}</p>
               </div>
-              <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
+              <div className="home-event-meta-card col-span-2 rounded-lg border border-emerald-100 bg-emerald-50/70 p-3 sm:col-span-1">
                 <FiMapPin className="mb-2 text-primary" />
                 <p className="truncate text-sm font-bold">{event.venue}</p>
               </div>
             </div>
-            <div className="mt-6 inline-flex items-center gap-2 font-black text-primary">
+            <div className="mt-5 inline-flex items-center gap-2 font-black text-primary sm:mt-6">
               View Details <FiArrowRight />
             </div>
           </div>
