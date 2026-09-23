@@ -1,12 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiBarChart2, FiDownload, FiEdit3, FiEye, FiEyeOff, FiRefreshCw, FiSearch, FiShield } from 'react-icons/fi';
+import { FiArrowLeft, FiBarChart2, FiDownload, FiEdit3, FiEye, FiEyeOff, FiRefreshCw, FiSearch, FiShield, FiUser, FiUsers } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { registrationAPI } from '../utils/api';
 
 const getTeamName = (registration) => {
   return registration.teamCode || 'Confirmed team';
 };
+
+const getTeamMembers = (registration) => {
+  const members = registration.teamMembers?.filter(member => member?.name) || [];
+  return members.length ? members : (registration.userId?.name ? [{ name: registration.userId.name }] : []);
+};
+
+const getLeaderName = (registration) => getTeamMembers(registration)[0]?.name || registration.userId?.name || 'Team leader';
 
 const downloadBlob = (blob, fileName) => {
   const url = window.URL.createObjectURL(blob);
@@ -36,7 +43,7 @@ export const AdminHackathonEvaluationPage = () => {
     if (!query) return registrations;
     return registrations.filter(registration => (
       getTeamName(registration).toLowerCase().includes(query) ||
-      String(registration.teamCode || '').toLowerCase().includes(query)
+      getTeamMembers(registration).some(member => member.name.toLowerCase().includes(query))
     ));
   }, [registrations, searchTerm]);
 
@@ -157,7 +164,7 @@ export const AdminHackathonEvaluationPage = () => {
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               className="h-12 flex-1 bg-transparent text-base font-bold text-slate-950 outline-none placeholder:text-slate-400"
-              placeholder="Search team name"
+              placeholder="Search team, leader, or member"
             />
           </label>
         </div>
@@ -168,6 +175,14 @@ export const AdminHackathonEvaluationPage = () => {
               <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
                 <div className="min-w-0">
                   <p className="break-words text-xl font-black text-slate-950">{getTeamName(registration)}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-sm font-bold">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-800">
+                      <FiUser size={14} /> Leader: {getLeaderName(registration)}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">
+                      <FiUsers size={14} /> {getTeamMembers(registration).length || 4} members
+                    </span>
+                  </div>
                   <p className="mt-1 text-sm font-semibold text-slate-500">
                     {registration.selectedProblemStatement?.title || 'Problem statement not selected'}
                   </p>

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiCheckCircle, FiLock, FiSave, FiShield } from 'react-icons/fi';
+import { FiArrowLeft, FiCheckCircle, FiLock, FiSave, FiShield, FiUser, FiUsers } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { registrationAPI } from '../utils/api';
 
@@ -8,6 +8,11 @@ const ADMIN_CODE = 'KLHAZ';
 
 const getTeamName = (registration) => {
   return registration.teamCode || 'Confirmed team';
+};
+
+const getTeamMembers = (registration) => {
+  const members = registration?.teamMembers?.filter(member => member?.name) || [];
+  return members.length ? members : (registration?.userId?.name ? [{ name: registration.userId.name }] : []);
 };
 
 const reviewComplete = (review) => Number(review?.score) > 0 && Boolean(String(review?.reason || '').trim());
@@ -122,6 +127,32 @@ export const AdminHackathonTeamEvaluationPage = () => {
           <h1 className="mt-2 break-words text-3xl font-black text-slate-950 sm:text-5xl">
             {registration ? getTeamName(registration) : 'Team'}
           </h1>
+          {registration && (
+            <section className="mt-5 max-w-4xl rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm sm:p-5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Evaluation team</p>
+                  <h2 className="mt-1 text-xl font-black text-slate-950">{getTeamName(registration)}</h2>
+                </div>
+                <span className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600">
+                  <FiUsers size={15} /> {getTeamMembers(registration).length || 4} members
+                </span>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {getTeamMembers(registration).map((member, index) => (
+                  <div
+                    key={member._id || `${member.name}-${index}`}
+                    className={`min-w-0 rounded-xl border p-3 ${index === 0 ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}
+                  >
+                    <p className={`inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-wide ${index === 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
+                      <FiUser size={13} /> {index === 0 ? 'Team leader' : `Member ${index}`}
+                    </p>
+                    <p className="mt-1 truncate text-base font-black text-slate-950" title={member.name}>{member.name}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
           {registration?.selectedProblemStatement?.statementId && (
             <div className="mt-5 max-w-3xl rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
               <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Selected problem statement</p>
