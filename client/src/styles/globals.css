@@ -4599,3 +4599,22 @@ button, [role="button"], input, textarea, select {
   0%, 100% { transform: scaleY(0.82); opacity: 0.62; }
   50% { transform: scaleY(1); opacity: 1; }
 }
+
+/* Registration lists can contain many uploaded screenshots. Keep mobile scrolling
+   focused on the records near the viewport instead of repainting the full list. */
+@media (max-width: 767px) {
+  .registrations-page .backdrop-blur {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .registrations-table .registration-record {
+    content-visibility: auto;
+    contain: layout paint style;
+    contain-intrinsic-size: auto 640px;
+  }
+
+  .registrations-table .registration-record img {
+    content-visibility: auto;
+  }
+}

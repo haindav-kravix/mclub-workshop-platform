@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FiCheck, FiFileText, FiInbox, FiTrash2, FiX } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
 import { ProfileAvatar } from './ProfileAvatar';
@@ -112,10 +112,10 @@ export const RegistrationsTable = ({
   loading,
   emptyMessage = 'No registrations yet'
 }) => {
-  const fields = buildFields(registrations, formFields);
+  const fields = useMemo(() => buildFields(registrations, formFields), [registrations, formFields]);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="registrations-table overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 bg-white px-4 py-4 sm:px-5">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -128,7 +128,7 @@ export const RegistrationsTable = ({
 
       <div className="divide-y divide-slate-100">
         {registrations.map((reg) => (
-          <article key={reg._id} className="p-4 transition hover:bg-emerald-50/30 sm:p-5">
+          <article key={reg._id} className="registration-record p-4 transition hover:bg-emerald-50/30 sm:p-5">
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px] xl:grid-cols-[minmax(0,1fr)_320px]">
               <div className="min-w-0">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -163,6 +163,8 @@ export const RegistrationsTable = ({
                                 <img
                                   src={resolveMediaUrl(getFormValue(reg.formData, field.id))}
                                   alt={`${field.label} upload`}
+                                  loading="lazy"
+                                  decoding="async"
                                   className="h-16 w-16 rounded-md object-cover"
                                 />
                               ) : (
@@ -225,6 +227,8 @@ export const RegistrationsTable = ({
                         <img
                           src={resolveMediaUrl(reg.paymentScreenshot)}
                           alt={`${reg.userId?.name || 'Student'} payment screenshot`}
+                          loading="lazy"
+                          decoding="async"
                           className="h-16 w-16 rounded-md object-cover"
                         />
                       ) : (

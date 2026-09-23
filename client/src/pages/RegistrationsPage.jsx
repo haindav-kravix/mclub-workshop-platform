@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { registrationAPI, workshopAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
@@ -17,23 +17,32 @@ export const RegistrationsPage = () => {
   const [activeStatus, setActiveStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const registrationCounts = useMemo(() => registrations.reduce((counts, registration) => {
+    counts[registration.status] = (counts[registration.status] || 0) + 1;
+    return counts;
+  }, {}), [registrations]);
   const totalCount = registrations.length;
-  const confirmedCount = registrations.filter(registration => registration.status === 'confirmed').length;
-  const pendingCount = registrations.filter(registration => registration.status === 'pending').length;
-  const rejectedCount = registrations.filter(registration => registration.status === 'rejected').length;
-  const cancelledCount = registrations.filter(registration => registration.status === 'cancelled').length;
+  const confirmedCount = registrationCounts.confirmed || 0;
+  const pendingCount = registrationCounts.pending || 0;
+  const rejectedCount = registrationCounts.rejected || 0;
+  const cancelledCount = registrationCounts.cancelled || 0;
   const countCards = [
     { label: 'Total', value: totalCount, status: 'all', icon: FiUsers, className: 'border-slate-200 bg-white text-slate-950', activeClass: 'ring-slate-400', iconClass: 'bg-slate-100 text-slate-700' },
     { label: 'Confirmed', value: confirmedCount, status: 'confirmed', icon: FiCheckCircle, className: 'border-emerald-200 bg-emerald-50 text-emerald-900', activeClass: 'ring-emerald-500', iconClass: 'bg-emerald-100 text-emerald-700' },
     { label: 'Reviewing', value: pendingCount, status: 'pending', icon: FiClock, className: 'border-amber-200 bg-amber-50 text-amber-900', activeClass: 'ring-amber-500', iconClass: 'bg-amber-100 text-amber-700' },
     { label: 'Rejected', value: rejectedCount, status: 'rejected', icon: FiXCircle, className: 'border-rose-200 bg-rose-50 text-rose-900', activeClass: 'ring-rose-500', iconClass: 'bg-rose-100 text-rose-700' }
   ];
-  const statusFilteredRegistrations = activeStatus === 'all'
-    ? registrations
-    : registrations.filter(registration => registration.status === activeStatus);
   const normalizedSearch = searchQuery.trim().toLowerCase();
-  const filteredRegistrations = normalizedSearch
-    ? statusFilteredRegistrations.filter(registration => {
+  const { statusFilteredRegistrations, filteredRegistrations } = useMemo(() => {
+    const statusFiltered = activeStatus === 'all'
+      ? registrations
+      : registrations.filter(registration => registration.status === activeStatus);
+    if (!normalizedSearch) {
+      return { statusFilteredRegistrations: statusFiltered, filteredRegistrations: statusFiltered };
+    }
+    return {
+      statusFilteredRegistrations: statusFiltered,
+      filteredRegistrations: statusFiltered.filter(registration => {
         const formValues = Object.values(registration.formData || {}).flat().join(' ');
         return [
           registration.userId?.name,
@@ -42,7 +51,8 @@ export const RegistrationsPage = () => {
           formValues
         ].filter(Boolean).join(' ').toLowerCase().includes(normalizedSearch);
       })
-    : statusFilteredRegistrations;
+    };
+  }, [activeStatus, normalizedSearch, registrations]);
   const activeCard = countCards.find(card => card.status === activeStatus) || countCards[0];
 
   useEffect(() => {
@@ -125,7 +135,7 @@ export const RegistrationsPage = () => {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen app-shell">
+    <div className="registrations-page min-h-screen app-shell">
       {/* Header */}
       <div className="border-b border-emerald-100 bg-white/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-5 sm:py-7">
