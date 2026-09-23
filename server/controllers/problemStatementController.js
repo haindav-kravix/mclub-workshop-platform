@@ -7,6 +7,20 @@ const getHackathon = async (workshopId, select = 'title eventType problemStateme
   return Workshop.findById(workshopId).select(select);
 };
 
+const clearDeletedStatementSelections = async (workshopId, problemStatements) => {
+  const activeStatementIds = problemStatements.map(statement => statement._id);
+  return Registration.updateMany(
+    {
+      workshopId,
+      'selectedProblemStatement.statementId': { $exists: true, $nin: activeStatementIds }
+    },
+    {
+      $unset: { selectedProblemStatement: 1 },
+      $set: { updatedAt: new Date() }
+    }
+  );
+};
+
 export const getAdminProblemStatements = async (req, res) => {
   try {
     const workshop = await getHackathon(req.params.id);
@@ -25,6 +39,9 @@ export const getProblemStatementSelections = async (req, res) => {
     const workshop = await getHackathon(workshopId, 'title eventType problemStatements');
     if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
     if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Problem statements are available only for hackathons' });
+
+    // Reconcile any selections left behind by statements deleted before this safeguard.
+    await clearDeletedStatementSelections(workshopId, workshop.problemStatements);
 
     const registrations = await Registration.find({ workshopId, status: 'confirmed' })
       .select('teamCode selectedProblemStatement createdAt')
@@ -135,9 +152,14 @@ export const deleteProblemStatement = async (req, res) => {
 
     const statement = workshop.problemStatements.id(req.params.statementId);
     if (!statement) return res.status(404).json({ message: 'Problem statement not found' });
+    const statementId = statement._id;
     statement.deleteOne();
     workshop.updatedAt = new Date();
     await workshop.save();
+    await Registration.updateMany(
+      { workshopId: workshop._id, 'selectedProblemStatement.statementId': statementId },
+      { $unset: { selectedProblemStatement: 1 }, $set: { updatedAt: new Date() } }
+    );
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ message: 'Unable to delete problem statement', error: error.message });
