@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
 import Workshop from '../models/Workshop.js';
 import Registration from '../models/Registration.js';
+import { assignRandomStatementsToConfirmedTeams } from '../utils/problemStatementAssignment.js';
 
-const getHackathon = async (workshopId, select = 'title eventType problemStatements') => {
+const getHackathon = async (workshopId, select = 'title eventType problemStatements problemStatementAssignmentMode') => {
   if (!mongoose.Types.ObjectId.isValid(workshopId)) return null;
   return Workshop.findById(workshopId).select(select);
 };
@@ -27,7 +28,12 @@ export const getAdminProblemStatements = async (req, res) => {
     if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
     if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Problem statements are available only for hackathons' });
 
-    res.json({ workshopId: workshop._id, title: workshop.title, problemStatements: workshop.problemStatements });
+    res.json({
+      workshopId: workshop._id,
+      title: workshop.title,
+      assignmentMode: workshop.problemStatementAssignmentMode || 'self_select',
+      problemStatements: workshop.problemStatements
+    });
   } catch (error) {
     res.status(500).json({ message: 'Unable to load problem statements', error: error.message });
   }
@@ -36,7 +42,7 @@ export const getAdminProblemStatements = async (req, res) => {
 export const getProblemStatementSelections = async (req, res) => {
   try {
     const { id: workshopId } = req.params;
-    const workshop = await getHackathon(workshopId, 'title eventType problemStatements');
+    const workshop = await getHackathon(workshopId, 'title eventType problemStatements problemStatementAssignmentMode');
     if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
     if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Problem statements are available only for hackathons' });
 
@@ -93,7 +99,11 @@ export const getProblemStatementSelections = async (req, res) => {
 
     const selectedCount = registrations.length - pendingTeams.length;
     res.json({
-      workshop: { _id: workshop._id, title: workshop.title },
+      workshop: {
+        _id: workshop._id,
+        title: workshop.title,
+        assignmentMode: workshop.problemStatementAssignmentMode || 'self_select'
+      },
       summary: {
         confirmedTeams: registrations.length,
         selectedTeams: selectedCount,
@@ -126,6 +136,49 @@ export const createProblemStatement = async (req, res) => {
   }
 };
 
+export const setProblemStatementAssignmentMode = async (req, res) => {
+  try {
+    const mode = String(req.body.mode || '');
+    const reassign = Boolean(req.body.reassign);
+    if (!['self_select', 'random'].includes(mode)) {
+      return res.status(400).json({ message: 'Select a valid assignment mode' });
+    }
+
+    const workshop = await getHackathon(req.params.id);
+    if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
+    if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Problem statements are available only for hackathons' });
+
+    const previousMode = workshop.problemStatementAssignmentMode || 'self_select';
+    const changingToRandom = previousMode !== 'random' && mode === 'random';
+    const changingToSelfSelect = previousMode === 'random' && mode === 'self_select';
+    workshop.problemStatementAssignmentMode = mode;
+    workshop.updatedAt = new Date();
+    await workshop.save();
+
+    let clearedCount = 0;
+    if (changingToSelfSelect) {
+      const cleared = await Registration.updateMany(
+        { workshopId: workshop._id, status: 'confirmed', 'selectedProblemStatement.statementId': { $exists: true } },
+        { $unset: { selectedProblemStatement: 1 }, $set: { updatedAt: new Date() } }
+      );
+      clearedCount = cleared.modifiedCount || 0;
+    }
+
+    const assignment = mode === 'random'
+      ? await assignRandomStatementsToConfirmedTeams(workshop, { resetExisting: changingToRandom || reassign })
+      : { assignedCount: 0, pendingCount: 0 };
+
+    res.json({
+      success: true,
+      assignmentMode: workshop.problemStatementAssignmentMode,
+      clearedCount,
+      ...assignment
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to update assignment mode', error: error.message });
+  }
+};
+
 export const setProblemStatementPublished = async (req, res) => {
   try {
     const workshop = await getHackathon(req.params.id);
@@ -138,6 +191,9 @@ export const setProblemStatementPublished = async (req, res) => {
     statement.updatedAt = new Date();
     workshop.updatedAt = new Date();
     await workshop.save();
+    if (workshop.problemStatementAssignmentMode === 'random') {
+      await assignRandomStatementsToConfirmedTeams(workshop, { resetExisting: true });
+    }
     res.json({ success: true, problemStatement: statement });
   } catch (error) {
     res.status(500).json({ message: 'Unable to update problem statement', error: error.message });
@@ -160,6 +216,9 @@ export const deleteProblemStatement = async (req, res) => {
       { workshopId: workshop._id, 'selectedProblemStatement.statementId': statementId },
       { $unset: { selectedProblemStatement: 1 }, $set: { updatedAt: new Date() } }
     );
+    if (workshop.problemStatementAssignmentMode === 'random') {
+      await assignRandomStatementsToConfirmedTeams(workshop);
+    }
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ message: 'Unable to delete problem statement', error: error.message });
@@ -171,7 +230,7 @@ export const getTeamProblemStatements = async (req, res) => {
     const { workshopId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(workshopId)) return res.status(400).json({ message: 'Invalid hackathon id' });
     const [workshop, registration] = await Promise.all([
-      getHackathon(workshopId, 'title eventType problemStatements'),
+      getHackathon(workshopId, 'title eventType problemStatements problemStatementAssignmentMode'),
       Registration.findOne({ workshopId, userId: req.user.id, status: 'confirmed' })
         .select('teamCode selectedProblemStatement')
         .lean()
@@ -180,12 +239,19 @@ export const getTeamProblemStatements = async (req, res) => {
     if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Problem statements are available only for hackathons' });
     if (!registration) return res.status(403).json({ message: 'Only confirmed teams can select a problem statement' });
 
+    if (workshop.problemStatementAssignmentMode === 'random' && !registration.selectedProblemStatement?.statementId) {
+      await assignRandomStatementsToConfirmedTeams(workshop);
+      const refreshed = await Registration.findById(registration._id).select('selectedProblemStatement').lean();
+      registration.selectedProblemStatement = refreshed?.selectedProblemStatement;
+    }
+
     const problemStatements = workshop.problemStatements
       .filter(statement => statement.isPublished)
       .map(statement => ({ _id: statement._id, title: statement.title, description: statement.description }));
     res.json({
       workshop: { _id: workshop._id, title: workshop.title },
       teamCode: registration.teamCode,
+      assignmentMode: workshop.problemStatementAssignmentMode || 'self_select',
       selectedProblemStatement: registration.selectedProblemStatement?.statementId ? registration.selectedProblemStatement : null,
       problemStatements
     });
@@ -201,9 +267,12 @@ export const selectProblemStatement = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(workshopId)) return res.status(400).json({ message: 'Invalid hackathon id' });
     if (!mongoose.Types.ObjectId.isValid(statementId)) return res.status(400).json({ message: 'Select a valid problem statement' });
 
-    const workshop = await getHackathon(workshopId, 'eventType problemStatements');
+    const workshop = await getHackathon(workshopId, 'eventType problemStatements problemStatementAssignmentMode');
     if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
     if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Problem statements are available only for hackathons' });
+    if (workshop.problemStatementAssignmentMode === 'random') {
+      return res.status(409).json({ message: 'Problem statements are assigned automatically for this hackathon' });
+    }
     const statement = workshop.problemStatements.id(statementId);
     if (!statement || !statement.isPublished) return res.status(404).json({ message: 'This problem statement is not available' });
 

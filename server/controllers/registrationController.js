@@ -7,6 +7,7 @@ import fs from 'fs';
 import mongoose from 'mongoose';
 import sharp from 'sharp';
 import { buildHackathonTeamMembers, ensureHackathonTeamMembers } from '../utils/hackathonTeam.js';
+import { assignRandomStatementToRegistration } from '../utils/problemStatementAssignment.js';
 
 const safeExportFileName = (value = 'registrations') => String(value)
   .replace(/[^a-z0-9]+/gi, '-')
@@ -626,7 +627,7 @@ export const updateRegistrationStatus = async (req, res) => {
     }
 
     const workshop = await Workshop.findById(registration.workshopId)
-      .select('capacity registrationCount eventType registrationFormFields')
+      .select('capacity registrationCount eventType registrationFormFields problemStatements problemStatementAssignmentMode')
       .lean();
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
@@ -657,6 +658,10 @@ export const updateRegistrationStatus = async (req, res) => {
         return res.status(400).json({ message: 'The registration must contain the leader and all three member names before confirmation' });
       }
       registration.teamMembers = teamMembers;
+    }
+
+    if (status === 'confirmed' && previousStatus !== 'confirmed' && workshop.eventType === 'hackathon') {
+      await assignRandomStatementToRegistration(registration, workshop);
     }
 
     registration.status = status;

@@ -67,6 +67,9 @@ export const workshopAPI = {
   createProblemStatement: (id, data) => axios.post(`${API_URL}/workshops/${id}/problem-statements`, data, {
     headers: getAuthHeaders()
   }),
+  setProblemStatementAssignmentMode: (id, mode, reassign = false) => axios.patch(`${API_URL}/workshops/${id}/problem-statements/mode`, { mode, reassign }, {
+    headers: getAuthHeaders()
+  }),
   setProblemStatementPublished: (id, statementId, isPublished) => axios.patch(`${API_URL}/workshops/${id}/problem-statements/${statementId}`, { isPublished }, {
     headers: getAuthHeaders()
   }),

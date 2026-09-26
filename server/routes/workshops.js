@@ -24,6 +24,7 @@ router.get('/admin/:id', authenticateToken, adminOnly, workshopController.getAdm
 router.get('/:id/problem-statements/admin', authenticateToken, adminOnly, problemStatementController.getAdminProblemStatements);
 router.get('/:id/problem-statements/selections', authenticateToken, adminOnly, problemStatementController.getProblemStatementSelections);
 router.post('/:id/problem-statements', authenticateToken, adminOnly, problemStatementController.createProblemStatement);
+router.patch('/:id/problem-statements/mode', authenticateToken, adminOnly, problemStatementController.setProblemStatementAssignmentMode);
 router.patch('/:id/problem-statements/:statementId', authenticateToken, adminOnly, problemStatementController.setProblemStatementPublished);
 router.delete('/:id/problem-statements/:statementId', authenticateToken, adminOnly, problemStatementController.deleteProblemStatement);
 router.get('/:id/report', authenticateToken, adminOnly, workshopController.generateWorkshopReport);

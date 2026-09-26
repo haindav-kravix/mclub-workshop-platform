@@ -52,11 +52,17 @@ export const HackathonProblemStatementsPage = () => {
 
             {selected?.statementId ? (
               <section className="rounded-3xl border-2 border-emerald-300 bg-white p-6 shadow-lg sm:p-8">
-                <p className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-emerald-700"><FiCheckCircle /> Your selected statement</p>
+                <p className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-emerald-700"><FiCheckCircle /> {data.assignmentMode === 'random' ? 'Your assigned statement' : 'Your selected statement'}</p>
                 <h2 className="mt-3 text-2xl font-black text-slate-950 sm:text-3xl">{selected.title}</h2>
                 <p className="mt-4 whitespace-pre-wrap font-medium leading-7 text-slate-600">{selected.description}</p>
-                <p className="mt-6 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">This statement is locked to your team.</p>
+                <p className="mt-6 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">{data.assignmentMode === 'random' ? 'This statement was assigned automatically and is locked to your team.' : 'This statement is locked to your team.'}</p>
               </section>
+            ) : data.assignmentMode === 'random' ? (
+              <div className="rounded-3xl border border-violet-200 bg-violet-50 p-8 text-center shadow-sm">
+                <FiBookOpen className="mx-auto text-4xl text-violet-700" />
+                <h2 className="mt-4 text-2xl font-black text-slate-950">Assignment pending</h2>
+                <p className="mx-auto mt-2 max-w-xl font-semibold text-slate-600">Your team will receive a problem statement automatically after the admin publishes the statements.</p>
+              </div>
             ) : (
               <div className="grid gap-5">
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900">Choose carefully. A confirmed team can select only one problem statement.</div>
