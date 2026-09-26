@@ -105,7 +105,7 @@ export const registrationAPI = {
     headers: getAuthHeaders(),
     data: { workshopId }
   }),
-  updateRegistrationStatus: (registrationId, status) => axios.patch(`${API_URL}/registrations/admin/${registrationId}/status`, { status }, {
+  updateRegistrationStatus: (registrationId, status, rejectionReason = '') => axios.patch(`${API_URL}/registrations/admin/${registrationId}/status`, { status, rejectionReason }, {
     headers: getAuthHeaders()
   }),
   getHackathonEvaluation: (workshopId) => axios.get(`${API_URL}/registrations/hackathon/${workshopId}/evaluation`, {

@@ -94,6 +94,12 @@ const registrationSchema = new mongoose.Schema({
     enum: ['confirmed', 'pending', 'cancelled', 'rejected'],
     default: 'pending'
   },
+  rejectionReason: {
+    type: String,
+    trim: true,
+    maxlength: 500,
+    default: ''
+  },
   createdAt: {
     type: Date,
     default: Date.now

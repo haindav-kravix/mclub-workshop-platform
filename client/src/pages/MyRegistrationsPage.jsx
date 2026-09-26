@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { registrationAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage } from '../components/UI';
-import { FiBarChart2, FiBookOpen, FiCalendar, FiMapPin, FiClock, FiSend, FiShield } from 'react-icons/fi';
+import { FiAlertCircle, FiBarChart2, FiBookOpen, FiCalendar, FiMapPin, FiClock, FiSend, FiShield } from 'react-icons/fi';
 import { formatWorkshopTime } from '../utils/formatters';
 
 export const MyRegistrationsPage = () => {
@@ -153,6 +153,13 @@ export const MyRegistrationsPage = () => {
                     )}
                   </div>
                 </div>
+
+                {registration.status === 'rejected' && registration.rejectionReason && (
+                  <div className="border-t border-rose-200 bg-rose-50 px-6 py-4">
+                    <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-rose-700"><FiAlertCircle /> Reason for rejection</p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6 text-rose-900">{registration.rejectionReason}</p>
+                  </div>
+                )}
 
                 {/* Form Data */}
                 {registration.teamCode && (

@@ -362,6 +362,7 @@ export const getUserRegistrations = async (req, res) => {
           workshopId: 1,
           userId: 1,
           status: 1,
+          rejectionReason: 1,
           createdAt: 1,
           updatedAt: 1,
           teamCode: 1,
@@ -387,6 +388,7 @@ export const getUserRegistrations = async (req, res) => {
           _id: 1,
           userId: 1,
           status: 1,
+          rejectionReason: 1,
           createdAt: 1,
           updatedAt: 1,
           teamCode: 1,
@@ -616,9 +618,13 @@ export const updateRegistrationStatus = async (req, res) => {
   try {
     const { registrationId } = req.params;
     const { status } = req.body;
+    const rejectionReason = String(req.body.rejectionReason || '').trim().slice(0, 500);
 
     if (!['confirmed', 'rejected'].includes(status)) {
       return res.status(400).json({ message: 'Invalid registration status' });
+    }
+    if (status === 'rejected' && !rejectionReason) {
+      return res.status(400).json({ message: 'Enter a reason for rejecting this registration' });
     }
 
     const registration = await Registration.findById(registrationId);
@@ -665,6 +671,7 @@ export const updateRegistrationStatus = async (req, res) => {
     }
 
     registration.status = status;
+    registration.rejectionReason = status === 'rejected' ? rejectionReason : '';
     registration.updatedAt = new Date();
     await registration.save();
 

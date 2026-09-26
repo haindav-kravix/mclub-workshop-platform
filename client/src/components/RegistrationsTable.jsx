@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { FiCheck, FiFileText, FiInbox, FiTrash2, FiX } from 'react-icons/fi';
+import React, { useMemo, useState } from 'react';
+import { FiAlertCircle, FiCheck, FiFileText, FiInbox, FiTrash2, FiX } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
 import { ProfileAvatar } from './ProfileAvatar';
 
@@ -64,7 +64,7 @@ const StudentAvatar = ({ user }) => (
   />
 );
 
-const RegistrationActions = ({ registration, loading, onUpdateRegistrationStatus, onDeleteRegistration }) => (
+const RegistrationActions = ({ registration, loading, onUpdateRegistrationStatus, onDeleteRegistration, onReject }) => (
   <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
     {registration.status !== 'confirmed' && registration.status !== 'cancelled' && (
       <button
@@ -81,7 +81,7 @@ const RegistrationActions = ({ registration, loading, onUpdateRegistrationStatus
     {registration.status !== 'rejected' && registration.status !== 'cancelled' && (
       <button
         type="button"
-        onClick={() => onUpdateRegistrationStatus(registration._id, 'rejected')}
+        onClick={() => onReject(registration)}
         disabled={loading}
         className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-amber-100 px-3 py-2 text-sm font-black text-amber-800 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
         title="Reject registration"
@@ -113,9 +113,29 @@ export const RegistrationsTable = ({
   emptyMessage = 'No registrations yet'
 }) => {
   const fields = useMemo(() => buildFields(registrations, formFields), [registrations, formFields]);
+  const [rejectingRegistration, setRejectingRegistration] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [submittingRejection, setSubmittingRejection] = useState(false);
+
+  const closeRejection = () => {
+    if (submittingRejection) return;
+    setRejectingRegistration(null);
+    setRejectionReason('');
+  };
+
+  const submitRejection = async (event) => {
+    event.preventDefault();
+    const reason = rejectionReason.trim();
+    if (!reason || !rejectingRegistration) return;
+    setSubmittingRejection(true);
+    const updated = await onUpdateRegistrationStatus(rejectingRegistration._id, 'rejected', reason);
+    setSubmittingRejection(false);
+    if (updated) closeRejection();
+  };
 
   return (
-    <div className="registrations-table overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <>
+      <div className="registrations-table overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 bg-white px-4 py-4 sm:px-5">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -215,6 +235,13 @@ export const RegistrationsTable = ({
                   </div>
                 )}
 
+                {reg.status === 'rejected' && reg.rejectionReason && (
+                  <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 p-3">
+                    <p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-rose-700"><FiAlertCircle /> Rejection reason</p>
+                    <p className="mt-1 whitespace-pre-wrap text-sm font-semibold leading-6 text-rose-900">{reg.rejectionReason}</p>
+                  </div>
+                )}
+
                 <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50 p-3">
                   <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Payment Screenshot</p>
                   {reg.paymentScreenshot ? (
@@ -251,6 +278,10 @@ export const RegistrationsTable = ({
                   loading={loading}
                   onUpdateRegistrationStatus={onUpdateRegistrationStatus}
                   onDeleteRegistration={onDeleteRegistration}
+                  onReject={(registration) => {
+                    setRejectingRegistration(registration);
+                    setRejectionReason('');
+                  }}
                 />
               </div>
             </div>
@@ -267,6 +298,39 @@ export const RegistrationsTable = ({
           <p className="mt-1 text-sm">Students will appear here after they register.</p>
         </div>
       )}
-    </div>
+      </div>
+
+      {rejectingRegistration && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="reject-registration-title">
+          <form onSubmit={submitRejection} className="w-full max-w-lg rounded-2xl border border-rose-100 bg-white p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-rose-700">Registration decision</p>
+                <h2 id="reject-registration-title" className="mt-1 text-2xl font-black text-slate-950">Why is this registration rejected?</h2>
+                <p className="mt-2 text-sm font-semibold text-slate-600">This message will be visible to {rejectingRegistration.userId?.name || 'the applicant'} in My Events.</p>
+              </div>
+              <button type="button" onClick={closeRejection} disabled={submittingRejection} className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200" aria-label="Close rejection dialog"><FiX /></button>
+            </div>
+            <label className="mt-5 block">
+              <span className="mb-2 block text-sm font-black text-slate-700">Reason for rejection</span>
+              <textarea
+                autoFocus
+                required
+                maxLength={500}
+                value={rejectionReason}
+                onChange={event => setRejectionReason(event.target.value)}
+                className="min-h-32 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-50"
+                placeholder="Explain what is missing or why the registration cannot be accepted"
+              />
+              <span className="mt-1 block text-right text-xs font-bold text-slate-400">{rejectionReason.length}/500</span>
+            </label>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button type="button" onClick={closeRejection} disabled={submittingRejection} className="min-h-12 rounded-xl border border-slate-200 bg-white font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-50">Cancel</button>
+              <button type="submit" disabled={submittingRejection || !rejectionReason.trim()} className="min-h-12 rounded-xl bg-rose-600 font-black text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50">{submittingRejection ? 'Rejecting...' : 'Reject Registration'}</button>
+            </div>
+          </form>
+        </div>
+      )}
+    </>
   );
 };

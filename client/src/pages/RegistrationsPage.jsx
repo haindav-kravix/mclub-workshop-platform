@@ -98,18 +98,20 @@ export const RegistrationsPage = () => {
     }
   };
 
-  const handleUpdateRegistrationStatus = async (registrationId, status) => {
+  const handleUpdateRegistrationStatus = async (registrationId, status, rejectionReason = '') => {
     setDeleting(true);
     setError('');
     try {
-      const response = await registrationAPI.updateRegistrationStatus(registrationId, status);
+      const response = await registrationAPI.updateRegistrationStatus(registrationId, status, rejectionReason);
       setRegistrations(prev => prev.map(registration =>
         registration._id === registrationId ? response.data.registration : registration
       ));
       setSuccess(status === 'confirmed' ? 'Registration approved' : 'Registration rejected');
+      return true;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update registration status');
       console.error(err);
+      return false;
     } finally {
       setDeleting(false);
     }
