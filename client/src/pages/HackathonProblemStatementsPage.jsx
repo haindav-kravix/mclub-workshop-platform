@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiBookOpen, FiCheckCircle } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
+import { ProblemStatementContent } from '../components/ProblemStatementContent';
 import { registrationAPI } from '../utils/api';
 
 export const HackathonProblemStatementsPage = () => {
@@ -54,7 +55,7 @@ export const HackathonProblemStatementsPage = () => {
               <section className="rounded-3xl border-2 border-emerald-300 bg-white p-6 shadow-lg sm:p-8">
                 <p className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-emerald-700"><FiCheckCircle /> {data.assignmentMode === 'random' ? 'Your assigned statement' : 'Your selected statement'}</p>
                 <h2 className="mt-3 text-2xl font-black text-slate-950 sm:text-3xl">{selected.title}</h2>
-                <p className="mt-4 whitespace-pre-wrap font-medium leading-7 text-slate-600">{selected.description}</p>
+                <ProblemStatementContent className="mt-4 font-medium leading-7">{selected.description}</ProblemStatementContent>
                 <p className="mt-6 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">{data.assignmentMode === 'random' ? 'This statement was assigned automatically and is locked to your team.' : 'This statement is locked to your team.'}</p>
               </section>
             ) : data.assignmentMode === 'random' ? (
@@ -70,7 +71,7 @@ export const HackathonProblemStatementsPage = () => {
                   <article key={statement._id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                     <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Problem statement {index + 1}</p>
                     <h2 className="mt-2 text-2xl font-black text-slate-950">{statement.title}</h2>
-                    <p className="mt-3 whitespace-pre-wrap font-medium leading-7 text-slate-600">{statement.description}</p>
+                    <ProblemStatementContent className="mt-3 font-medium leading-7">{statement.description}</ProblemStatementContent>
                     <button onClick={() => chooseStatement(statement)} disabled={Boolean(selecting)} className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 font-black text-secondary shadow-sm hover:bg-primary/80 disabled:opacity-50 sm:w-auto"><FiCheckCircle /> {selecting === statement._id ? 'Selecting...' : 'Select This Statement'}</button>
                   </article>
                 ))}

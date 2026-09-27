@@ -4,6 +4,7 @@ import { registrationAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage } from '../components/UI';
 import { FiAlertCircle, FiBarChart2, FiBookOpen, FiCalendar, FiMapPin, FiClock, FiSend, FiShield } from 'react-icons/fi';
 import { formatWorkshopTime } from '../utils/formatters';
+import { ProblemStatementContent } from '../components/ProblemStatementContent';
 
 export const MyRegistrationsPage = () => {
   const [registrations, setRegistrations] = useState([]);
@@ -182,7 +183,7 @@ export const MyRegistrationsPage = () => {
                   <div className="border-t border-emerald-100 bg-white px-6 py-4">
                     <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Selected problem statement</p>
                     <p className="mt-1 text-lg font-black text-slate-950">{registration.selectedProblemStatement.title}</p>
-                    <p className="mt-1 whitespace-pre-wrap text-sm font-medium text-slate-600">{registration.selectedProblemStatement.description}</p>
+                    <ProblemStatementContent className="mt-3 text-sm font-medium">{registration.selectedProblemStatement.description}</ProblemStatementContent>
                   </div>
                 )}
                 {Object.keys(registration.formData).length > 0 && (

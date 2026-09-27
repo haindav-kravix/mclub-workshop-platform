@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiCheckCircle, FiLock, FiSave, FiShield, FiUser, FiUsers } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { registrationAPI } from '../utils/api';
+import { ProblemStatementContent } from '../components/ProblemStatementContent';
 
 const ADMIN_CODE = 'KLHAZ';
 
@@ -157,7 +158,7 @@ export const AdminHackathonTeamEvaluationPage = () => {
             <div className="mt-5 max-w-3xl rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
               <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Selected problem statement</p>
               <p className="mt-1 text-lg font-black text-slate-950">{registration.selectedProblemStatement.title}</p>
-              <p className="mt-1 whitespace-pre-wrap text-sm font-semibold text-slate-600">{registration.selectedProblemStatement.description}</p>
+              <ProblemStatementContent className="mt-3 text-sm font-semibold">{registration.selectedProblemStatement.description}</ProblemStatementContent>
             </div>
           )}
         </div>

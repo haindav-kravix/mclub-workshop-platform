@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiBookOpen, FiCheck, FiEye, FiEyeOff, FiMousePointer, FiPlus, FiRefreshCw, FiShuffle, FiUsers, FiTrash2 } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { workshopAPI } from '../utils/api';
+import { ProblemStatementContent } from '../components/ProblemStatementContent';
 
 export const AdminHackathonProblemStatementsPage = () => {
   const { workshopId } = useParams();
@@ -193,7 +194,7 @@ export const AdminHackathonProblemStatementsPage = () => {
                 <div className="min-w-0">
                   <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Statement {index + 1}</p>
                   <h2 className="mt-1 break-words text-xl font-black text-slate-950">{statement.title}</h2>
-                  <p className="mt-3 whitespace-pre-wrap text-sm font-medium leading-6 text-slate-600">{statement.description}</p>
+                  <ProblemStatementContent className="mt-3 text-sm font-medium leading-6">{statement.description}</ProblemStatementContent>
                 </div>
                 <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${statement.isPublished ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{statement.isPublished ? 'Published' : 'Draft'}</span>
               </div>
