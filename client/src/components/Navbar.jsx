@@ -73,7 +73,7 @@ export const Navbar = () => {
               </Link>
             )}
 
-            {isAuthenticated && !isAdmin && (
+            {isAuthenticated && (
               <Link
                 to="/my-registrations"
                 className={navLinkClass('/my-registrations')}
@@ -157,7 +157,7 @@ export const Navbar = () => {
                 Blogs
               </Link>
             )}
-            {isAuthenticated && !isAdmin && (
+            {isAuthenticated && (
               <Link
                 to="/my-registrations"
                 className={mobileLinkClass('/my-registrations')}
