@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import fs from 'fs';
 import mongoose from 'mongoose';
 import sharp from 'sharp';
-import { buildHackathonTeamMembers, ensureHackathonTeamMembers } from '../utils/hackathonTeam.js';
+import { buildHackathonTeamMembers, ensureHackathonTeamMembers, extractHackathonTeamMembers } from '../utils/hackathonTeam.js';
 import { assignRandomStatementToRegistration } from '../utils/problemStatementAssignment.js';
 
 const safeExportFileName = (value = 'registrations') => String(value)
@@ -47,6 +47,36 @@ const parseFormData = (formData) => {
   } catch {
     return {};
   }
+};
+
+const normalizeParticipantEmail = value => String(value || '').trim().toLowerCase();
+
+const extractParticipantEmails = (formData, formFields, leaderUser) => (
+  extractHackathonTeamMembers(formData, formFields, leaderUser)
+    .map(member => normalizeParticipantEmail(member.email))
+    .filter(Boolean)
+);
+
+const findRegisteredParticipantEmail = async ({ workshopId, emails, formFields }) => {
+  const requestedEmails = new Set(emails);
+  const registrations = await Registration.find({
+    workshopId,
+    status: { $in: ['pending', 'confirmed'] }
+  })
+    .select('teamMemberEmails teamMembers formData userId')
+    .populate('userId', 'name email')
+    .lean();
+
+  for (const registration of registrations) {
+    const registeredEmails = new Set([
+      ...(registration.teamMemberEmails || []).map(normalizeParticipantEmail),
+      ...(registration.teamMembers || []).map(member => normalizeParticipantEmail(member.email)),
+      ...extractParticipantEmails(registration.formData, formFields, registration.userId || {})
+    ].filter(Boolean));
+    const duplicate = [...requestedEmails].find(email => registeredEmails.has(email));
+    if (duplicate) return duplicate;
+  }
+  return '';
 };
 
 const uploadedFileToDataUrl = async (file) => {
@@ -301,6 +331,38 @@ export const registerForWorkshop = async (req, res) => {
       return res.status(400).json({ message: statusMessages[existingRegistration.status] || 'You are already registered for this workshop' });
     }
 
+    let teamMemberEmails = [];
+    if (workshop.eventType === 'hackathon') {
+      const leaderUser = await User.findById(req.user.id).select('name email').lean();
+      teamMemberEmails = extractParticipantEmails(
+        parsedFormData,
+        workshop.registrationFormFields || [],
+        leaderUser || {}
+      );
+
+      if (teamMemberEmails.length !== 4) {
+        cleanupUploadedFiles(req);
+        return res.status(400).json({ message: 'Enter a valid email address for the team leader and all 3 members' });
+      }
+
+      if (new Set(teamMemberEmails).size !== teamMemberEmails.length) {
+        cleanupUploadedFiles(req);
+        return res.status(400).json({ message: 'Each team member must use a different email address' });
+      }
+
+      const registeredEmail = await findRegisteredParticipantEmail({
+        workshopId,
+        emails: teamMemberEmails,
+        formFields: workshop.registrationFormFields || []
+      });
+      if (registeredEmail) {
+        cleanupUploadedFiles(req);
+        return res.status(409).json({
+          message: `${registeredEmail} is already registered with another team for this hackathon. Each participant can join only one team.`
+        });
+      }
+    }
+
     // Check capacity
     if (workshop.capacity) {
       const registrationCount = await Registration.countDocuments({
@@ -321,6 +383,7 @@ export const registerForWorkshop = async (req, res) => {
       formData: parsedFormData,
       paymentScreenshot: isPaymentEnabled(workshop) && paymentScreenshotFile ? await uploadedFileToDataUrl(paymentScreenshotFile) : '',
       teamCode: workshop.eventType === 'hackathon' ? await generateUniqueTeamCode(workshopId) : '',
+      teamMemberEmails,
       status: 'pending'
     });
 
