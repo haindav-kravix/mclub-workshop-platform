@@ -5,7 +5,7 @@ import { AdminWorkshopCard } from '../components/AdminWorkshopCard';
 import { FiActivity, FiAward, FiBarChart2, FiCalendar, FiCheckCircle, FiClock, FiMail, FiPlus, FiTrendingUp, FiUsers, FiX, FiXCircle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { getEventLabel } from '../utils/eventLabels';
-import { getConfirmedParticipantEmails } from '../utils/emailRecipients';
+import { getConfirmedParticipantEmails, openGmailCompose, splitEmailBatches } from '../utils/emailRecipients';
 
 export const AdminDashboard = () => {
   const [workshops, setWorkshops] = useState([]);
@@ -15,6 +15,8 @@ export const AdminDashboard = () => {
   const [emailWorkshop, setEmailWorkshop] = useState(null);
   const [emailForm, setEmailForm] = useState({ subject: '', message: '' });
   const [emailLoading, setEmailLoading] = useState(false);
+  const [emailBatches, setEmailBatches] = useState([]);
+  const [nextEmailBatch, setNextEmailBatch] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -128,6 +130,8 @@ export const AdminDashboard = () => {
 
   const openEmailComposer = (workshop) => {
     setEmailWorkshop(workshop);
+    setEmailBatches([]);
+    setNextEmailBatch(0);
     setEmailForm({
       subject: `Update for ${workshop.title}`,
       message: `Hello,\n\nThis is an update about ${workshop.title}.\n\nRegards,\nMongoDB Club`
@@ -136,6 +140,23 @@ export const AdminDashboard = () => {
 
   const handleSendEmails = async () => {
     if (!emailWorkshop) return;
+
+    if (emailBatches.length > 0) {
+      openGmailCompose({
+        emails: emailBatches[nextEmailBatch],
+        subject: emailForm.subject,
+        message: emailForm.message
+      });
+      const followingBatch = nextEmailBatch + 1;
+      if (followingBatch >= emailBatches.length) {
+        setSuccess(`Opened all ${emailBatches.length} Gmail batches`);
+        setEmailWorkshop(null);
+      } else {
+        setNextEmailBatch(followingBatch);
+        setSuccess(`Opened Gmail batch ${followingBatch} of ${emailBatches.length}`);
+      }
+      return;
+    }
 
     setEmailLoading(true);
     try {
@@ -147,16 +168,16 @@ export const AdminDashboard = () => {
         return;
       }
 
-      const gmailUrl = new URL('https://mail.google.com/mail/');
-      gmailUrl.searchParams.set('view', 'cm');
-      gmailUrl.searchParams.set('fs', '1');
-      gmailUrl.searchParams.set('bcc', emails.join(','));
-      gmailUrl.searchParams.set('su', emailForm.subject);
-      gmailUrl.searchParams.set('body', emailForm.message);
-
-      window.open(gmailUrl.toString(), '_blank', 'noopener,noreferrer');
-      setSuccess(`Opened Gmail compose for ${emails.length} confirmed students`);
-      setEmailWorkshop(null);
+      const batches = splitEmailBatches(emails);
+      openGmailCompose({ emails: batches[0], subject: emailForm.subject, message: emailForm.message });
+      if (batches.length === 1) {
+        setSuccess(`Opened Gmail compose for ${emails.length} confirmed students`);
+        setEmailWorkshop(null);
+      } else {
+        setEmailBatches(batches);
+        setNextEmailBatch(1);
+        setSuccess(`Opened Gmail batch 1 of ${batches.length}`);
+      }
     } catch (err) {
       setError('Failed to collect registered student emails');
       console.error(err);
@@ -329,6 +350,11 @@ export const AdminDashboard = () => {
               </button>
             </div>
             <div className="p-5 space-y-4">
+              {emailBatches.length > 0 && (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">
+                  Batch {nextEmailBatch + 1} of {emailBatches.length} is ready. Send the open draft, then return here for the next batch.
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Subject</label>
                 <input
@@ -353,7 +379,7 @@ export const AdminDashboard = () => {
                 className="w-full px-4 py-3 bg-slate-950 text-white rounded-lg hover:bg-slate-800 transition font-bold disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <FiMail />
-                {emailLoading ? 'Preparing...' : 'Open in Gmail'}
+                {emailLoading ? 'Preparing...' : emailBatches.length > 0 ? `Open Batch ${nextEmailBatch + 1} of ${emailBatches.length}` : 'Open in Gmail'}
               </button>
             </div>
           </div>
