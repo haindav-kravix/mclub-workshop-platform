@@ -5,7 +5,7 @@ import { AdminWorkshopCard } from '../components/AdminWorkshopCard';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { certificateAPI, registrationAPI, workshopAPI } from '../utils/api';
 import { getEventLabel } from '../utils/eventLabels';
-import { getConfirmedParticipantEmails, openGmailCompose, splitEmailBatches } from '../utils/emailRecipients';
+import { copyEmailsToClipboard, getConfirmedParticipantEmails, openGmailCompose } from '../utils/emailRecipients';
 
 export const AdminHackathonsPage = () => {
   const [events, setEvents] = useState([]);
@@ -15,8 +15,6 @@ export const AdminHackathonsPage = () => {
   const [emailEvent, setEmailEvent] = useState(null);
   const [emailForm, setEmailForm] = useState({ subject: '', message: '' });
   const [emailLoading, setEmailLoading] = useState(false);
-  const [emailBatches, setEmailBatches] = useState([]);
-  const [nextEmailBatch, setNextEmailBatch] = useState(0);
   const navigate = useNavigate();
 
   const fetchEvents = async () => {
@@ -122,8 +120,6 @@ export const AdminHackathonsPage = () => {
 
   const openEmailComposer = (event) => {
     setEmailEvent(event);
-    setEmailBatches([]);
-    setNextEmailBatch(0);
     setEmailForm({
       subject: `Update for ${event.title}`,
       message: `Hello,\n\nThis is an update about ${event.title}.\n\nRegards,\nMongoDB Club`
@@ -132,23 +128,6 @@ export const AdminHackathonsPage = () => {
 
   const sendEmails = async () => {
     if (!emailEvent) return;
-
-    if (emailBatches.length > 0) {
-      openGmailCompose({
-        emails: emailBatches[nextEmailBatch],
-        subject: emailForm.subject,
-        message: emailForm.message
-      });
-      const followingBatch = nextEmailBatch + 1;
-      if (followingBatch >= emailBatches.length) {
-        setSuccess(`Opened all ${emailBatches.length} Gmail batches for confirmed participants`);
-        setEmailEvent(null);
-      } else {
-        setNextEmailBatch(followingBatch);
-        setSuccess(`Opened Gmail batch ${followingBatch} of ${emailBatches.length}`);
-      }
-      return;
-    }
 
     setEmailLoading(true);
     try {
@@ -160,16 +139,11 @@ export const AdminHackathonsPage = () => {
         return;
       }
 
-      const batches = splitEmailBatches(emails);
-      openGmailCompose({ emails: batches[0], subject: emailForm.subject, message: emailForm.message });
-      if (batches.length === 1) {
-        setSuccess(`Opened Gmail for ${emails.length} confirmed participants`);
-        setEmailEvent(null);
-      } else {
-        setEmailBatches(batches);
-        setNextEmailBatch(1);
-        setSuccess(`Opened Gmail batch 1 of ${batches.length}`);
-      }
+      await copyEmailsToClipboard(emails);
+      openGmailCompose({ emails: [], subject: emailForm.subject, message: emailForm.message });
+      window.alert(`${emails.length} participant emails were copied. In Gmail, click Bcc and paste them using Ctrl+V or Command+V.`);
+      setSuccess(`Copied all ${emails.length} confirmed participant emails`);
+      setEmailEvent(null);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to collect confirmed participant emails');
     } finally {
@@ -291,13 +265,8 @@ export const AdminHackathonsPage = () => {
             </div>
             <div className="space-y-4 p-5">
               <p className="text-sm font-semibold text-slate-600">
-                Gmail will include every confirmed team leader and member in BCC. Large recipient lists open in safe batches to prevent Gmail errors.
+                Every confirmed team leader and member will be copied. Gmail opens with the message ready; paste the copied list once into Bcc.
               </p>
-              {emailBatches.length > 0 && (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">
-                  Batch {nextEmailBatch + 1} of {emailBatches.length} is ready. Send the open draft, then return here for the next batch.
-                </div>
-              )}
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">Subject</label>
                 <input
@@ -321,7 +290,7 @@ export const AdminHackathonsPage = () => {
                 disabled={emailLoading || !emailForm.subject.trim() || !emailForm.message.trim()}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-50"
               >
-                <FiMail /> {emailLoading ? 'Preparing...' : emailBatches.length > 0 ? `Open Batch ${nextEmailBatch + 1} of ${emailBatches.length}` : 'Open in Gmail'}
+                <FiMail /> {emailLoading ? 'Preparing...' : 'Copy All Emails & Open Gmail'}
               </button>
             </div>
           </div>
