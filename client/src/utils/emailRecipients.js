@@ -13,7 +13,7 @@ export const getConfirmedParticipantEmails = (registrations = []) => {
   return [...new Set(emails)];
 };
 
-export const splitEmailBatches = (emails, batchSize = 40) => {
+export const splitEmailBatches = (emails, batchSize = 800) => {
   const batches = [];
   for (let index = 0; index < emails.length; index += batchSize) {
     batches.push(emails.slice(index, index + batchSize));
