@@ -64,6 +64,10 @@ export const workshopAPI = {
   getProblemStatementSelections: (id) => axios.get(`${API_URL}/workshops/${id}/problem-statements/selections`, {
     headers: getAuthHeaders()
   }),
+  exportProblemStatementSelections: (id) => axios.get(`${API_URL}/workshops/${id}/problem-statements/selections/export`, {
+    headers: getAuthHeaders(),
+    responseType: 'blob'
+  }),
   createProblemStatement: (id, data) => axios.post(`${API_URL}/workshops/${id}/problem-statements`, data, {
     headers: getAuthHeaders()
   }),

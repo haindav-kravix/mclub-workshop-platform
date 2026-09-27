@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiBookOpen, FiCheckCircle, FiClock, FiUsers } from 'react-icons/fi';
+import { FiArrowLeft, FiBookOpen, FiCheckCircle, FiClock, FiDownload, FiUsers } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner } from '../components/UI';
 import { workshopAPI } from '../utils/api';
 
@@ -12,6 +12,7 @@ export const AdminProblemStatementSelectionsPage = () => {
   const [data, setData] = useState(null);
   const [activeKey, setActiveKey] = useState('');
   const [error, setError] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     workshopAPI.getProblemStatementSelections(workshopId)
@@ -30,17 +31,48 @@ export const AdminProblemStatementSelectionsPage = () => {
     return data.problemStatements.find(statement => String(statement._id) === String(activeKey)) || null;
   }, [activeKey, data]);
 
+  const exportSelections = async () => {
+    setExporting(true);
+    setError('');
+    try {
+      const response = await workshopAPI.exportProblemStatementSelections(workshopId);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${data?.workshop?.title || 'hackathon'}-problem-selections.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to export problem selections');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (!data && !error) return <LoadingSpinner />;
 
   return (
     <div className="min-h-screen app-shell">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
-        <button
-          onClick={() => navigate(`/admin/hackathon/${workshopId}/problem-statements`)}
-          className="mb-5 inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-black text-secondary shadow-sm transition hover:bg-emerald-50"
-        >
-          <FiArrowLeft /> Back to Problem Statements
-        </button>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <button
+            onClick={() => navigate(`/admin/hackathon/${workshopId}/problem-statements`)}
+            className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-black text-secondary shadow-sm transition hover:bg-emerald-50"
+          >
+            <FiArrowLeft /> Back to Problem Statements
+          </button>
+          {data && (
+            <button
+              onClick={exportSelections}
+              disabled={exporting}
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60"
+            >
+              <FiDownload /> {exporting ? 'Exporting...' : 'Export Excel'}
+            </button>
+          )}
+        </div>
 
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
         {data && (

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import ExcelJS from 'exceljs';
 import Workshop from '../models/Workshop.js';
 import Registration from '../models/Registration.js';
 import { assignRandomStatementsToConfirmedTeams } from '../utils/problemStatementAssignment.js';
@@ -7,6 +8,11 @@ const getHackathon = async (workshopId, select = 'title eventType problemStateme
   if (!mongoose.Types.ObjectId.isValid(workshopId)) return null;
   return Workshop.findById(workshopId).select(select);
 };
+
+const safeExportFileName = (value = 'problem-selections') => String(value)
+  .replace(/[^a-z0-9]+/gi, '-')
+  .replace(/^-+|-+$/g, '')
+  .toLowerCase() || 'problem-selections';
 
 const clearDeletedStatementSelections = async (workshopId, problemStatements) => {
   const activeStatementIds = problemStatements.map(statement => statement._id);
@@ -114,6 +120,76 @@ export const getProblemStatementSelections = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Unable to load problem statement selections', error: error.message });
+  }
+};
+
+export const exportProblemStatementSelections = async (req, res) => {
+  try {
+    const { id: workshopId } = req.params;
+    const workshop = await getHackathon(workshopId, 'title eventType problemStatements');
+    if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
+    if (workshop.eventType !== 'hackathon') {
+      return res.status(400).json({ message: 'Problem statement export is available only for hackathons' });
+    }
+
+    await clearDeletedStatementSelections(workshopId, workshop.problemStatements);
+    const registrations = await Registration.find({ workshopId, status: 'confirmed' })
+      .select('teamCode teamMembers selectedProblemStatement userId createdAt')
+      .populate('userId', 'name email')
+      .sort({ createdAt: 1 })
+      .lean();
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'MongoDB Technical Club';
+    const worksheet = workbook.addWorksheet('Problem Selections');
+    worksheet.columns = [
+      { header: 'S.No', key: 'sno', width: 8 },
+      { header: 'Team Name', key: 'teamName', width: 24 },
+      { header: 'Leader Name', key: 'leaderName', width: 28 },
+      { header: 'Member Names', key: 'memberNames', width: 54 },
+      { header: 'Problem Statement', key: 'problemStatement', width: 52 }
+    ];
+
+    registrations.forEach((registration, index) => {
+      const teamMembers = registration.teamMembers || [];
+      worksheet.addRow({
+        sno: index + 1,
+        teamName: registration.teamCode || 'Confirmed team',
+        leaderName: teamMembers[0]?.name || registration.userId?.name || registration.userId?.email || '',
+        memberNames: teamMembers.slice(1).map(member => member.name).filter(Boolean).join(', '),
+        problemStatement: registration.selectedProblemStatement?.title || 'Not selected'
+      });
+    });
+
+    const header = worksheet.getRow(1);
+    header.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF047857' } };
+    header.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    header.height = 24;
+    worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+    worksheet.autoFilter = { from: 'A1', to: 'E1' };
+    worksheet.eachRow((row, rowNumber) => {
+      row.eachCell(cell => {
+        cell.alignment = { vertical: 'top', wrapText: true };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFD1FAE5' } },
+          left: { style: 'thin', color: { argb: 'FFD1FAE5' } },
+          bottom: { style: 'thin', color: { argb: 'FFD1FAE5' } },
+          right: { style: 'thin', color: { argb: 'FFD1FAE5' } }
+        };
+      });
+      if (rowNumber > 1 && rowNumber % 2 === 0) {
+        row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FDF4' } };
+      }
+    });
+
+    const fileName = `${safeExportFileName(workshop.title)}-problem-selections.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to export problem statement selections', error: error.message });
   }
 };
 
