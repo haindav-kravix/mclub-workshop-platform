@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiBookOpen, FiCheckCircle, FiClock, FiDownload, FiUsers } from 'react-icons/fi';
+import { FiArrowLeft, FiBookOpen, FiCheckCircle, FiChevronDown, FiClock, FiDownload, FiUser, FiUsers } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner } from '../components/UI';
 import { workshopAPI } from '../utils/api';
 
@@ -13,6 +13,7 @@ export const AdminProblemStatementSelectionsPage = () => {
   const [activeKey, setActiveKey] = useState('');
   const [error, setError] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [expandedTeam, setExpandedTeam] = useState('');
 
   useEffect(() => {
     workshopAPI.getProblemStatementSelections(workshopId)
@@ -146,12 +147,28 @@ export const AdminProblemStatementSelectionsPage = () => {
                 </div>
 
                 <div className="mt-6 grid gap-3">
-                  {activeGroup?.teams?.map((team, index) => (
-                    <div key={team.registrationId} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-black text-emerald-800 shadow-sm">{index + 1}</span>
-                      <p className="min-w-0 break-words text-lg font-black text-slate-950">{team.teamName}</p>
-                    </div>
-                  ))}
+                  {activeGroup?.teams?.map((team, index) => {
+                    const isExpanded = expandedTeam === String(team.registrationId);
+                    return (
+                      <div key={team.registrationId} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                        <button onClick={() => setExpandedTeam(isExpanded ? '' : String(team.registrationId))} className="flex w-full items-center gap-4 p-4 text-left hover:bg-emerald-50/60" aria-expanded={isExpanded}>
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-black text-emerald-800 shadow-sm">{index + 1}</span>
+                          <p className="min-w-0 flex-1 break-words text-lg font-black text-slate-950">{team.teamName}</p>
+                          <FiChevronDown className={`shrink-0 text-xl text-emerald-700 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+                        {isExpanded && (
+                          <div className="grid gap-2 border-t border-slate-200 bg-white p-4 sm:grid-cols-2">
+                            {(team.members || []).map((member, memberIndex) => (
+                              <div key={`${member.name}-${memberIndex}`} className={`rounded-xl border p-3 ${memberIndex === 0 ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
+                                <p className="flex items-center gap-1 text-xs font-black uppercase text-slate-500"><FiUser /> {member.role}</p>
+                                <p className="mt-1 break-words font-black text-slate-950">{member.name}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                   {activeGroup && activeGroup.teams.length === 0 && (
                     <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center font-bold text-slate-500">
                       {activeGroup.pending ? 'Every confirmed team has selected a problem statement.' : 'No confirmed team selected this problem statement yet.'}

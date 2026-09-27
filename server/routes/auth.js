@@ -2,8 +2,8 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
-import { verifyGoogleToken, getProfile, updateProfile } from '../controllers/authController.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { verifyGoogleToken, getProfile, updateProfile, getAdminAccounts, revokeAdminAccess } from '../controllers/authController.js';
+import { authenticateToken, adminOnly } from '../middleware/auth.js';
 
 const router = express.Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -11,6 +11,8 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 router.post('/verify-token', verifyGoogleToken);
 router.get('/profile', authenticateToken, getProfile);
 router.put('/profile', authenticateToken, updateProfile);
+router.get('/admin/accounts', authenticateToken, adminOnly, getAdminAccounts);
+router.patch('/admin/accounts/:userId/revoke', authenticateToken, adminOnly, revokeAdminAccess);
 
 // Admin Login
 router.post('/admin/login', async (req, res) => {
@@ -29,20 +31,12 @@ router.post('/admin/login', async (req, res) => {
     const payload = ticket.getPayload();
     const { sub, email, name, picture } = payload;
 
-    let user = await User.findOne({ googleId: sub });
-
-    if (!user) {
-      user = new User({
-        googleId: sub,
-        email,
-        name,
-        profilePhoto: picture,
-        isAdmin: true
-      });
-      await user.save();
-    } else if (!user.isAdmin || (!user.profilePhoto && picture)) {
-      if (!user.isAdmin) user.isAdmin = true;
-      if (!user.profilePhoto && picture) user.profilePhoto = picture;
+    const user = await User.findOne({ googleId: sub });
+    if (!user?.isAdmin) {
+      return res.status(403).json({ error: 'This account does not have admin access. Use the regular user login.' });
+    }
+    if (!user.profilePhoto && picture) {
+      user.profilePhoto = picture;
       await user.save();
     }
 
@@ -81,8 +75,12 @@ router.post('/admin/signup', async (req, res) => {
 
     let user = await User.findOne({ googleId: sub });
 
+    if (user?.adminRevokedAt) {
+      return res.status(403).json({ error: 'Admin access for this account has been revoked' });
+    }
     if (user) {
       user.isAdmin = true;
+      user.adminRevokedAt = null;
       if (!user.profilePhoto && picture) user.profilePhoto = picture;
       await user.save();
     } else {

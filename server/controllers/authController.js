@@ -91,3 +91,39 @@ export const updateProfile = async (req, res) => {
     res.status(500).json({ message: 'Error updating profile', error: error.message });
   }
 };
+
+export const getAdminAccounts = async (req, res) => {
+  try {
+    const admins = await User.find({ isAdmin: true })
+      .select('name email profilePhoto createdAt')
+      .sort({ createdAt: 1 })
+      .lean();
+    res.json(admins.map(admin => ({
+      ...admin,
+      isCurrentUser: String(admin._id) === String(req.user.id)
+    })));
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to load admin accounts', error: error.message });
+  }
+};
+
+export const revokeAdminAccess = async (req, res) => {
+  try {
+    if (String(req.params.userId) === String(req.user.id)) {
+      return res.status(400).json({ message: 'You cannot revoke your own admin access' });
+    }
+    const adminCount = await User.countDocuments({ isAdmin: true });
+    if (adminCount <= 1) {
+      return res.status(400).json({ message: 'At least one admin account must remain' });
+    }
+    const user = await User.findOneAndUpdate(
+      { _id: req.params.userId, isAdmin: true },
+      { $set: { isAdmin: false, adminRevokedAt: new Date() } },
+      { new: true }
+    ).select('name email isAdmin');
+    if (!user) return res.status(404).json({ message: 'Admin account not found' });
+    res.json({ success: true, user, message: `${user.name} is now a regular user` });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to revoke admin access', error: error.message });
+  }
+};

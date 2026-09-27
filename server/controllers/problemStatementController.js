@@ -56,7 +56,8 @@ export const getProblemStatementSelections = async (req, res) => {
     await clearDeletedStatementSelections(workshopId, workshop.problemStatements);
 
     const registrations = await Registration.find({ workshopId, status: 'confirmed' })
-      .select('teamCode selectedProblemStatement createdAt')
+      .select('teamCode teamMembers selectedProblemStatement userId createdAt')
+      .populate('userId', 'name email')
       .sort({ createdAt: 1 })
       .lean();
 
@@ -67,6 +68,9 @@ export const getProblemStatementSelections = async (req, res) => {
       const team = {
         registrationId: registration._id,
         teamName: registration.teamCode || 'Confirmed team',
+        members: registration.teamMembers?.length
+          ? registration.teamMembers.map((member, index) => ({ name: member.name, role: index === 0 ? 'Leader' : `Member ${index}` }))
+          : [{ name: registration.userId?.name || registration.userId?.email || 'Leader', role: 'Leader' }],
         selectedAt: registration.selectedProblemStatement?.selectedAt || null
       };
       const statementId = registration.selectedProblemStatement?.statementId?.toString();

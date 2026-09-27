@@ -25,6 +25,11 @@ const getAuthHeaders = () => {
   };
 };
 
+export const adminAccountAPI = {
+  getAll: () => axios.get(`${API_URL}/auth/admin/accounts`, { headers: getAuthHeaders() }),
+  revoke: (userId) => axios.patch(`${API_URL}/auth/admin/accounts/${userId}/revoke`, {}, { headers: getAuthHeaders() })
+};
+
 // Workshop API
 export const workshopAPI = {
   getAllWorkshops: () => axios.get(`${API_URL}/workshops`),

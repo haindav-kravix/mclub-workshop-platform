@@ -183,7 +183,8 @@ export const AdminDashboard = () => {
     { label: 'Create Event', icon: FiPlus, onClick: () => navigate('/admin/workshops/new'), primary: true },
     { label: 'Hackathon Admin', icon: FiAward, onClick: () => navigate('/admin/hackathons') },
     { label: 'Analytics', icon: FiBarChart2, onClick: () => navigate('/admin/analytics') },
-    { label: 'Club Highlights', icon: FiAward, onClick: () => navigate('/admin/achievements') }
+    { label: 'Club Highlights', icon: FiAward, onClick: () => navigate('/admin/achievements') },
+    { label: 'Admin Accounts', icon: FiUsers, onClick: () => navigate('/admin/accounts') }
   ];
 
   return (

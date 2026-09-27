@@ -34,6 +34,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  adminRevokedAt: {
+    type: Date,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now
