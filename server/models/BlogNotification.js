@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { contentConnection } from '../config/contentDatabase.js';
 
 const blogNotificationSchema = new mongoose.Schema({
   recipient: {
@@ -33,4 +34,4 @@ const blogNotificationSchema = new mongoose.Schema({
 
 blogNotificationSchema.index({ recipient: 1, createdAt: -1 });
 
-export default mongoose.model('BlogNotification', blogNotificationSchema);
+export default contentConnection.model('BlogNotification', blogNotificationSchema);

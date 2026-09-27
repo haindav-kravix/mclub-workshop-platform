@@ -18,6 +18,7 @@ import achievementRoutes from './routes/achievements.js';
 import certificateRoutes from './routes/certificates.js';
 import entryRoutes from './routes/entry.js';
 import { getAchievementImage } from './controllers/achievementController.js';
+import { waitForContentDatabase } from './config/contentDatabase.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -164,6 +165,8 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   await connectDB();
+  await waitForContentDatabase();
+  console.log(process.env.CONTENT_MONGODB_URI ? 'Content MongoDB connected successfully' : 'Content MongoDB using primary connection');
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });

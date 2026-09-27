@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { contentConnection } from '../config/contentDatabase.js';
 
 const certificateSchema = new mongoose.Schema({
   workshopId: { type: mongoose.Schema.Types.ObjectId, ref: 'Workshop', required: true },
@@ -16,4 +17,4 @@ certificateSchema.index({ userId: 1, issuedAt: -1 });
 // MongoDB removes the PDF and its certificate record after the chosen deadline.
 certificateSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-export default mongoose.model('Certificate', certificateSchema);
+export default contentConnection.model('Certificate', certificateSchema);

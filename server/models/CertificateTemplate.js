@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { contentConnection } from '../config/contentDatabase.js';
 
 const certificateTemplateSchema = new mongoose.Schema({
   workshopId: {
@@ -21,4 +22,4 @@ const certificateTemplateSchema = new mongoose.Schema({
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 }, { timestamps: true });
 
-export default mongoose.model('CertificateTemplate', certificateTemplateSchema);
+export default contentConnection.model('CertificateTemplate', certificateTemplateSchema);

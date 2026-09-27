@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { contentConnection } from '../config/contentDatabase.js';
 
 const blogPostSchema = new mongoose.Schema({
   title: {
@@ -51,4 +52,4 @@ const blogPostSchema = new mongoose.Schema({
 
 blogPostSchema.index({ title: 'text', body: 'text', tags: 'text' });
 
-export default mongoose.model('BlogPost', blogPostSchema);
+export default contentConnection.model('BlogPost', blogPostSchema);

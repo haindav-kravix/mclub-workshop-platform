@@ -408,12 +408,18 @@ export const deleteWorkshopCertificates = async (req, res) => {
 export const getMyCertificates = async (req, res) => {
   try {
     const [certificates, teamCertificates] = await Promise.all([
-      Certificate.find({ userId: req.user.id, $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }] }).select('-pdfData').populate('workshopId', 'title eventType date startDate').lean(),
-      HackathonCertificate.find({ ownerUserId: req.user.id, $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }] }).select('-pdfData').populate('workshopId', 'title eventType date startDate').lean()
+      Certificate.find({ userId: req.user.id, $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }] }).select('-pdfData').lean(),
+      HackathonCertificate.find({ ownerUserId: req.user.id, $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }] }).select('-pdfData').lean()
     ]);
+    const workshopIds = [...new Set([...certificates, ...teamCertificates].map(item => String(item.workshopId)))];
+    const workshops = await Workshop.find({ _id: { $in: workshopIds } })
+      .select('title eventType date startDate')
+      .lean();
+    const workshopsById = new Map(workshops.map(workshop => [String(workshop._id), workshop]));
+    const withWorkshop = item => ({ ...item, workshopId: workshopsById.get(String(item.workshopId)) || item.workshopId });
     res.json([
-      ...certificates.map(item => ({ ...item, certificateType: 'standard' })),
-      ...teamCertificates.map(item => ({ ...item, certificateType: 'hackathon-member' }))
+      ...certificates.map(item => ({ ...withWorkshop(item), certificateType: 'standard' })),
+      ...teamCertificates.map(item => ({ ...withWorkshop(item), certificateType: 'hackathon-member' }))
     ].sort((a, b) => new Date(b.issuedAt) - new Date(a.issuedAt)));
   } catch (error) {
     res.status(500).json({ message: 'Unable to load certificates', error: error.message });

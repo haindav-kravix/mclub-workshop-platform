@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { contentConnection } from '../config/contentDatabase.js';
 
 const schema = new mongoose.Schema({
   workshopId: { type: mongoose.Schema.Types.ObjectId, ref: 'Workshop', required: true },
@@ -18,4 +19,4 @@ schema.index({ workshopId: 1, registrationId: 1, memberId: 1 }, { unique: true }
 schema.index({ ownerUserId: 1, issuedAt: -1 });
 schema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-export default mongoose.model('HackathonCertificate', schema);
+export default contentConnection.model('HackathonCertificate', schema);

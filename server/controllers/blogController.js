@@ -2,6 +2,12 @@ import BlogPost from '../models/BlogPost.js';
 import BlogNotification from '../models/BlogNotification.js';
 import User from '../models/User.js';
 
+const authorPopulation = {
+  path: 'author',
+  select: 'name email profilePhoto bio followers',
+  model: User
+};
+
 const serializePost = (post, viewerId = null) => {
   const likeIds = (post.likes || []).map(id => id.toString());
   return {
@@ -59,7 +65,7 @@ const serializeNotification = (notification, viewer) => {
 export const getFeed = async (req, res) => {
   try {
     const posts = await BlogPost.find({ status: 'published' })
-      .populate('author', 'name email profilePhoto bio followers')
+      .populate(authorPopulation)
       .sort({ publishedAt: -1, createdAt: -1 });
 
     res.json(posts.map(post => serializePost(post, req.user?.id)));
@@ -71,7 +77,7 @@ export const getFeed = async (req, res) => {
 export const getAdminPosts = async (req, res) => {
   try {
     const posts = await BlogPost.find({})
-      .populate('author', 'name email profilePhoto bio followers')
+      .populate(authorPopulation)
       .sort({ updatedAt: -1, createdAt: -1 });
 
     res.json(posts.map(post => serializePost(post, req.user?.id)));
@@ -83,7 +89,7 @@ export const getAdminPosts = async (req, res) => {
 export const getMyPosts = async (req, res) => {
   try {
     const posts = await BlogPost.find({ author: req.user.id })
-      .populate('author', 'name email profilePhoto bio followers')
+      .populate(authorPopulation)
       .sort({ updatedAt: -1 });
 
     res.json(posts.map(post => serializePost(post, req.user.id)));
@@ -163,7 +169,7 @@ export const createPost = async (req, res) => {
     });
 
     await post.save();
-    await post.populate('author', 'name email profilePhoto bio followers');
+    await post.populate(authorPopulation);
     res.status(201).json({ success: true, post: serializePost(post, req.user.id) });
   } catch (error) {
     res.status(500).json({ message: 'Error creating post', error: error.message });
@@ -190,7 +196,7 @@ export const updatePost = async (req, res) => {
     }
     post.updatedAt = new Date();
     await post.save();
-    await post.populate('author', 'name email profilePhoto bio followers');
+    await post.populate(authorPopulation);
 
     res.json({ success: true, post: serializePost(post, req.user.id) });
   } catch (error) {
@@ -237,7 +243,7 @@ export const toggleLike = async (req, res) => {
       });
     }
 
-    await post.populate('author', 'name email profilePhoto bio followers');
+    await post.populate(authorPopulation);
 
     res.json({ success: true, post: serializePost(post, userId) });
   } catch (error) {
@@ -251,7 +257,7 @@ export const recordShare = async (req, res) => {
       req.params.postId,
       { $inc: { shares: 1 }, updatedAt: new Date() },
       { new: true }
-    ).populate('author', 'name email profilePhoto bio followers');
+    ).populate(authorPopulation);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
@@ -329,7 +335,7 @@ export const getUserPosts = async (req, res) => {
   try {
     const userId = req.params.userId;
     const posts = await BlogPost.find({ author: userId, status: 'published' })
-      .populate('author', 'name email profilePhoto bio followers')
+      .populate(authorPopulation)
       .sort({ publishedAt: -1, createdAt: -1 });
 
     res.json(posts.map(post => serializePost(post, req.user?.id)));
@@ -382,7 +388,7 @@ export const getNotifications = async (req, res) => {
   try {
     const viewer = await User.findById(req.user.id).select('following');
     const notifications = await BlogNotification.find({ recipient: req.user.id })
-      .populate('actor', 'name email profilePhoto followers following')
+      .populate({ path: 'actor', select: 'name email profilePhoto followers following', model: User })
       .populate('post', 'title')
       .sort({ createdAt: -1 })
       .limit(30);
