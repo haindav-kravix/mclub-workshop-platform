@@ -193,7 +193,7 @@ export const AdminWorkshopCard = ({
             </button>
           )}
 
-          {showEmail && workshop.isActive && (
+          {showEmail && (
             <button
               onClick={() => onEmail(workshop)}
               className="col-span-2 px-3 py-2 bg-sky-50 text-sky-700 rounded-lg hover:bg-sky-100 transition text-sm font-semibold flex items-center justify-center space-x-1"

@@ -1,16 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiAward, FiBarChart2, FiPlus, FiShield, FiTrendingUp, FiUsers } from 'react-icons/fi';
+import { FiArrowLeft, FiAward, FiBarChart2, FiMail, FiPlus, FiShield, FiTrendingUp, FiUsers, FiX } from 'react-icons/fi';
 import { AdminWorkshopCard } from '../components/AdminWorkshopCard';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { certificateAPI, registrationAPI, workshopAPI } from '../utils/api';
 import { getEventLabel } from '../utils/eventLabels';
+import { getConfirmedParticipantEmails } from '../utils/emailRecipients';
 
 export const AdminHackathonsPage = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [emailEvent, setEmailEvent] = useState(null);
+  const [emailForm, setEmailForm] = useState({ subject: '', message: '' });
+  const [emailLoading, setEmailLoading] = useState(false);
   const navigate = useNavigate();
 
   const fetchEvents = async () => {
@@ -114,6 +118,44 @@ export const AdminHackathonsPage = () => {
     }
   };
 
+  const openEmailComposer = (event) => {
+    setEmailEvent(event);
+    setEmailForm({
+      subject: `Update for ${event.title}`,
+      message: `Hello,\n\nThis is an update about ${event.title}.\n\nRegards,\nMongoDB Club`
+    });
+  };
+
+  const sendEmails = async () => {
+    if (!emailEvent) return;
+
+    setEmailLoading(true);
+    try {
+      const response = await registrationAPI.getWorkshopRegistrations(emailEvent._id);
+      const emails = getConfirmedParticipantEmails(response.data);
+
+      if (emails.length === 0) {
+        setError('No confirmed participant emails were found for this hackathon');
+        return;
+      }
+
+      const gmailUrl = new URL('https://mail.google.com/mail/');
+      gmailUrl.searchParams.set('view', 'cm');
+      gmailUrl.searchParams.set('fs', '1');
+      gmailUrl.searchParams.set('bcc', emails.join(','));
+      gmailUrl.searchParams.set('su', emailForm.subject);
+      gmailUrl.searchParams.set('body', emailForm.message);
+
+      window.open(gmailUrl.toString(), '_blank', 'noopener,noreferrer');
+      setSuccess(`Opened Gmail for ${emails.length} confirmed participants`);
+      setEmailEvent(null);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to collect confirmed participant emails');
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
   const totals = useMemo(() => events.reduce((stats, event) => {
     stats.total += event.totalRegistrationCount ?? event.registrationStats?.total ?? 0;
     stats.confirmed += event.confirmedRegistrationCount ?? event.registrationStats?.confirmed ?? 0;
@@ -198,8 +240,7 @@ export const AdminHackathonsPage = () => {
                 onViewRegistrations={(eventId) => navigate(`/admin/registrations/${eventId}`)}
                 onExport={exportRegistrations}
                 onReport={downloadReport}
-                onEmail={() => {}}
-                showEmail={false}
+                onEmail={openEmailComposer}
                 onToggleRegistrations={toggleRegistrations}
                 onToggleStopped={toggleStopped}
                 onTakeAttendance={(eventId) => navigate(`/admin/hackathon/${eventId}/attendance`)}
@@ -214,6 +255,52 @@ export const AdminHackathonsPage = () => {
           </div>
         )}
       </div>
+
+      {emailEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-xl rounded-lg bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-200 p-5">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-wide text-emerald-700">Email confirmed participants</p>
+                <h2 className="text-xl font-bold text-slate-950">{emailEvent.title}</h2>
+              </div>
+              <button onClick={() => setEmailEvent(null)} className="text-slate-500 hover:text-slate-900" aria-label="Close email composer">
+                <FiX size={22} />
+              </button>
+            </div>
+            <div className="space-y-4 p-5">
+              <p className="text-sm font-semibold text-slate-600">
+                Gmail will include every confirmed team leader and member with a valid email address in BCC.
+              </p>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Subject</label>
+                <input
+                  type="text"
+                  value={emailForm.subject}
+                  onChange={(event) => setEmailForm(previous => ({ ...previous, subject: event.target.value }))}
+                  className="focus-ring w-full rounded-lg border border-slate-300 px-4 py-2"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Message</label>
+                <textarea
+                  rows="7"
+                  value={emailForm.message}
+                  onChange={(event) => setEmailForm(previous => ({ ...previous, message: event.target.value }))}
+                  className="focus-ring w-full rounded-lg border border-slate-300 px-4 py-2"
+                />
+              </div>
+              <button
+                onClick={sendEmails}
+                disabled={emailLoading || !emailForm.subject.trim() || !emailForm.message.trim()}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-50"
+              >
+                <FiMail /> {emailLoading ? 'Preparing...' : 'Open in Gmail'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

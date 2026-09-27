@@ -5,6 +5,7 @@ import { AdminWorkshopCard } from '../components/AdminWorkshopCard';
 import { FiActivity, FiAward, FiBarChart2, FiCalendar, FiCheckCircle, FiClock, FiMail, FiPlus, FiTrendingUp, FiUsers, FiX, FiXCircle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { getEventLabel } from '../utils/eventLabels';
+import { getConfirmedParticipantEmails } from '../utils/emailRecipients';
 
 export const AdminDashboard = () => {
   const [workshops, setWorkshops] = useState([]);
@@ -139,10 +140,7 @@ export const AdminDashboard = () => {
     setEmailLoading(true);
     try {
       const response = await registrationAPI.getWorkshopRegistrations(emailWorkshop._id);
-      const emails = response.data
-        .filter(registration => registration.status === 'confirmed')
-        .map(registration => registration.userId?.email)
-        .filter(Boolean);
+      const emails = getConfirmedParticipantEmails(response.data);
 
       if (emails.length === 0) {
         setError('No confirmed student emails found for this workshop');

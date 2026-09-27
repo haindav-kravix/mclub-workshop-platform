@@ -202,6 +202,7 @@ const buildRegistrationListProjection = (formFields = []) => {
     createdAt: 1,
     updatedAt: 1,
     teamCode: 1,
+    teamMembers: 1,
     evaluationScores: 1,
     evaluationReviews: 1,
     evaluationAverage: 1,
