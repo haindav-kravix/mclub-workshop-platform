@@ -12,7 +12,10 @@ export const LoginPage = () => {
   const [searchParams] = useSearchParams();
   const [error, setError] = React.useState('');
   const [isSigningIn, setIsSigningIn] = React.useState(false);
-  const redirectTo = searchParams.get('redirect') || '/workshops';
+  const requestedRedirect = searchParams.get('redirect');
+  const redirectTo = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
+    ? requestedRedirect
+    : '/workshops';
 
   const handleSuccess = async (credentialResponse) => {
     setIsSigningIn(true);

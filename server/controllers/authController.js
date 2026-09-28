@@ -74,7 +74,7 @@ export const getProfile = async (req, res) => {
       id: profile._id.toString()
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching profile', error: error.message });
+    res.status(500).json({ message: 'Error fetching profile', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -88,7 +88,7 @@ export const updateProfile = async (req, res) => {
     );
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating profile', error: error.message });
+    res.status(500).json({ message: 'Error updating profile', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -103,7 +103,7 @@ export const getAdminAccounts = async (req, res) => {
       isCurrentUser: String(admin._id) === String(req.user.id)
     })));
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load admin accounts', error: error.message });
+    res.status(500).json({ message: 'Unable to load admin accounts', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -124,6 +124,6 @@ export const revokeAdminAccess = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'Admin account not found' });
     res.json({ success: true, user, message: `${user.name} is now a regular user` });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to revoke admin access', error: error.message });
+    res.status(500).json({ message: 'Unable to revoke admin access', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };

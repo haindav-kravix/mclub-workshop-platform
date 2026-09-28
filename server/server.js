@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -23,15 +24,21 @@ import { waitForContentDatabase } from './config/contentDatabase.js';
 const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
+app.set('query parser', 'simple');
 
 // File path setup for static files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Middleware
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  hsts: process.env.NODE_ENV === 'production'
+    ? { maxAge: 63072000, includeSubDomains: true, preload: true }
+    : false
+}));
 app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
   const isCacheableMedia = /^\/api\/workshops\/[^/]+\/(cover-image|qr-image)$/.test(req.path) ||
@@ -69,38 +76,57 @@ setInterval(() => {
   }
 }, 15 * 60 * 1000).unref();
 
-const allowedOrigins = [
+const productionOrigins = [
+  'https://mongodbtcklh.club',
+  'https://www.mongodbtcklh.club',
+  'https://client-lac-eight-57.vercel.app',
+  'https://client-darenanigamer-6336s-projects.vercel.app'
+];
+const developmentOrigins = [
   'http://localhost:3000',
   'http://localhost:8000',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:8000',
-  'https://mongodbtcklh.club',
-  'https://www.mongodbtcklh.club',
-  'https://client-lac-eight-57.vercel.app',
-  'https://client-darenanigamer-6336s-projects.vercel.app',
-  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim()) : [])
+  'http://192-168-1-7.sslip.io:3000'
 ];
+const configuredOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim()).filter(Boolean)
+  : [];
+const allowedOrigins = new Set([
+  ...productionOrigins,
+  ...configuredOrigins,
+  ...(process.env.NODE_ENV === 'production' ? [] : developmentOrigins)
+]);
 
 app.use(cors({
   origin: (origin, callback) => {
     if (
       !origin ||
-      allowedOrigins.includes(origin) ||
-      /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin) ||
-      /^http:\/\/192-168-1-7\.sslip\.io:3000$/.test(origin)
+      allowedOrigins.has(origin)
     ) {
       callback(null, true);
       return;
     }
     callback(new Error('CORS blocked'));
   },
-  credentials: true
+  credentials: false,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Authorization', 'Content-Type'],
+  maxAge: 86400
 }));
-app.use(express.json());
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '2mb', strict: true }));
+app.use(express.urlencoded({ limit: '2mb', extended: false, parameterLimit: 200 }));
 
 // Static files for uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  dotfiles: 'deny',
+  index: false,
+  maxAge: '1d',
+  setHeaders: res => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Disposition', 'inline');
+  }
+}));
 app.get('/media/highlights/:id/:index', rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 800,
@@ -134,6 +160,12 @@ app.get('/api/health', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  if (err.message === 'CORS blocked') {
+    return res.status(403).json({ message: 'Origin not allowed' });
+  }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ message: 'Request is too large' });
+  }
   if (err.name === 'MulterError' || err.message?.startsWith('Invalid file type')) {
     return res.status(400).json({
       message: err.message || 'Invalid uploaded file'
@@ -167,9 +199,13 @@ const startServer = async () => {
   await connectDB();
   await waitForContentDatabase();
   console.log(process.env.CONTENT_MONGODB_URI ? 'Content MongoDB connected successfully' : 'Content MongoDB using primary connection');
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
+  server.headersTimeout = 30000;
+  server.requestTimeout = 120000;
+  server.keepAliveTimeout = 5000;
+  server.maxHeadersCount = 100;
 };
 
 startServer().catch(error => {

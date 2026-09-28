@@ -40,8 +40,7 @@ const fileFilter = (req, file, cb) => {
     'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     'application/vnd.ms-excel',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain',
-    'application/octet-stream'
+    'text/plain'
   ];
   const allowedExtensions = [
     '.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.heic', '.heif',

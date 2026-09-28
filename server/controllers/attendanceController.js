@@ -72,7 +72,7 @@ export const getAttendanceRoster = async (req, res) => {
       }))
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error loading attendance roster', error: error.message });
+    res.status(500).json({ message: 'Error loading attendance roster', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -135,7 +135,7 @@ export const submitAttendance = async (req, res) => {
 
     res.json({ success: true, attendance });
   } catch (error) {
-    res.status(500).json({ message: 'Error submitting attendance', error: error.message });
+    res.status(500).json({ message: 'Error submitting attendance', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -212,7 +212,7 @@ export const postEntryAttendance = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error posting entry attendance', error: error.message });
+    res.status(500).json({ message: 'Error posting entry attendance', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -242,7 +242,7 @@ export const getAttendanceReports = async (req, res) => {
       };
     }));
   } catch (error) {
-    res.status(500).json({ message: 'Error loading attendance reports', error: error.message });
+    res.status(500).json({ message: 'Error loading attendance reports', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -260,7 +260,7 @@ export const resetAttendanceDay = async (req, res) => {
     await Attendance.deleteOne({ workshopId, date: normalizeDate(date) });
     res.json({ success: true, message: 'Attendance cleared. Retake can begin from start.' });
   } catch (error) {
-    res.status(500).json({ message: 'Error resetting attendance', error: error.message });
+    res.status(500).json({ message: 'Error resetting attendance', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -296,7 +296,7 @@ export const exportDailyAttendance = async (req, res) => {
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
-    res.status(500).json({ message: 'Error exporting daily attendance', error: error.message });
+    res.status(500).json({ message: 'Error exporting daily attendance', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -359,7 +359,7 @@ export const exportOverallAttendance = async (req, res) => {
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
-    res.status(500).json({ message: 'Error exporting overall attendance', error: error.message });
+    res.status(500).json({ message: 'Error exporting overall attendance', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -384,7 +384,7 @@ export const getQrSession = async (req, res) => {
       manualEnabled: session?.manualEnabled || false
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error loading QR session', error: error.message });
+    res.status(500).json({ message: 'Error loading QR session', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -419,7 +419,7 @@ export const setQrSession = async (req, res) => {
 
     res.json({ success: true, session });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating QR session', error: error.message });
+    res.status(500).json({ message: 'Error updating QR session', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -503,6 +503,6 @@ export const qrCheckIn = async (req, res) => {
       user: registration.userId
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error marking QR attendance', error: error.message });
+    res.status(500).json({ message: 'Error marking QR attendance', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };

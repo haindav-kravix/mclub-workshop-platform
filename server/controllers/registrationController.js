@@ -402,7 +402,7 @@ export const registerForWorkshop = async (req, res) => {
     });
   } catch (error) {
     cleanupUploadedFiles(req);
-    res.status(500).json({ message: 'Error registering for workshop', error: error.message });
+    res.status(500).json({ message: 'Error registering for workshop', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -492,7 +492,7 @@ export const getUserRegistrations = async (req, res) => {
 
     res.json(registrations);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching registrations', error: error.message });
+    res.status(500).json({ message: 'Error fetching registrations', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -516,7 +516,7 @@ export const getUserWorkshopRegistrationStatus = async (req, res) => {
       registration
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching registration status', error: error.message });
+    res.status(500).json({ message: 'Error fetching registration status', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -533,7 +533,7 @@ export const getUserRegisteredWorkshopIds = async (req, res) => {
       workshopIds: registrations.map(registration => String(registration.workshopId))
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching registered events', error: error.message });
+    res.status(500).json({ message: 'Error fetching registered events', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -565,7 +565,7 @@ export const getWorkshopRegistrations = async (req, res) => {
       userId: usersById.get(String(registration.userId)) || registration.userId
     })));
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching registrations', error: error.message });
+    res.status(500).json({ message: 'Error fetching registrations', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -613,7 +613,7 @@ export const getRegistrationUpload = async (req, res) => {
       value: rawValue
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error loading upload', error: error.message });
+    res.status(500).json({ message: 'Error loading upload', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -644,7 +644,7 @@ export const cancelRegistration = async (req, res) => {
 
     res.json({ success: true, message: 'Registration cancelled' });
   } catch (error) {
-    res.status(500).json({ message: 'Error cancelling registration', error: error.message });
+    res.status(500).json({ message: 'Error cancelling registration', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -674,7 +674,7 @@ export const exportRegistrationsToExcel = async (req, res) => {
     res.end();
   } catch (error) {
     console.error('Error exporting registrations:', error);
-    res.status(500).json({ message: 'Error exporting registrations', error: error.message });
+    res.status(500).json({ message: 'Error exporting registrations', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -763,7 +763,7 @@ export const updateRegistrationStatus = async (req, res) => {
       registration
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating registration status', error: error.message });
+    res.status(500).json({ message: 'Error updating registration status', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -787,7 +787,7 @@ export const getHackathonEvaluation = async (req, res) => {
 
     res.json({ workshop, registrations });
   } catch (error) {
-    res.status(500).json({ message: 'Error loading evaluation', error: error.message });
+    res.status(500).json({ message: 'Error loading evaluation', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -869,7 +869,7 @@ export const updateHackathonEvaluation = async (req, res) => {
 
     res.json({ success: true, registration });
   } catch (error) {
-    res.status(500).json({ message: 'Error saving evaluation', error: error.message });
+    res.status(500).json({ message: 'Error saving evaluation', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -953,7 +953,7 @@ export const exportHackathonEvaluation = async (req, res) => {
     res.end();
   } catch (error) {
     console.error('Error exporting hackathon evaluation:', error);
-    res.status(500).json({ message: 'Error exporting hackathon evaluation', error: error.message });
+    res.status(500).json({ message: 'Error exporting hackathon evaluation', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -976,7 +976,7 @@ export const toggleHackathonLeaderboard = async (req, res) => {
       .lean();
     res.json({ success: true, workshop: updatedWorkshop });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating leaderboard visibility', error: error.message });
+    res.status(500).json({ message: 'Error updating leaderboard visibility', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -1018,7 +1018,7 @@ export const getHackathonLeaderboard = async (req, res) => {
       }))
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error loading leaderboard', error: error.message });
+    res.status(500).json({ message: 'Error loading leaderboard', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -1047,6 +1047,6 @@ export const deleteRegistration = async (req, res) => {
 
     res.json({ success: true, message: 'Registration deleted' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting registration', error: error.message });
+    res.status(500).json({ message: 'Error deleting registration', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };

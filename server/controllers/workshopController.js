@@ -737,7 +737,7 @@ export const createWorkshop = async (req, res) => {
     res.status(201).json({ success: true, workshop: withWorkshopImageUrls(workshop.toObject(), req) });
   } catch (error) {
     cleanupUploadedFiles(req);
-    res.status(500).json({ message: 'Error creating workshop', error: error.message });
+    res.status(500).json({ message: 'Error creating workshop', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -749,7 +749,7 @@ export const getAllWorkshops = async (req, res) => {
       .lean();
     res.json(workshops.map(workshop => withCoverImageUrl(workshop, req)));
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching workshops', error: error.message });
+    res.status(500).json({ message: 'Error fetching workshops', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -776,7 +776,7 @@ export const getWorkshopCoverImage = async (req, res) => {
       cacheKey
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Error fetching image', error: error.message });
+    return res.status(500).json({ message: 'Error fetching image', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -804,7 +804,7 @@ export const getWorkshopQrImage = async (req, res) => {
       cacheKey
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Error fetching image', error: error.message });
+    return res.status(500).json({ message: 'Error fetching image', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -833,7 +833,7 @@ export const getHackathonDescriptionImage = async (req, res) => {
 
     return sendDataUrlImage(res, image, { width: req.query.w, cacheKey });
   } catch (error) {
-    return res.status(500).json({ message: 'Error fetching image', error: error.message });
+    return res.status(500).json({ message: 'Error fetching image', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -850,7 +850,7 @@ export const getWorkshopById = async (req, res) => {
     
     res.json(withWorkshopImageUrls(workshop, req));
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching workshop', error: error.message });
+    res.status(500).json({ message: 'Error fetching workshop', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -867,7 +867,7 @@ export const getAdminWorkshopById = async (req, res) => {
 
     res.json(withWorkshopImageUrls(workshop, req));
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching event', error: error.message });
+    res.status(500).json({ message: 'Error fetching event', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -978,7 +978,7 @@ export const updateWorkshop = async (req, res) => {
     res.json({ success: true, workshop: withWorkshopImageUrls(workshop.toObject(), req) });
   } catch (error) {
     cleanupUploadedFiles(req);
-    res.status(500).json({ message: 'Error updating workshop', error: error.message });
+    res.status(500).json({ message: 'Error updating workshop', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -998,7 +998,7 @@ export const deleteWorkshop = async (req, res) => {
 
     res.json({ success: true, message: 'Workshop deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting workshop', error: error.message });
+    res.status(500).json({ message: 'Error deleting workshop', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -1090,7 +1090,7 @@ export const getAdminWorkshops = async (req, res) => {
       };
     }));
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching workshops', error: error.message });
+    res.status(500).json({ message: 'Error fetching workshops', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -1118,7 +1118,7 @@ export const generateWorkshopReport = async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.send(reportBuffer);
   } catch (error) {
-    res.status(500).json({ message: 'Error generating workshop report', error: error.message });
+    res.status(500).json({ message: 'Error generating workshop report', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -1134,7 +1134,7 @@ export const toggleWorkshopStatus = async (req, res) => {
 
     res.json({ success: true, workshop: withWorkshopImageUrls(workshop.toObject(), req) });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating workshop status', error: error.message });
+    res.status(500).json({ message: 'Error updating workshop status', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -1150,7 +1150,7 @@ export const toggleRegistrationStatus = async (req, res) => {
 
     res.json({ success: true, workshop: withWorkshopImageUrls(workshop.toObject(), req) });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating registration status', error: error.message });
+    res.status(500).json({ message: 'Error updating registration status', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -1166,6 +1166,6 @@ export const toggleStoppedStatus = async (req, res) => {
 
     res.json({ success: true, workshop: withWorkshopImageUrls(workshop.toObject(), req) });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating workshop stop status', error: error.message });
+    res.status(500).json({ message: 'Error updating workshop stop status', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };

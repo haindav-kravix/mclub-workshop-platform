@@ -57,7 +57,7 @@ export const getTeams = async (req, res) => {
     await Promise.all(registrations.map(registration => ensureHackathonTeamMembers(registration, workshop)));
     res.json({ workshop, teams: registrations.map(serializeTeam) });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load hackathon teams', error: error.message });
+    res.status(500).json({ message: 'Unable to load hackathon teams', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -91,7 +91,7 @@ export const getSessions = async (req, res) => {
       .lean();
     res.json({ workshop, sessions });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load attendance sessions', error: error.message });
+    res.status(500).json({ message: 'Unable to load attendance sessions', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -105,7 +105,7 @@ export const createSession = async (req, res) => {
     const session = await HackathonAttendanceSession.create({ workshopId: workshop._id, title, date, createdBy: req.user.id, updatedBy: req.user.id });
     res.status(201).json({ success: true, session });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to create attendance session', error: error.message });
+    res.status(500).json({ message: 'Unable to create attendance session', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -115,7 +115,7 @@ export const deleteSession = async (req, res) => {
     if (!session) return res.status(404).json({ message: 'Attendance session not found' });
     res.json({ success: true, message: 'Attendance session deleted' });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to delete attendance session', error: error.message });
+    res.status(500).json({ message: 'Unable to delete attendance session', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -125,7 +125,7 @@ export const getSessionRoster = async (req, res) => {
     if (!session) return res.status(404).json({ message: 'Attendance session not found' });
     res.json({ session, teams: await buildRoster(session) });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load attendance roster', error: error.message });
+    res.status(500).json({ message: 'Unable to load attendance roster', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -139,7 +139,7 @@ export const setQrEnabled = async (req, res) => {
     if (!session) return res.status(404).json({ message: 'Attendance session not found' });
     res.json({ success: true, session });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to update QR access', error: error.message });
+    res.status(500).json({ message: 'Unable to update QR access', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -167,7 +167,7 @@ export const saveManualAttendance = async (req, res) => {
     await session.save();
     res.json({ success: true, teams: await buildRoster(session.toObject()) });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to save attendance', error: error.message });
+    res.status(500).json({ message: 'Unable to save attendance', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -220,7 +220,7 @@ export const postEntryAttendance = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to post entry scans to hackathon attendance', error: error.message });
+    res.status(500).json({ message: 'Unable to post entry scans to hackathon attendance', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -230,7 +230,7 @@ export const getAttendanceReports = async (req, res) => {
     if (!report) return res.status(404).json({ message: 'Hackathon not found' });
     res.json(report);
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load hackathon attendance reports', error: error.message });
+    res.status(500).json({ message: 'Unable to load hackathon attendance reports', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -265,7 +265,7 @@ export const exportAttendanceReport = async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${safeFileName(report.workshop.title)}-attendance-report.xlsx"`);
     await workbook.xlsx.write(res); res.end();
   } catch (error) {
-    res.status(500).json({ message: 'Unable to export attendance report', error: error.message });
+    res.status(500).json({ message: 'Unable to export attendance report', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -290,7 +290,7 @@ export const exportSessionAttendance = async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${safeFileName(workshop.title)}-${safeFileName(session.title)}.xlsx"`);
     await workbook.xlsx.write(res); res.end();
   } catch (error) {
-    res.status(500).json({ message: 'Unable to export attendance session', error: error.message });
+    res.status(500).json({ message: 'Unable to export attendance session', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -300,7 +300,7 @@ export const getPublicSession = async (req, res) => {
     if (!session || session.workshopId?.eventType !== 'hackathon') return res.status(404).json({ message: 'Attendance session not found' });
     res.json({ _id: session._id, title: session.title, date: session.date, qrEnabled: session.qrEnabled, workshop: { title: session.workshopId.title } });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load attendance session', error: error.message });
+    res.status(500).json({ message: 'Unable to load attendance session', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -321,6 +321,6 @@ export const memberCheckIn = async (req, res) => {
     await session.save();
     res.json({ success: true, message: 'Attendance marked', member: { name: member.name, teamCode: registration.teamCode } });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to mark attendance', error: error.message });
+    res.status(500).json({ message: 'Unable to mark attendance', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };

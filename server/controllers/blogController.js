@@ -70,7 +70,7 @@ export const getFeed = async (req, res) => {
 
     res.json(posts.map(post => serializePost(post, req.user?.id)));
   } catch (error) {
-    res.status(500).json({ message: 'Error loading blog feed', error: error.message });
+    res.status(500).json({ message: 'Error loading blog feed', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -82,7 +82,7 @@ export const getAdminPosts = async (req, res) => {
 
     res.json(posts.map(post => serializePost(post, req.user?.id)));
   } catch (error) {
-    res.status(500).json({ message: 'Error loading admin blog list', error: error.message });
+    res.status(500).json({ message: 'Error loading admin blog list', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -94,7 +94,7 @@ export const getMyPosts = async (req, res) => {
 
     res.json(posts.map(post => serializePost(post, req.user.id)));
   } catch (error) {
-    res.status(500).json({ message: 'Error loading your posts', error: error.message });
+    res.status(500).json({ message: 'Error loading your posts', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -110,7 +110,7 @@ export const getBlogProfile = async (req, res) => {
 
     res.json(serializeProfile(user));
   } catch (error) {
-    res.status(500).json({ message: 'Error loading blog profile', error: error.message });
+    res.status(500).json({ message: 'Error loading blog profile', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -137,7 +137,7 @@ export const updateBlogProfile = async (req, res) => {
       profile: serializeProfile(user)
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating blog profile', error: error.message });
+    res.status(500).json({ message: 'Error updating blog profile', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -151,7 +151,7 @@ export const uploadBlogImage = async (req, res) => {
       imageUrl: `/uploads/${req.file.filename}`
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error uploading image', error: error.message });
+    res.status(500).json({ message: 'Error uploading image', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -172,7 +172,7 @@ export const createPost = async (req, res) => {
     await post.populate(authorPopulation);
     res.status(201).json({ success: true, post: serializePost(post, req.user.id) });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating post', error: error.message });
+    res.status(500).json({ message: 'Error creating post', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -200,7 +200,7 @@ export const updatePost = async (req, res) => {
 
     res.json({ success: true, post: serializePost(post, req.user.id) });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating post', error: error.message });
+    res.status(500).json({ message: 'Error updating post', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -215,7 +215,7 @@ export const deletePost = async (req, res) => {
     }
     res.json({ success: true, message: 'Post deleted' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting post', error: error.message });
+    res.status(500).json({ message: 'Error deleting post', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -247,7 +247,7 @@ export const toggleLike = async (req, res) => {
 
     res.json({ success: true, post: serializePost(post, userId) });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating like', error: error.message });
+    res.status(500).json({ message: 'Error updating like', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -263,7 +263,7 @@ export const recordShare = async (req, res) => {
     }
     res.json({ success: true, post: serializePost(post, req.user?.id) });
   } catch (error) {
-    res.status(500).json({ message: 'Error recording share', error: error.message });
+    res.status(500).json({ message: 'Error recording share', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -295,7 +295,7 @@ export const searchUsers = async (req, res) => {
       };
     }));
   } catch (error) {
-    res.status(500).json({ message: 'Error searching users', error: error.message });
+    res.status(500).json({ message: 'Error searching users', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -327,7 +327,7 @@ export const getUserProfile = async (req, res) => {
       followingCount: user.following.length
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error loading user profile', error: error.message });
+    res.status(500).json({ message: 'Error loading user profile', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -340,7 +340,7 @@ export const getUserPosts = async (req, res) => {
 
     res.json(posts.map(post => serializePost(post, req.user?.id)));
   } catch (error) {
-    res.status(500).json({ message: 'Error loading user posts', error: error.message });
+    res.status(500).json({ message: 'Error loading user posts', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -380,7 +380,7 @@ export const toggleFollow = async (req, res) => {
       followerCount: target.followers.length
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating follow status', error: error.message });
+    res.status(500).json({ message: 'Error updating follow status', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -403,7 +403,7 @@ export const getNotifications = async (req, res) => {
       unreadCount
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error loading notifications', error: error.message });
+    res.status(500).json({ message: 'Error loading notifications', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -416,7 +416,7 @@ export const markNotificationsRead = async (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating notifications', error: error.message });
+    res.status(500).json({ message: 'Error updating notifications', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -442,6 +442,6 @@ export const deleteUser = async (req, res) => {
 
     res.json({ success: true, message: 'User and their blogs deleted' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting user', error: error.message });
+    res.status(500).json({ message: 'Error deleting user', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };

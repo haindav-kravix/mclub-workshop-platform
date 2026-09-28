@@ -163,7 +163,7 @@ export const getTemplateSetup = async (req, res) => {
     const template = await CertificateTemplate.findOne({ workshopId: workshop._id });
     res.json({ workshop, template: templateResponse(template) });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load certificate setup', error: error.message });
+    res.status(500).json({ message: 'Unable to load certificate setup', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -198,7 +198,7 @@ export const setCertificateDownloadExpiry = async (req, res) => {
         : 'Certificate download deadline removed'
     });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to save certificate download deadline', error: error.message });
+    res.status(500).json({ message: 'Unable to save certificate download deadline', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -243,7 +243,7 @@ export const saveTemplateSetup = async (req, res) => {
     res.json({ success: true, template: templateResponse(template) });
   } catch (error) {
     if (req.file?.path) fs.unlink(req.file.path, () => {});
-    res.status(500).json({ message: 'Unable to save certificate setup', error: error.message });
+    res.status(500).json({ message: 'Unable to save certificate setup', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -318,7 +318,7 @@ export const getEligibleRecipients = async (req, res) => {
       };
     }));
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load eligible participants', error: error.message });
+    res.status(500).json({ message: 'Unable to load eligible participants', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -378,7 +378,7 @@ export const generateCertificates = async (req, res) => {
     }
     res.json({ success: true, generatedCount: registrations.length, message: `${registrations.length} certificate${registrations.length === 1 ? '' : 's'} generated` });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to generate certificates', error: error.message });
+    res.status(500).json({ message: 'Unable to generate certificates', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -401,7 +401,7 @@ export const deleteWorkshopCertificates = async (req, res) => {
         : 'No issued certificates found for this event'
     });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to delete issued certificates', error: error.message });
+    res.status(500).json({ message: 'Unable to delete issued certificates', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -422,7 +422,7 @@ export const getMyCertificates = async (req, res) => {
       ...teamCertificates.map(item => ({ ...withWorkshop(item), certificateType: 'hackathon-member' }))
     ].sort((a, b) => new Date(b.issuedAt) - new Date(a.issuedAt)));
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load certificates', error: error.message });
+    res.status(500).json({ message: 'Unable to load certificates', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -441,7 +441,7 @@ export const getHackathonCertificateFile = async (req, res) => {
     res.setHeader('Content-Disposition', `${disposition}; filename="${certificate.fileName}"`);
     res.send(certificate.pdfData);
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load certificate', error: error.message });
+    res.status(500).json({ message: 'Unable to load certificate', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -460,6 +460,6 @@ export const getCertificateFile = async (req, res) => {
     res.setHeader('Content-Disposition', `${disposition}; filename="${certificate.fileName}"`);
     res.send(certificate.pdfData);
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load certificate', error: error.message });
+    res.status(500).json({ message: 'Unable to load certificate', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };

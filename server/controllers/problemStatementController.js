@@ -41,7 +41,7 @@ export const getAdminProblemStatements = async (req, res) => {
       problemStatements: workshop.problemStatements
     });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load problem statements', error: error.message });
+    res.status(500).json({ message: 'Unable to load problem statements', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -123,7 +123,7 @@ export const getProblemStatementSelections = async (req, res) => {
       pendingTeams
     });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load problem statement selections', error: error.message });
+    res.status(500).json({ message: 'Unable to load problem statement selections', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -193,7 +193,7 @@ export const exportProblemStatementSelections = async (req, res) => {
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
-    res.status(500).json({ message: 'Unable to export problem statement selections', error: error.message });
+    res.status(500).json({ message: 'Unable to export problem statement selections', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -212,7 +212,7 @@ export const createProblemStatement = async (req, res) => {
     await workshop.save();
     res.status(201).json({ success: true, problemStatement: workshop.problemStatements.at(-1) });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to create problem statement', error: error.message });
+    res.status(500).json({ message: 'Unable to create problem statement', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -255,7 +255,7 @@ export const setProblemStatementAssignmentMode = async (req, res) => {
       ...assignment
     });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to update assignment mode', error: error.message });
+    res.status(500).json({ message: 'Unable to update assignment mode', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -276,7 +276,7 @@ export const setProblemStatementPublished = async (req, res) => {
     }
     res.json({ success: true, problemStatement: statement });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to update problem statement', error: error.message });
+    res.status(500).json({ message: 'Unable to update problem statement', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -301,7 +301,7 @@ export const deleteProblemStatement = async (req, res) => {
     }
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to delete problem statement', error: error.message });
+    res.status(500).json({ message: 'Unable to delete problem statement', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -336,7 +336,7 @@ export const getTeamProblemStatements = async (req, res) => {
       problemStatements
     });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load problem statements', error: error.message });
+    res.status(500).json({ message: 'Unable to load problem statements', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -384,6 +384,6 @@ export const selectProblemStatement = async (req, res) => {
 
     res.json({ success: true, selectedProblemStatement: registration.selectedProblemStatement });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to select problem statement', error: error.message });
+    res.status(500).json({ message: 'Unable to select problem statement', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };

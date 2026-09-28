@@ -3,13 +3,13 @@ import User from '../models/User.js';
 
 export const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const [scheme, token] = authHeader?.split(' ') || [];
 
-  if (!token) {
+  if (scheme !== 'Bearer' || !token || token.length > 4096) {
     return res.status(401).json({ message: 'Access token required' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] }, (err, user) => {
     if (err) {
       return res.status(403).json({ message: 'Invalid or expired token' });
     }

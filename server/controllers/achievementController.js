@@ -85,7 +85,7 @@ export const getPublishedAchievements = async (req, res) => {
       .lean();
     res.json(achievements.map(item => serializeAchievement(item, req)));
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load achievements', error: error.message });
+    res.status(500).json({ message: 'Unable to load achievements', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -98,7 +98,7 @@ export const getAdminAchievements = async (req, res) => {
       .lean();
     res.json(achievements.map(item => serializeAchievement(item, req)));
   } catch (error) {
-    res.status(500).json({ message: 'Unable to load achievements', error: error.message });
+    res.status(500).json({ message: 'Unable to load achievements', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -191,7 +191,7 @@ export const createAchievement = async (req, res) => {
     res.status(201).json({ success: true, achievement: serializeAchievement(achievement, req) });
   } catch (error) {
     cleanupFiles(req.files);
-    res.status(500).json({ message: 'Unable to create achievement', error: error.message });
+    res.status(500).json({ message: 'Unable to create achievement', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -218,7 +218,7 @@ export const updateAchievement = async (req, res) => {
     res.json({ success: true, achievement: serializeAchievement(achievement, req) });
   } catch (error) {
     cleanupFiles(req.files);
-    res.status(500).json({ message: 'Unable to update achievement', error: error.message });
+    res.status(500).json({ message: 'Unable to update achievement', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -228,6 +228,6 @@ export const deleteAchievement = async (req, res) => {
     if (!achievement) return res.status(404).json({ message: 'Achievement not found' });
     res.json({ success: true, message: 'Achievement deleted' });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to delete achievement', error: error.message });
+    res.status(500).json({ message: 'Unable to delete achievement', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };

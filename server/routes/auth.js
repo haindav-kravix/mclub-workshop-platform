@@ -56,58 +56,9 @@ router.post('/admin/login', async (req, res) => {
   }
 });
 
-// Admin Signup
-router.post('/admin/signup', async (req, res) => {
-  const { token } = req.body;
-
-  if (!token) {
-    return res.status(400).json({ error: 'Token required' });
-  }
-
-  try {
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
-
-    const payload = ticket.getPayload();
-    const { sub, email, name, picture } = payload;
-
-    let user = await User.findOne({ googleId: sub });
-
-    if (user?.adminRevokedAt) {
-      return res.status(403).json({ error: 'Admin access for this account has been revoked' });
-    }
-    if (user) {
-      user.isAdmin = true;
-      user.adminRevokedAt = null;
-      if (!user.profilePhoto && picture) user.profilePhoto = picture;
-      await user.save();
-    } else {
-      user = new User({
-        googleId: sub,
-        email,
-        name,
-        profilePhoto: picture,
-        isAdmin: true
-      });
-      await user.save();
-    }
-
-    const jwtToken = jwt.sign(
-      { id: user._id, email: user.email, isAdmin: user.isAdmin },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    res.json({
-      success: true,
-      token: jwtToken,
-      user: { id: user._id, email: user.email, name: user.name, profilePhoto: user.profilePhoto, isAdmin: true }
-    });
-  } catch (error) {
-    res.status(401).json({ error: 'Registration failed' });
-  }
+// Admin accounts are provisioned out-of-band and can never self-promote.
+router.post('/admin/signup', (req, res) => {
+  res.status(403).json({ error: 'Public admin registration is disabled' });
 });
 
 export default router;

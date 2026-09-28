@@ -72,7 +72,12 @@ export const parseMarkdown = (text) => {
 
 // Format inline markdown (bold, italic, inline code)
 export const formatInlineMarkdown = (text) => {
-  let formatted = text;
+  let formatted = String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
   // Code (must be before bold/italic)
   formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
