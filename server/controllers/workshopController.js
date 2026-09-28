@@ -840,7 +840,7 @@ export const getHackathonDescriptionImage = async (req, res) => {
 export const getWorkshopById = async (req, res) => {
   try {
     const workshop = await Workshop.findById(req.params.id)
-      .select('-coverImage -qrImage -coverImagePreview -problemStatements -hackathonDescriptionImages')
+      .select('-coverImage -qrImage -coverImagePreview -problemStatements -hackathonDescriptionImages -hackathonSolutionSubmissionUrl -hackathonSolutionSubmissionVisible')
       .populate('createdBy', 'name email')
       .lean();
     
@@ -851,6 +851,47 @@ export const getWorkshopById = async (req, res) => {
     res.json(withWorkshopImageUrls(workshop, req));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching workshop', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
+  }
+};
+
+export const updateHackathonSolutionSubmission = async (req, res) => {
+  try {
+    const workshop = await Workshop.findById(req.params.id);
+    if (!workshop || workshop.eventType !== 'hackathon') {
+      return res.status(404).json({ message: 'Hackathon not found' });
+    }
+
+    const url = String(req.body.url || '').trim();
+    const visible = Boolean(req.body.visible);
+    if (visible && !url) {
+      return res.status(400).json({ message: 'Add the submission link before making it visible' });
+    }
+    if (url) {
+      try {
+        const parsed = new URL(url);
+        if (!['https:', 'http:'].includes(parsed.protocol)) throw new Error('Invalid protocol');
+      } catch {
+        return res.status(400).json({ message: 'Enter a valid http or https submission link' });
+      }
+    }
+
+    workshop.hackathonSolutionSubmissionUrl = url;
+    workshop.hackathonSolutionSubmissionVisible = visible && Boolean(url);
+    workshop.updatedAt = new Date();
+    await workshop.save();
+
+    res.json({
+      message: workshop.hackathonSolutionSubmissionVisible
+        ? 'Solution submission is visible to confirmed teams'
+        : 'Solution submission is hidden from teams',
+      workshop: {
+        _id: workshop._id,
+        hackathonSolutionSubmissionUrl: workshop.hackathonSolutionSubmissionUrl,
+        hackathonSolutionSubmissionVisible: workshop.hackathonSolutionSubmissionVisible
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to update solution submission', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 

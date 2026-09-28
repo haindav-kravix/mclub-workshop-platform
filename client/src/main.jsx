@@ -6,7 +6,7 @@ import './styles/globals.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <SiteIntro />
+    {window.location.pathname === '/' && <SiteIntro />}
     <div className="site-app">
       <App />
     </div>

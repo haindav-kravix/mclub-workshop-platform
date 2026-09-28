@@ -63,6 +63,9 @@ export const workshopAPI = {
   toggleStoppedStatus: (id) => axios.patch(`${API_URL}/workshops/${id}/stop/toggle`, {}, {
     headers: getAuthHeaders()
   }),
+  updateHackathonSolutionSubmission: (id, data) => axios.patch(`${API_URL}/workshops/${id}/hackathon/solution-submission`, data, {
+    headers: getAuthHeaders()
+  }),
   getAdminProblemStatements: (id) => axios.get(`${API_URL}/workshops/${id}/problem-statements/admin`, {
     headers: getAuthHeaders()
   }),

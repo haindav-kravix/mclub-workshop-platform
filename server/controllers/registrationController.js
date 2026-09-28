@@ -474,6 +474,25 @@ export const getUserRegistrations = async (req, res) => {
             telegramLink: '$workshop.telegramLink',
             entryPassEnabled: '$workshop.entryPassEnabled',
             hackathonLeaderboardVisible: '$workshop.hackathonLeaderboardVisible',
+            hackathonSolutionSubmissionUrl: {
+              $cond: [
+                { $and: [
+                  { $eq: ['$status', 'confirmed'] },
+                  { $eq: ['$workshop.eventType', 'hackathon'] },
+                  { $eq: ['$workshop.hackathonSolutionSubmissionVisible', true] }
+                ] },
+                '$workshop.hackathonSolutionSubmissionUrl',
+                '$$REMOVE'
+              ]
+            },
+            hackathonSolutionSubmissionVisible: {
+              $and: [
+                { $eq: ['$status', 'confirmed'] },
+                { $eq: ['$workshop.eventType', 'hackathon'] },
+                { $eq: ['$workshop.hackathonSolutionSubmissionVisible', true] },
+                { $gt: [{ $strLenCP: { $ifNull: ['$workshop.hackathonSolutionSubmissionUrl', ''] } }, 0] }
+              ]
+            },
             registrationFormFields: {
               $map: {
                 input: { $ifNull: ['$workshop.registrationFormFields', []] },

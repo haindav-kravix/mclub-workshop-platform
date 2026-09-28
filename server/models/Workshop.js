@@ -127,6 +127,16 @@ const workshopSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  hackathonSolutionSubmissionUrl: {
+    type: String,
+    default: '',
+    trim: true,
+    maxlength: 2048
+  },
+  hackathonSolutionSubmissionVisible: {
+    type: Boolean,
+    default: false
+  },
   hackathonReviewCount: {
     type: Number,
     default: 3,

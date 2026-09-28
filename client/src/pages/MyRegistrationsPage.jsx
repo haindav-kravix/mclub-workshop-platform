@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { registrationAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage } from '../components/UI';
-import { FiAlertCircle, FiBarChart2, FiBookOpen, FiCalendar, FiMapPin, FiClock, FiSend, FiShield } from 'react-icons/fi';
+import { FiAlertCircle, FiArrowUpRight, FiBarChart2, FiBookOpen, FiCalendar, FiMapPin, FiClock, FiSend, FiShield } from 'react-icons/fi';
 import { formatWorkshopTime } from '../utils/formatters';
 import { ProblemStatementContent } from '../components/ProblemStatementContent';
 
@@ -126,6 +126,20 @@ export const MyRegistrationsPage = () => {
                             <FiBookOpen size={18} />
                             <span>{registration.selectedProblemStatement?.statementId ? 'View Problem Statement' : 'Select Problem Statement'}</span>
                           </Link>
+                        )}
+                        {registration.workshopId?.eventType === 'hackathon' &&
+                          registration.workshopId?.hackathonSolutionSubmissionVisible &&
+                          registration.workshopId?.hackathonSolutionSubmissionUrl && (
+                          <a
+                            href={registration.workshopId.hackathonSolutionSubmissionUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-3 font-black text-white shadow-lg shadow-emerald-900/10 transition hover:-translate-y-0.5 hover:bg-emerald-700"
+                          >
+                            <FiSend size={18} />
+                            <span>Submit Solution</span>
+                            <FiArrowUpRight className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                          </a>
                         )}
                         {registration.workshopId.telegramLink && (
                           <a

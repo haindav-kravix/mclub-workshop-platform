@@ -34,6 +34,7 @@ router.delete('/:id', authenticateToken, adminOnly, workshopController.deleteWor
 router.patch('/:id/toggle', authenticateToken, adminOnly, workshopController.toggleWorkshopStatus);
 router.patch('/:id/registrations/toggle', authenticateToken, adminOnly, workshopController.toggleRegistrationStatus);
 router.patch('/:id/stop/toggle', authenticateToken, adminOnly, workshopController.toggleStoppedStatus);
+router.patch('/:id/hackathon/solution-submission', authenticateToken, adminOnly, workshopController.updateHackathonSolutionSubmission);
 
 router.get('/:id', workshopController.getWorkshopById);
 

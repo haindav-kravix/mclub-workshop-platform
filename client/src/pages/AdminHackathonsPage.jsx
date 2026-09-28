@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiAward, FiBarChart2, FiMail, FiPlus, FiShield, FiTrendingUp, FiUsers, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiAward, FiBarChart2, FiEye, FiEyeOff, FiLink, FiMail, FiPlus, FiSave, FiShield, FiTrendingUp, FiUsers, FiX } from 'react-icons/fi';
 import { AdminWorkshopCard } from '../components/AdminWorkshopCard';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { certificateAPI, registrationAPI, workshopAPI } from '../utils/api';
@@ -15,6 +15,9 @@ export const AdminHackathonsPage = () => {
   const [emailEvent, setEmailEvent] = useState(null);
   const [emailForm, setEmailForm] = useState({ subject: '', message: '' });
   const [emailLoading, setEmailLoading] = useState(false);
+  const [solutionEventId, setSolutionEventId] = useState('');
+  const [solutionForm, setSolutionForm] = useState({ url: '', visible: false });
+  const [solutionSaving, setSolutionSaving] = useState(false);
   const navigate = useNavigate();
 
   const fetchEvents = async () => {
@@ -104,6 +107,34 @@ export const AdminHackathonsPage = () => {
       setSuccess(`Hackathon ${response.data.workshop.isStopped ? 'hidden from users' : 'visible to users'}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update hackathon status');
+    }
+  };
+
+  const openSolutionSettings = (event) => {
+    if (solutionEventId === event._id) {
+      setSolutionEventId('');
+      return;
+    }
+    setSolutionEventId(event._id);
+    setSolutionForm({
+      url: event.hackathonSolutionSubmissionUrl || '',
+      visible: Boolean(event.hackathonSolutionSubmissionVisible)
+    });
+  };
+
+  const saveSolutionSettings = async (eventId) => {
+    setError('');
+    setSolutionSaving(true);
+    try {
+      const response = await workshopAPI.updateHackathonSolutionSubmission(eventId, solutionForm);
+      const current = events.find(event => event._id === eventId);
+      updateEventInState({ ...current, ...response.data.workshop });
+      setSuccess(response.data.message);
+      setSolutionEventId('');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to save the submission link');
+    } finally {
+      setSolutionSaving(false);
     }
   };
 
@@ -227,8 +258,8 @@ export const AdminHackathonsPage = () => {
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {events.map(event => (
+              <div key={event._id} className="space-y-3">
               <AdminWorkshopCard
-                key={event._id}
                 workshop={event}
                 onEdit={() => navigate(`/admin/workshops/${event._id}/edit`)}
                 onDelete={deleteEvent}
@@ -246,6 +277,48 @@ export const AdminHackathonsPage = () => {
                 onHackathonEvaluation={(eventId) => navigate(`/admin/hackathon/${eventId}/evaluation`)}
                 onProblemStatements={(eventId) => navigate(`/admin/hackathon/${eventId}/problem-statements`)}
               />
+              <button
+                type="button"
+                onClick={() => openSolutionSettings(event)}
+                className="flex w-full items-center justify-between rounded-lg border border-emerald-200 bg-white px-4 py-3 text-left font-black text-slate-900 shadow-sm transition hover:border-emerald-400 hover:bg-emerald-50"
+              >
+                <span className="flex items-center gap-2"><FiLink className="text-emerald-600" /> Solution submission</span>
+                <span className={`flex items-center gap-1 text-xs uppercase ${event.hackathonSolutionSubmissionVisible ? 'text-emerald-700' : 'text-slate-500'}`}>
+                  {event.hackathonSolutionSubmissionVisible ? <FiEye /> : <FiEyeOff />}
+                  {event.hackathonSolutionSubmissionVisible ? 'Visible' : 'Hidden'}
+                </span>
+              </button>
+              {solutionEventId === event._id && (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+                  <label className="text-xs font-black uppercase tracking-wide text-emerald-800" htmlFor={`solution-url-${event._id}`}>Submission link</label>
+                  <input
+                    id={`solution-url-${event._id}`}
+                    type="url"
+                    inputMode="url"
+                    placeholder="https://forms.google.com/..."
+                    value={solutionForm.url}
+                    onChange={(inputEvent) => setSolutionForm(previous => ({ ...previous, url: inputEvent.target.value }))}
+                    className="mt-2 w-full rounded-lg border border-emerald-200 bg-white px-3 py-3 text-sm font-semibold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setSolutionForm(previous => ({ ...previous, visible: !previous.visible }))}
+                    className={`mt-3 flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-black transition ${solutionForm.visible ? 'bg-emerald-600 text-white' : 'bg-white text-slate-700'}`}
+                  >
+                    <span>{solutionForm.visible ? 'Visible to confirmed teams' : 'Hidden from teams'}</span>
+                    {solutionForm.visible ? <FiEye /> : <FiEyeOff />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => saveSolutionSettings(event._id)}
+                    disabled={solutionSaving}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-3 font-black text-white transition hover:bg-slate-800 disabled:opacity-60"
+                  >
+                    <FiSave /> {solutionSaving ? 'Saving...' : 'Save Submission Settings'}
+                  </button>
+                </div>
+              )}
+              </div>
             ))}
           </div>
         )}
