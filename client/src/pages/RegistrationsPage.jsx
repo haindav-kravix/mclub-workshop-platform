@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { registrationAPI, workshopAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage, SuccessMessage } from '../components/UI';
 import { RegistrationsTable } from '../components/RegistrationsTable';
-import { FiArrowLeft, FiCheckCircle, FiClock, FiDownload, FiSearch, FiUsers, FiXCircle } from 'react-icons/fi';
+import { FiArrowLeft, FiCheckCircle, FiClock, FiDownload, FiEdit3, FiSave, FiSearch, FiUsers, FiX, FiXCircle } from 'react-icons/fi';
 
 export const RegistrationsPage = () => {
   const { workshopId } = useParams();
@@ -16,6 +16,9 @@ export const RegistrationsPage = () => {
   const [success, setSuccess] = useState('');
   const [activeStatus, setActiveStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkEditableFieldIds, setBulkEditableFieldIds] = useState([]);
+  const [savingBulkEdit, setSavingBulkEdit] = useState(false);
 
   const registrationCounts = useMemo(() => registrations.reduce((counts, registration) => {
     counts[registration.status] = (counts[registration.status] || 0) + 1;
@@ -134,23 +137,28 @@ export const RegistrationsPage = () => {
     }
   };
 
-  const handleSetEditableFields = async (registrationId, fieldIds) => {
-    setDeleting(true);
+  const openBulkEdit = () => {
+    const currentRequest = registrations.find(registration => registration.editableFieldIds?.length)?.editableFieldIds || [];
+    setBulkEditableFieldIds(currentRequest);
+    setBulkEditOpen(true);
+  };
+
+  const handleSetEditableFields = async () => {
+    setSavingBulkEdit(true);
     setError('');
     try {
-      const response = await registrationAPI.setEditableFields(registrationId, fieldIds);
-      setRegistrations(previous => previous.map(registration => (
-        registration._id === registrationId
-          ? { ...registration, editableFieldIds: response.data.registration.editableFieldIds, editRequestedAt: response.data.registration.editRequestedAt }
-          : registration
-      )));
+      const response = await registrationAPI.setWorkshopEditableFields(workshopId, bulkEditableFieldIds);
+      setRegistrations(previous => previous.map(registration => registration.status === 'cancelled' ? registration : ({
+        ...registration,
+        editableFieldIds: response.data.fieldIds,
+        editRequestedAt: response.data.fieldIds.length ? new Date().toISOString() : null
+      })));
       setSuccess(response.data.message);
-      return true;
+      setBulkEditOpen(false);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to open fields for correction');
-      return false;
     } finally {
-      setDeleting(false);
+      setSavingBulkEdit(false);
     }
   };
 
@@ -235,12 +243,10 @@ export const RegistrationsPage = () => {
                 </p>
               )}
             </div>
-            <button
-              onClick={handleExportToExcel}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-5 py-3 font-black text-white shadow-sm transition hover:bg-slate-800 sm:w-auto"
-            >
-              <FiDownload /> <span>Export to Excel</span>
-            </button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button onClick={openBulkEdit} className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 font-black text-white shadow-sm transition hover:bg-blue-700 sm:w-auto"><FiEdit3 /> <span>Allow Everyone to Edit</span></button>
+              <button onClick={handleExportToExcel} className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-5 py-3 font-black text-white shadow-sm transition hover:bg-slate-800 sm:w-auto"><FiDownload /> <span>Export to Excel</span></button>
+            </div>
           </div>
         )}
 
@@ -273,7 +279,6 @@ export const RegistrationsPage = () => {
           formFields={workshop?.registrationFormFields || []}
           onDeleteRegistration={handleDeleteRegistration}
           onUpdateRegistrationStatus={handleUpdateRegistrationStatus}
-          onSetEditableFields={handleSetEditableFields}
           onViewPaymentScreenshot={(registrationId, imageKey = 'paymentScreenshot') => {
             sessionStorage.setItem(`registrations-scroll:${workshopId}`, String(window.scrollY));
             navigate(`/admin/registrations/${workshopId}/image/${registrationId}/${imageKey}`);
@@ -282,6 +287,27 @@ export const RegistrationsPage = () => {
           emptyMessage={normalizedSearch ? 'No registrations match your search' : activeStatus === 'all' ? 'No registrations yet' : `No ${activeCard.label.toLowerCase()} registrations`}
         />
       </div>
+
+      {bulkEditOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="bulk-edit-title">
+          <div className="w-full max-w-xl rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div><p className="text-xs font-black uppercase tracking-wide text-blue-700">Event-wide correction</p><h2 id="bulk-edit-title" className="mt-1 text-2xl font-black text-slate-950">Choose fields everyone can edit</h2><p className="mt-2 text-sm font-semibold text-slate-600">This applies once to every active registration. Each user locks again after submitting their correction.</p></div>
+              <button type="button" onClick={() => setBulkEditOpen(false)} disabled={savingBulkEdit} className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-slate-100 text-slate-600" aria-label="Close"><FiX /></button>
+            </div>
+            <div className="mt-5 max-h-[45vh] space-y-2 overflow-y-auto pr-1">
+              {(workshop?.registrationFormFields || []).map(field => {
+                const selected = bulkEditableFieldIds.includes(field.fieldId);
+                return <label key={field.fieldId} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition ${selected ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}><input type="checkbox" checked={selected} onChange={() => setBulkEditableFieldIds(previous => selected ? previous.filter(id => id !== field.fieldId) : [...previous, field.fieldId])} className="h-5 w-5 accent-blue-600" /><span><span className="block font-black text-slate-950">{field.label}</span><span className="block text-xs font-bold uppercase text-slate-400">{field.type}</span></span></label>;
+              })}
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button type="button" onClick={() => setBulkEditOpen(false)} disabled={savingBulkEdit} className="min-h-12 rounded-xl border border-slate-200 font-black text-slate-700">Cancel</button>
+              <button type="button" onClick={handleSetEditableFields} disabled={savingBulkEdit} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 font-black text-white disabled:opacity-50"><FiSave /> {savingBulkEdit ? 'Applying...' : bulkEditableFieldIds.length ? 'Allow for Everyone' : 'Remove for Everyone'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

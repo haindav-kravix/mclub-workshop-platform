@@ -18,6 +18,7 @@ router.delete('/:registrationId', authenticateToken, registrationController.canc
 
 // Admin routes
 router.get('/workshop/:workshopId', authenticateToken, adminOnly, registrationController.getWorkshopRegistrations);
+router.patch('/workshop/:workshopId/editable-fields', authenticateToken, adminOnly, registrationController.setWorkshopEditableRegistrationFields);
 router.get('/workshop/:workshopId/export', authenticateToken, adminOnly, registrationController.exportRegistrationsToExcel);
 router.get('/workshop/:workshopId/upload/:registrationId/:imageKey', authenticateToken, adminOnly, registrationController.getRegistrationUpload);
 router.get('/hackathon/:workshopId/evaluation', authenticateToken, adminOnly, registrationController.getHackathonEvaluation);
@@ -26,7 +27,6 @@ router.patch('/hackathon/:workshopId/leaderboard', authenticateToken, adminOnly,
 router.patch('/hackathon/evaluation/:registrationId', authenticateToken, adminOnly, registrationController.updateHackathonEvaluation);
 router.get('/hackathon/:workshopId/leaderboard', authenticateToken, registrationController.getHackathonLeaderboard);
 router.patch('/admin/:registrationId/status', authenticateToken, adminOnly, registrationController.updateRegistrationStatus);
-router.patch('/admin/:registrationId/editable-fields', authenticateToken, adminOnly, registrationController.setEditableRegistrationFields);
 router.delete('/admin/:registrationId', authenticateToken, adminOnly, registrationController.deleteRegistration);
 
 export default router;

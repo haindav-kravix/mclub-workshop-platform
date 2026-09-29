@@ -523,12 +523,9 @@ export const getUserRegistrations = async (req, res) => {
   }
 };
 
-export const setEditableRegistrationFields = async (req, res) => {
+export const setWorkshopEditableRegistrationFields = async (req, res) => {
   try {
-    const registration = await Registration.findById(req.params.registrationId);
-    if (!registration) return res.status(404).json({ message: 'Registration not found' });
-
-    const workshop = await Workshop.findById(registration.workshopId)
+    const workshop = await Workshop.findById(req.params.workshopId)
       .select('registrationFormFields')
       .lean();
     if (!workshop) return res.status(404).json({ message: 'Event not found' });
@@ -537,24 +534,30 @@ export const setEditableRegistrationFields = async (req, res) => {
     const requestedIds = Array.isArray(req.body.fieldIds) ? req.body.fieldIds : [];
     const fieldIds = [...new Set(requestedIds.map(value => String(value || '').trim()))]
       .filter(fieldId => validIds.has(fieldId));
-
     if (requestedIds.length !== fieldIds.length) {
       return res.status(400).json({ message: 'One or more selected fields are invalid' });
     }
 
-    registration.editableFieldIds = fieldIds;
-    registration.editRequestedAt = fieldIds.length ? new Date() : null;
-    registration.updatedAt = new Date();
-    await registration.save();
+    const result = await Registration.updateMany(
+      { workshopId: workshop._id, status: { $ne: 'cancelled' } },
+      {
+        $set: {
+          editableFieldIds: fieldIds,
+          editRequestedAt: fieldIds.length ? new Date() : null,
+          updatedAt: new Date()
+        }
+      }
+    );
 
     res.json({
       message: fieldIds.length
-        ? `${fieldIds.length} field${fieldIds.length === 1 ? '' : 's'} opened for correction`
-        : 'Correction request removed',
-      registration: summarizeRegistrationUploads(registration, workshop.registrationFormFields || [])
+        ? `${fieldIds.length} field${fieldIds.length === 1 ? '' : 's'} opened for ${result.matchedCount} registrations`
+        : `Correction request removed from ${result.matchedCount} registrations`,
+      fieldIds,
+      registrationCount: result.matchedCount
     });
   } catch (error) {
-    res.status(500).json({ message: 'Unable to update correction fields', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
+    res.status(500).json({ message: 'Unable to update event correction fields', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { FiAlertCircle, FiCheck, FiEdit3, FiFileText, FiInbox, FiSave, FiTrash2, FiX } from 'react-icons/fi';
+import { FiAlertCircle, FiCheck, FiFileText, FiInbox, FiTrash2, FiX } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
 import { ProfileAvatar } from './ProfileAvatar';
 
@@ -64,17 +64,8 @@ const StudentAvatar = ({ user }) => (
   />
 );
 
-const RegistrationActions = ({ registration, loading, onUpdateRegistrationStatus, onDeleteRegistration, onReject, onRequestCorrection }) => (
-  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-    <button
-      type="button"
-      onClick={() => onRequestCorrection(registration)}
-      disabled={loading}
-      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-black text-blue-700 transition hover:bg-blue-100 disabled:opacity-50"
-    >
-      <FiEdit3 size={18} />
-      Allow Edit
-    </button>
+const RegistrationActions = ({ registration, loading, onUpdateRegistrationStatus, onDeleteRegistration, onReject }) => (
+  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
     {registration.status !== 'confirmed' && registration.status !== 'cancelled' && (
       <button
         type="button"
@@ -117,7 +108,6 @@ export const RegistrationsTable = ({
   formFields = [],
   onDeleteRegistration,
   onUpdateRegistrationStatus,
-  onSetEditableFields,
   onViewPaymentScreenshot,
   loading,
   emptyMessage = 'No registrations yet'
@@ -126,9 +116,6 @@ export const RegistrationsTable = ({
   const [rejectingRegistration, setRejectingRegistration] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [submittingRejection, setSubmittingRejection] = useState(false);
-  const [editingRegistration, setEditingRegistration] = useState(null);
-  const [selectedFieldIds, setSelectedFieldIds] = useState([]);
-  const [savingEditableFields, setSavingEditableFields] = useState(false);
 
   const closeRejection = () => {
     if (submittingRejection) return;
@@ -146,24 +133,6 @@ export const RegistrationsTable = ({
     if (updated) closeRejection();
   };
 
-  const openCorrection = (registration) => {
-    setEditingRegistration(registration);
-    setSelectedFieldIds(registration.editableFieldIds || []);
-  };
-
-  const toggleCorrectionField = (fieldId) => {
-    setSelectedFieldIds(previous => previous.includes(fieldId)
-      ? previous.filter(id => id !== fieldId)
-      : [...previous, fieldId]);
-  };
-
-  const saveCorrectionFields = async () => {
-    if (!editingRegistration) return;
-    setSavingEditableFields(true);
-    const saved = await onSetEditableFields(editingRegistration._id, selectedFieldIds);
-    setSavingEditableFields(false);
-    if (saved) setEditingRegistration(null);
-  };
 
   return (
     <>
@@ -314,7 +283,6 @@ export const RegistrationsTable = ({
                     setRejectingRegistration(registration);
                     setRejectionReason('');
                   }}
-                  onRequestCorrection={openCorrection}
                 />
               </div>
             </div>
@@ -365,36 +333,6 @@ export const RegistrationsTable = ({
         </div>
       )}
 
-      {editingRegistration && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="registration-correction-title">
-          <div className="w-full max-w-xl rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-black uppercase tracking-wide text-blue-700">Controlled correction</p>
-                <h2 id="registration-correction-title" className="mt-1 text-2xl font-black text-slate-950">Choose what they can edit</h2>
-                <p className="mt-2 text-sm font-semibold text-slate-600">Only selected fields will appear for {editingRegistration.userId?.name || 'this user'}. They lock again immediately after submission.</p>
-              </div>
-              <button type="button" onClick={() => setEditingRegistration(null)} disabled={savingEditableFields} className="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-slate-100 text-slate-600" aria-label="Close"><FiX /></button>
-            </div>
-            <div className="mt-5 max-h-[45vh] space-y-2 overflow-y-auto pr-1">
-              {formFields.map(field => {
-                const selected = selectedFieldIds.includes(field.fieldId);
-                return (
-                  <label key={field.fieldId} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition ${selected ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
-                    <input type="checkbox" checked={selected} onChange={() => toggleCorrectionField(field.fieldId)} className="h-5 w-5 accent-blue-600" />
-                    <span className="min-w-0"><span className="block font-black text-slate-950">{field.label}</span><span className="block text-xs font-bold uppercase text-slate-400">{field.type}</span></span>
-                  </label>
-                );
-              })}
-              {formFields.length === 0 && <p className="rounded-xl bg-slate-50 p-5 text-center font-semibold text-slate-500">This event has no custom registration fields.</p>}
-            </div>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button type="button" onClick={() => setEditingRegistration(null)} disabled={savingEditableFields} className="min-h-12 rounded-xl border border-slate-200 font-black text-slate-700">Cancel</button>
-              <button type="button" onClick={saveCorrectionFields} disabled={savingEditableFields} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 font-black text-white disabled:opacity-50"><FiSave /> {savingEditableFields ? 'Saving...' : selectedFieldIds.length ? 'Send Edit Request' : 'Remove Request'}</button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };
