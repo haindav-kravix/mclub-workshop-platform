@@ -104,6 +104,14 @@ const registrationSchema = new mongoose.Schema({
     maxlength: 500,
     default: ''
   },
+  editableFieldIds: {
+    type: [String],
+    default: []
+  },
+  editRequestedAt: {
+    type: Date,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now

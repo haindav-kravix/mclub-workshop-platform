@@ -134,6 +134,26 @@ export const RegistrationsPage = () => {
     }
   };
 
+  const handleSetEditableFields = async (registrationId, fieldIds) => {
+    setDeleting(true);
+    setError('');
+    try {
+      const response = await registrationAPI.setEditableFields(registrationId, fieldIds);
+      setRegistrations(previous => previous.map(registration => (
+        registration._id === registrationId
+          ? { ...registration, editableFieldIds: response.data.registration.editableFieldIds, editRequestedAt: response.data.registration.editRequestedAt }
+          : registration
+      )));
+      setSuccess(response.data.message);
+      return true;
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to open fields for correction');
+      return false;
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -253,6 +273,7 @@ export const RegistrationsPage = () => {
           formFields={workshop?.registrationFormFields || []}
           onDeleteRegistration={handleDeleteRegistration}
           onUpdateRegistrationStatus={handleUpdateRegistrationStatus}
+          onSetEditableFields={handleSetEditableFields}
           onViewPaymentScreenshot={(registrationId, imageKey = 'paymentScreenshot') => {
             sessionStorage.setItem(`registrations-scroll:${workshopId}`, String(window.scrollY));
             navigate(`/admin/registrations/${workshopId}/image/${registrationId}/${imageKey}`);

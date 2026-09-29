@@ -11,6 +11,7 @@ router.post('/', authenticateToken, upload.any(), registrationController.registe
 router.get('/my-workshop-ids', authenticateToken, registrationController.getUserRegisteredWorkshopIds);
 router.get('/my-status/:workshopId', authenticateToken, registrationController.getUserWorkshopRegistrationStatus);
 router.get('/my-registrations', authenticateToken, registrationController.getUserRegistrations);
+router.patch('/:registrationId/correction', authenticateToken, upload.any(), registrationController.submitRegistrationCorrection);
 router.get('/hackathon/:workshopId/problem-statements', authenticateToken, problemStatementController.getTeamProblemStatements);
 router.patch('/hackathon/:workshopId/problem-statement', authenticateToken, problemStatementController.selectProblemStatement);
 router.delete('/:registrationId', authenticateToken, registrationController.cancelRegistration);
@@ -25,6 +26,7 @@ router.patch('/hackathon/:workshopId/leaderboard', authenticateToken, adminOnly,
 router.patch('/hackathon/evaluation/:registrationId', authenticateToken, adminOnly, registrationController.updateHackathonEvaluation);
 router.get('/hackathon/:workshopId/leaderboard', authenticateToken, registrationController.getHackathonLeaderboard);
 router.patch('/admin/:registrationId/status', authenticateToken, adminOnly, registrationController.updateRegistrationStatus);
+router.patch('/admin/:registrationId/editable-fields', authenticateToken, adminOnly, registrationController.setEditableRegistrationFields);
 router.delete('/admin/:registrationId', authenticateToken, adminOnly, registrationController.deleteRegistration);
 
 export default router;

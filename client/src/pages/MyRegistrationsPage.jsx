@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { registrationAPI } from '../utils/api';
 import { LoadingSpinner, ErrorMessage } from '../components/UI';
-import { FiAlertCircle, FiArrowUpRight, FiBarChart2, FiBookOpen, FiCalendar, FiMapPin, FiClock, FiSend, FiShield } from 'react-icons/fi';
+import { FiAlertCircle, FiArrowUpRight, FiBarChart2, FiBookOpen, FiCalendar, FiEdit3, FiMapPin, FiClock, FiSend, FiShield } from 'react-icons/fi';
 import { formatWorkshopTime } from '../utils/formatters';
 import { ProblemStatementContent } from '../components/ProblemStatementContent';
+import { RegistrationCorrectionModal } from '../components/RegistrationCorrectionModal';
 
 export const MyRegistrationsPage = () => {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [editingRegistration, setEditingRegistration] = useState(null);
 
   useEffect(() => {
     const fetchRegistrations = async () => {
@@ -28,6 +30,13 @@ export const MyRegistrationsPage = () => {
   }, []);
 
   if (loading) return <LoadingSpinner />;
+
+  const submitCorrection = async (registrationId, payload) => {
+    await registrationAPI.submitCorrection(registrationId, payload);
+    const response = await registrationAPI.getUserRegistrations();
+    setRegistrations(response.data);
+    setEditingRegistration(null);
+  };
 
   const getFieldLabel = (registration, fieldId) => {
     const field = registration.workshopId?.registrationFormFields?.find(item => item.fieldId === fieldId);
@@ -176,6 +185,15 @@ export const MyRegistrationsPage = () => {
                   </div>
                 )}
 
+                {registration.editableFieldIds?.length > 0 && (
+                  <div className="border-t border-blue-200 bg-blue-50 px-6 py-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div><p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-blue-700"><FiEdit3 /> Correction requested</p><p className="mt-1 text-sm font-semibold text-blue-950">Admin has opened {registration.editableFieldIds.length} field{registration.editableFieldIds.length === 1 ? '' : 's'} for correction.</p></div>
+                      <button type="button" onClick={() => setEditingRegistration(registration)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-black text-white shadow-sm transition hover:bg-blue-700"><FiEdit3 /> Edit Requested Details</button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Form Data */}
                 {registration.teamCode && (
                   <div className="bg-emerald-50 px-6 py-4 border-t border-emerald-100">
@@ -218,6 +236,7 @@ export const MyRegistrationsPage = () => {
           </div>
         )}
       </div>
+      {editingRegistration && <RegistrationCorrectionModal registration={editingRegistration} onClose={() => setEditingRegistration(null)} onSubmit={submitCorrection} />}
     </div>
   );
 };

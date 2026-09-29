@@ -236,6 +236,8 @@ const buildRegistrationListProjection = (formFields = []) => {
     evaluationScores: 1,
     evaluationReviews: 1,
     evaluationAverage: 1,
+    editableFieldIds: 1,
+    editRequestedAt: 1,
     formData: formDataProjection,
     paymentScreenshot: {
       $cond: [hasStringValueExpression('$paymentScreenshot'), 'uploaded', '']
@@ -432,6 +434,8 @@ export const getUserRegistrations = async (req, res) => {
           teamCode: 1,
           teamMembers: 1,
           selectedProblemStatement: 1,
+          editableFieldIds: 1,
+          editRequestedAt: 1,
           formData: buildSafeUserFormDataExpression(),
           paymentScreenshot: {
             $cond: [hasStringValueExpression('$paymentScreenshot'), 'uploaded', '']
@@ -458,6 +462,8 @@ export const getUserRegistrations = async (req, res) => {
           teamCode: 1,
           teamMembers: 1,
           selectedProblemStatement: 1,
+          editableFieldIds: 1,
+          editRequestedAt: 1,
           formData: 1,
           paymentScreenshot: 1,
           workshopId: {
@@ -500,7 +506,9 @@ export const getUserRegistrations = async (req, res) => {
                 in: {
                   fieldId: '$$field.fieldId',
                   label: '$$field.label',
-                  type: '$$field.type'
+                  type: '$$field.type',
+                  required: '$$field.required',
+                  options: '$$field.options'
                 }
               }
             }
@@ -512,6 +520,111 @@ export const getUserRegistrations = async (req, res) => {
     res.json(registrations);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching registrations', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
+  }
+};
+
+export const setEditableRegistrationFields = async (req, res) => {
+  try {
+    const registration = await Registration.findById(req.params.registrationId);
+    if (!registration) return res.status(404).json({ message: 'Registration not found' });
+
+    const workshop = await Workshop.findById(registration.workshopId)
+      .select('registrationFormFields')
+      .lean();
+    if (!workshop) return res.status(404).json({ message: 'Event not found' });
+
+    const validIds = new Set((workshop.registrationFormFields || []).map(field => field.fieldId));
+    const requestedIds = Array.isArray(req.body.fieldIds) ? req.body.fieldIds : [];
+    const fieldIds = [...new Set(requestedIds.map(value => String(value || '').trim()))]
+      .filter(fieldId => validIds.has(fieldId));
+
+    if (requestedIds.length !== fieldIds.length) {
+      return res.status(400).json({ message: 'One or more selected fields are invalid' });
+    }
+
+    registration.editableFieldIds = fieldIds;
+    registration.editRequestedAt = fieldIds.length ? new Date() : null;
+    registration.updatedAt = new Date();
+    await registration.save();
+
+    res.json({
+      message: fieldIds.length
+        ? `${fieldIds.length} field${fieldIds.length === 1 ? '' : 's'} opened for correction`
+        : 'Correction request removed',
+      registration: summarizeRegistrationUploads(registration, workshop.registrationFormFields || [])
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to update correction fields', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
+  }
+};
+
+export const submitRegistrationCorrection = async (req, res) => {
+  try {
+    const registration = await Registration.findOne({
+      _id: req.params.registrationId,
+      userId: req.user.id
+    });
+    if (!registration) {
+      cleanupUploadedFiles(req);
+      return res.status(404).json({ message: 'Registration not found' });
+    }
+
+    const allowedIds = [...new Set(registration.editableFieldIds || [])];
+    if (!allowedIds.length) {
+      cleanupUploadedFiles(req);
+      return res.status(403).json({ message: 'No fields are currently open for editing' });
+    }
+
+    const workshop = await Workshop.findById(registration.workshopId)
+      .select('registrationFormFields')
+      .lean();
+    if (!workshop) {
+      cleanupUploadedFiles(req);
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    const fieldsById = new Map((workshop.registrationFormFields || []).map(field => [field.fieldId, field]));
+    const submittedData = parseFormData(req.body.formData);
+    const submittedIds = Object.keys(submittedData || {});
+    const uploadedIds = (req.files || []).map(file => file.fieldname);
+    const changedIds = [...new Set([...submittedIds, ...uploadedIds])];
+    if (!changedIds.length || changedIds.some(fieldId => !allowedIds.includes(fieldId) || !fieldsById.has(fieldId))) {
+      cleanupUploadedFiles(req);
+      return res.status(400).json({ message: 'Submit only the fields opened by the admin' });
+    }
+
+    const nextValues = {};
+    for (const fieldId of submittedIds) {
+      const field = fieldsById.get(fieldId);
+      const value = String(submittedData[fieldId] ?? '').trim();
+      if (value.length > 5000) {
+        cleanupUploadedFiles(req);
+        return res.status(400).json({ message: `${field.label} is too long` });
+      }
+      if (field.required && !value && !uploadedIds.includes(fieldId)) {
+        cleanupUploadedFiles(req);
+        return res.status(400).json({ message: `${field.label} is required` });
+      }
+      if (['select', 'radio', 'question-mcq'].includes(field.type) && value && !(field.options || []).includes(value)) {
+        cleanupUploadedFiles(req);
+        return res.status(400).json({ message: `Invalid value for ${field.label}` });
+      }
+      nextValues[fieldId] = value;
+    }
+
+    const uploadedValues = await attachRegistrationUploads({}, req.files || [], workshop.registrationFormFields || []);
+    for (const fieldId of changedIds) {
+      registration.formData.set(fieldId, uploadedValues[fieldId] ?? nextValues[fieldId] ?? '');
+    }
+    registration.editableFieldIds = [];
+    registration.editRequestedAt = null;
+    registration.updatedAt = new Date();
+    await registration.save();
+
+    res.json({ message: 'Registration details updated successfully' });
+  } catch (error) {
+    cleanupUploadedFiles(req);
+    res.status(500).json({ message: 'Unable to update registration details', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 

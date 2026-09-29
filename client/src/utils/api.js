@@ -120,6 +120,12 @@ export const registrationAPI = {
   updateRegistrationStatus: (registrationId, status, rejectionReason = '') => axios.patch(`${API_URL}/registrations/admin/${registrationId}/status`, { status, rejectionReason }, {
     headers: getAuthHeaders()
   }),
+  setEditableFields: (registrationId, fieldIds) => axios.patch(`${API_URL}/registrations/admin/${registrationId}/editable-fields`, { fieldIds }, {
+    headers: getAuthHeaders()
+  }),
+  submitCorrection: (registrationId, data) => axios.patch(`${API_URL}/registrations/${registrationId}/correction`, data, {
+    headers: getAuthHeaders()
+  }),
   getHackathonEvaluation: (workshopId) => axios.get(`${API_URL}/registrations/hackathon/${workshopId}/evaluation`, {
     headers: getAuthHeaders()
   }),
