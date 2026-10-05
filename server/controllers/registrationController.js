@@ -678,7 +678,7 @@ export const getWorkshopRegistrations = async (req, res) => {
 
     // Check if workshop exists and user is admin
     const workshop = await Workshop.findById(workshopId)
-      .select('title registrationFormFields')
+      .select('title eventType registrationFormFields')
       .lean();
     if (!workshop) {
       return res.status(404).json({ message: 'Workshop not found' });
@@ -799,7 +799,12 @@ export const exportRegistrationsToExcel = async (req, res) => {
       .sort({ createdAt: -1 })
       .allowDiskUse(true);
 
-    const workbook = await generateExcelReport(registrations, workshop.title, workshop.registrationFormFields);
+    const workbook = await generateExcelReport(
+      registrations,
+      workshop.title,
+      workshop.registrationFormFields,
+      { includeTeamName: workshop.eventType === 'hackathon' }
+    );
     const fileName = `${safeExportFileName(workshop.title)}-registrations.xlsx`;
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -1033,7 +1038,7 @@ export const exportHackathonEvaluation = async (req, res) => {
     const baseColumns = [
       { header: 'S.No', key: 'sno', width: 8 },
       { header: 'Team Name', key: 'teamName', width: 24 },
-      { header: 'Team Members', key: 'teamMembers', width: 40 },
+      { header: 'Team Lead Name', key: 'teamLeadName', width: 32 },
       { header: 'College Name', key: 'collegeName', width: 32 },
       { header: 'Problem Statement', key: 'problemStatement', width: 44 }
     ];
@@ -1054,7 +1059,7 @@ export const exportHackathonEvaluation = async (req, res) => {
       const row = {
         sno: index + 1,
         teamName: registration.teamCode || findFormValue(formData, formFields, [/team.*name/i, /project.*name/i, /group.*name/i]) || registration.userId?.name || 'Team',
-        teamMembers: findFormValue(formData, formFields, [/team.*member/i, /member/i, /participant/i, /leader/i]) || registration.userId?.name || registration.userId?.email || '',
+        teamLeadName: registration.teamMembers?.[0]?.name || registration.userId?.name || registration.userId?.email || '',
         collegeName: findFormValue(formData, formFields, [/college/i, /university/i, /institution/i]),
         problemStatement: registration.selectedProblemStatement?.title || 'Not selected'
       };

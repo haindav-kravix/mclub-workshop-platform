@@ -47,9 +47,15 @@ export const RegistrationsPage = () => {
       statusFilteredRegistrations: statusFiltered,
       filteredRegistrations: statusFiltered.filter(registration => {
         const formValues = Object.values(registration.formData || {}).flat().join(' ');
+        const teamMembers = (registration.teamMembers || [])
+          .flatMap(member => [member.name, member.email, member.rollNumber, member.college])
+          .filter(Boolean)
+          .join(' ');
         return [
           registration.userId?.name,
           registration.userId?.email,
+          registration.teamCode,
+          teamMembers,
           registration.status,
           formValues
         ].filter(Boolean).join(' ').toLowerCase().includes(normalizedSearch);
