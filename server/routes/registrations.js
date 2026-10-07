@@ -3,6 +3,7 @@ import * as registrationController from '../controllers/registrationController.j
 import { authenticateToken, adminOnly } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
 import * as problemStatementController from '../controllers/problemStatementController.js';
+import * as finalSubmissionController from '../controllers/finalSubmissionController.js';
 
 const router = express.Router();
 
@@ -14,6 +15,8 @@ router.get('/my-registrations', authenticateToken, registrationController.getUse
 router.patch('/:registrationId/correction', authenticateToken, upload.any(), registrationController.submitRegistrationCorrection);
 router.get('/hackathon/:workshopId/problem-statements', authenticateToken, problemStatementController.getTeamProblemStatements);
 router.patch('/hackathon/:workshopId/problem-statement', authenticateToken, problemStatementController.selectProblemStatement);
+router.get('/hackathon/:workshopId/final-submission', authenticateToken, finalSubmissionController.getTeamFinalSubmission);
+router.put('/hackathon/:workshopId/final-submission', authenticateToken, upload.any(), finalSubmissionController.submitTeamFinalSubmission);
 router.delete('/:registrationId', authenticateToken, registrationController.cancelRegistration);
 
 // Admin routes
@@ -22,6 +25,8 @@ router.patch('/workshop/:workshopId/editable-fields', authenticateToken, adminOn
 router.get('/workshop/:workshopId/export', authenticateToken, adminOnly, registrationController.exportRegistrationsToExcel);
 router.get('/workshop/:workshopId/upload/:registrationId/:imageKey', authenticateToken, adminOnly, registrationController.getRegistrationUpload);
 router.get('/hackathon/:workshopId/evaluation', authenticateToken, adminOnly, registrationController.getHackathonEvaluation);
+router.get('/hackathon/:workshopId/final-submission/admin', authenticateToken, adminOnly, finalSubmissionController.getAdminFinalSubmission);
+router.put('/hackathon/:workshopId/final-submission/config', authenticateToken, adminOnly, finalSubmissionController.updateFinalSubmissionConfig);
 router.get('/hackathon/:workshopId/evaluation/export', authenticateToken, adminOnly, registrationController.exportHackathonEvaluation);
 router.patch('/hackathon/:workshopId/leaderboard', authenticateToken, adminOnly, registrationController.toggleHackathonLeaderboard);
 router.patch('/hackathon/evaluation/:registrationId', authenticateToken, adminOnly, registrationController.updateHackathonEvaluation);

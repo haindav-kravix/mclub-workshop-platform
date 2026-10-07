@@ -434,6 +434,10 @@ export const getUserRegistrations = async (req, res) => {
           teamCode: 1,
           teamMembers: 1,
           selectedProblemStatement: 1,
+          finalSubmission: {
+            submittedAt: '$finalSubmission.submittedAt',
+            updatedAt: '$finalSubmission.updatedAt'
+          },
           editableFieldIds: 1,
           editRequestedAt: 1,
           formData: buildSafeUserFormDataExpression(),
@@ -462,6 +466,7 @@ export const getUserRegistrations = async (req, res) => {
           teamCode: 1,
           teamMembers: 1,
           selectedProblemStatement: 1,
+          finalSubmission: 1,
           editableFieldIds: 1,
           editRequestedAt: 1,
           formData: 1,
@@ -499,6 +504,14 @@ export const getUserRegistrations = async (req, res) => {
                 { $gt: [{ $strLenCP: { $ifNull: ['$workshop.hackathonSolutionSubmissionUrl', ''] } }, 0] }
               ]
             },
+            hackathonFinalSubmissionEnabled: {
+              $and: [
+                { $eq: ['$status', 'confirmed'] },
+                { $eq: ['$workshop.eventType', 'hackathon'] },
+                { $eq: ['$workshop.hackathonFinalSubmissionEnabled', true] }
+              ]
+            },
+            hackathonFinalSubmissionTitle: '$workshop.hackathonFinalSubmissionTitle',
             registrationFormFields: {
               $map: {
                 input: { $ifNull: ['$workshop.registrationFormFields', []] },

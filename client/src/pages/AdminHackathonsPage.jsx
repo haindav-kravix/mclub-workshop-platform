@@ -276,6 +276,7 @@ export const AdminHackathonsPage = () => {
                 onDeleteCertificates={deleteCertificates}
                 onHackathonEvaluation={(eventId) => navigate(`/admin/hackathon/${eventId}/evaluation`)}
                 onProblemStatements={(eventId) => navigate(`/admin/hackathon/${eventId}/problem-statements`)}
+                onFinalSubmission={(eventId) => navigate(`/admin/hackathon/${eventId}/final-submission`)}
               />
               <button
                 type="button"

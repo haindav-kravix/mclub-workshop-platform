@@ -137,6 +137,26 @@ const workshopSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  hackathonFinalSubmissionEnabled: {
+    type: Boolean,
+    default: false
+  },
+  hackathonFinalSubmissionTitle: {
+    type: String,
+    default: 'Final Submission',
+    trim: true,
+    maxlength: 160
+  },
+  hackathonFinalSubmissionInstructions: {
+    type: String,
+    default: '',
+    trim: true,
+    maxlength: 3000
+  },
+  hackathonFinalSubmissionFields: {
+    type: [formFieldSchema],
+    default: []
+  },
   hackathonReviewCount: {
     type: Number,
     default: 3,

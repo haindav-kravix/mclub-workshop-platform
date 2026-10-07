@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FiCheck, FiEdit3, FiPlus, FiTrash2, FiX } from 'react-icons/fi';
 
-export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
+export const FormBuilder = ({ initialFields = [], onFieldsChange, title = 'Registration Form Builder' }) => {
   const [fields, setFields] = useState(initialFields);
   const [newField, setNewField] = useState({
     label: '',
@@ -154,7 +154,7 @@ export const FormBuilder = ({ initialFields = [], onFieldsChange }) => {
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="font-bold text-lg mb-4">Registration Form Builder</h3>
+      <h3 className="font-bold text-lg mb-4">{title}</h3>
 
       {/* Add New Field */}
       <div className="bg-gray-50 p-4 rounded-lg mb-6 space-y-4">

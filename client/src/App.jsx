@@ -48,6 +48,8 @@ import { AdminHackathonAttendancePage } from './pages/AdminHackathonAttendancePa
 import { HackathonAttendanceCheckInPage } from './pages/HackathonAttendanceCheckInPage';
 import { AdminHackathonAttendanceReportsPage } from './pages/AdminHackathonAttendanceReportsPage';
 import { AdminAccountsPage } from './pages/AdminAccountsPage';
+import { AdminHackathonFinalSubmissionPage } from './pages/AdminHackathonFinalSubmissionPage';
+import { HackathonFinalSubmissionPage } from './pages/HackathonFinalSubmissionPage';
 
 // Styles
 import './styles/globals.css';
@@ -162,6 +164,10 @@ const AppContent = () => {
                 <HackathonProblemStatementsPage />
               </PrivateRoute>
             }
+          />
+          <Route
+            path="/hackathon/:workshopId/final-submission"
+            element={<PrivateRoute><HackathonFinalSubmissionPage /></PrivateRoute>}
           />
 
           {/* Protected Routes */}
@@ -291,6 +297,10 @@ const AppContent = () => {
                 <AdminHackathonProblemStatementsPage />
               </PrivateRoute>
             }
+          />
+          <Route
+            path="/admin/hackathon/:workshopId/final-submission"
+            element={<PrivateRoute requireAdmin={true}><AdminHackathonFinalSubmissionPage /></PrivateRoute>}
           />
           <Route
             path="/admin/hackathon/:workshopId/problem-statements/selections"

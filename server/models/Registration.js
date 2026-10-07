@@ -93,6 +93,21 @@ const registrationSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  finalSubmission: {
+    formData: {
+      type: Map,
+      of: String,
+      default: {}
+    },
+    submittedAt: {
+      type: Date,
+      default: null
+    },
+    updatedAt: {
+      type: Date,
+      default: null
+    }
+  },
   status: {
     type: String,
     enum: ['confirmed', 'pending', 'cancelled', 'rejected'],

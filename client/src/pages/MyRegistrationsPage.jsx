@@ -136,6 +136,16 @@ export const MyRegistrationsPage = () => {
                             <span>{registration.selectedProblemStatement?.statementId ? 'View Problem Statement' : 'Select Problem Statement'}</span>
                           </Link>
                         )}
+                        {registration.workshopId?.eventType === 'hackathon' && registration.workshopId?.hackathonFinalSubmissionEnabled && (
+                          <Link
+                            to={`/hackathon/${registration.workshopId._id}/final-submission`}
+                            className="group flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 font-black text-white shadow-lg shadow-emerald-900/10 transition hover:-translate-y-0.5 hover:bg-emerald-700"
+                          >
+                            <FiSend size={18} />
+                            <span>{registration.finalSubmission?.submittedAt ? 'View Final Submission' : (registration.workshopId.hackathonFinalSubmissionTitle || 'Submit Final Details')}</span>
+                            <FiArrowUpRight />
+                          </Link>
+                        )}
                         {registration.workshopId?.eventType === 'hackathon' &&
                           registration.workshopId?.hackathonSolutionSubmissionVisible &&
                           registration.workshopId?.hackathonSolutionSubmissionUrl && (

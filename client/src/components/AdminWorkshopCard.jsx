@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiAward, FiBarChart2, FiBookOpen, FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiFileText, FiList, FiLogIn, FiMail, FiMapPin, FiTrash2, FiUsers } from 'react-icons/fi';
+import { FiAward, FiBarChart2, FiBookOpen, FiCalendar, FiCheckSquare, FiClock, FiDownload, FiEdit2, FiFileText, FiList, FiLogIn, FiMail, FiMapPin, FiSend, FiTrash2, FiUsers } from 'react-icons/fi';
 import { resolveMediaUrl } from '../utils/api';
 import { formatWorkshopTime } from '../utils/formatters';
 import { getEventLabel } from '../utils/eventLabels';
@@ -21,6 +21,7 @@ export const AdminWorkshopCard = ({
   onDeleteCertificates,
   onHackathonEvaluation,
   onProblemStatements,
+  onFinalSubmission,
   showEmail = true
 }) => {
   const registrationsOpen = workshop.registrationsOpen !== false;
@@ -147,6 +148,13 @@ export const AdminWorkshopCard = ({
               >
                 <FiBarChart2 size={16} />
                 <span>Evaluation & Leaderboard</span>
+              </button>
+              <button
+                onClick={() => onFinalSubmission(workshop._id)}
+                className="col-span-2 px-3 py-2 bg-slate-950 text-white rounded-lg hover:bg-emerald-800 transition text-sm font-semibold flex items-center justify-center space-x-1"
+              >
+                <FiSend size={16} />
+                <span>Final Submission</span>
               </button>
             </>
           )}

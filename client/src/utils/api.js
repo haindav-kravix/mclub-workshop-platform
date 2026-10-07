@@ -151,6 +151,18 @@ export const registrationAPI = {
   selectHackathonProblemStatement: (workshopId, statementId) => axios.patch(`${API_URL}/registrations/hackathon/${workshopId}/problem-statement`, { statementId }, {
     headers: getAuthHeaders()
   }),
+  getAdminFinalSubmission: (workshopId) => axios.get(`${API_URL}/registrations/hackathon/${workshopId}/final-submission/admin`, {
+    headers: getAuthHeaders()
+  }),
+  updateFinalSubmissionConfig: (workshopId, data) => axios.put(`${API_URL}/registrations/hackathon/${workshopId}/final-submission/config`, data, {
+    headers: getAuthHeaders()
+  }),
+  getTeamFinalSubmission: (workshopId) => axios.get(`${API_URL}/registrations/hackathon/${workshopId}/final-submission`, {
+    headers: getAuthHeaders()
+  }),
+  submitTeamFinalSubmission: (workshopId, data) => axios.put(`${API_URL}/registrations/hackathon/${workshopId}/final-submission`, data, {
+    headers: getAuthHeaders()
+  }),
   exportRegistrations: (workshopId) => axios.get(`${API_URL}/registrations/workshop/${workshopId}/export`, {
     headers: getAuthHeaders(),
     responseType: 'blob'
