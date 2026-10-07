@@ -53,16 +53,16 @@ export const HackathonProblemStatementsPage = () => {
 
             {selected?.statementId ? (
               <section className="rounded-3xl border-2 border-emerald-300 bg-white p-6 shadow-lg sm:p-8">
-                <p className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-emerald-700"><FiCheckCircle /> {data.assignmentMode === 'random' ? 'Your assigned statement' : 'Your selected statement'}</p>
+                <p className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-emerald-700"><FiCheckCircle /> {data.assignmentMode === 'self_select' ? 'Your selected statement' : 'Your assigned statement'}</p>
                 <h2 className="mt-3 text-2xl font-black text-slate-950 sm:text-3xl">{selected.title}</h2>
                 <ProblemStatementContent className="mt-4 font-medium leading-7">{selected.description}</ProblemStatementContent>
-                <p className="mt-6 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">{data.assignmentMode === 'random' ? 'This statement was assigned automatically and is locked to your team.' : 'This statement is locked to your team.'}</p>
+                <p className="mt-6 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">{data.assignmentMode === 'random' ? 'This statement was assigned automatically and is locked to your team.' : data.assignmentMode === 'manual' ? 'This statement was assigned by the admin and is locked to your team.' : 'This statement is locked to your team.'}</p>
               </section>
-            ) : data.assignmentMode === 'random' ? (
+            ) : data.assignmentMode !== 'self_select' ? (
               <div className="rounded-3xl border border-violet-200 bg-violet-50 p-8 text-center shadow-sm">
                 <FiBookOpen className="mx-auto text-4xl text-violet-700" />
                 <h2 className="mt-4 text-2xl font-black text-slate-950">Assignment pending</h2>
-                <p className="mx-auto mt-2 max-w-xl font-semibold text-slate-600">Your team will receive a problem statement automatically after the admin publishes the statements.</p>
+                <p className="mx-auto mt-2 max-w-xl font-semibold text-slate-600">{data.assignmentMode === 'manual' ? 'The admin has not assigned your team a problem statement yet. It will appear here after assignment.' : 'Your team will receive a problem statement automatically after the admin publishes the statements.'}</p>
               </div>
             ) : (
               <div className="grid gap-5">

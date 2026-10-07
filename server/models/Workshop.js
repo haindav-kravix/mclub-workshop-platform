@@ -153,7 +153,7 @@ const workshopSchema = new mongoose.Schema({
   },
   problemStatementAssignmentMode: {
     type: String,
-    enum: ['self_select', 'random'],
+    enum: ['self_select', 'random', 'manual'],
     default: 'self_select'
   },
   date: {

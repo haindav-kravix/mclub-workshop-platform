@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiBookOpen, FiCheck, FiEye, FiEyeOff, FiMousePointer, FiPlus, FiRefreshCw, FiShuffle, FiUsers, FiTrash2 } from 'react-icons/fi';
+import { FiArrowLeft, FiBookOpen, FiCheck, FiEdit3, FiEye, FiEyeOff, FiMousePointer, FiPlus, FiRefreshCw, FiShuffle, FiUsers, FiTrash2 } from 'react-icons/fi';
 import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { workshopAPI } from '../utils/api';
 import { ProblemStatementContent } from '../components/ProblemStatementContent';
@@ -41,7 +41,9 @@ export const AdminHackathonProblemStatementsPage = () => {
     if (mode !== assignmentMode) {
       const message = mode === 'random'
         ? 'Switch to random assignment? Existing selections will be replaced with balanced random assignments.'
-        : 'Switch to team selection? Current automatic assignments will be cleared so teams can choose.';
+        : mode === 'manual'
+          ? 'Switch to manual assignment? Current assignments will be preserved, and admins can assign or replace statements team by team.'
+          : 'Switch to team selection? Automatic assignments may be cleared so teams can choose.';
       if (!window.confirm(message)) return;
     }
     if (reassign && !window.confirm('Randomly redistribute all confirmed teams across the published statements?')) return;
@@ -54,6 +56,8 @@ export const AdminHackathonProblemStatementsPage = () => {
       if (response.data.assignmentMode === 'random') {
         const count = response.data.assignedCount || 0;
         setSuccess(`${count} confirmed team${count === 1 ? '' : 's'} assigned across published statements`);
+      } else if (response.data.assignmentMode === 'manual') {
+        setSuccess('Manual assignment enabled. Current team assignments were preserved.');
       } else {
         setSuccess('Teams can now select one published problem statement');
       }
@@ -146,7 +150,7 @@ export const AdminHackathonProblemStatementsPage = () => {
               </button>
             )}
           </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
             <button
               type="button"
               onClick={() => updateAssignmentMode('self_select')}
@@ -166,6 +170,16 @@ export const AdminHackathonProblemStatementsPage = () => {
               <span className="flex items-center gap-2 text-lg font-black text-slate-950"><FiShuffle className="text-violet-700" /> Random Assignment</span>
               <span className="mt-2 block text-sm font-semibold leading-6 text-slate-600">Confirmed teams are distributed fairly and randomly across published statements.</span>
               {assignmentMode === 'random' && <FiCheck className="absolute right-4 top-4 text-xl text-violet-700" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => updateAssignmentMode('manual')}
+              disabled={savingMode || assignmentMode === 'manual'}
+              className={`relative min-h-28 rounded-2xl border p-4 text-left transition disabled:cursor-default ${assignmentMode === 'manual' ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-100' : 'border-slate-200 bg-white hover:border-blue-200'}`}
+            >
+              <span className="flex items-center gap-2 text-lg font-black text-slate-950"><FiEdit3 className="text-blue-700" /> Manual Assignment</span>
+              <span className="mt-2 block text-sm font-semibold leading-6 text-slate-600">Search a confirmed team and assign or replace one published statement from the overview.</span>
+              {assignmentMode === 'manual' && <FiCheck className="absolute right-4 top-4 text-xl text-blue-700" />}
             </button>
           </div>
         </section>

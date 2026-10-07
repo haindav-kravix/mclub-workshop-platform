@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FiArrowLeft, FiBookOpen, FiCheckCircle, FiChevronDown, FiClock, FiDownload, FiUser, FiUsers } from 'react-icons/fi';
-import { ErrorMessage, LoadingSpinner } from '../components/UI';
+import { FiArrowLeft, FiBookOpen, FiCheckCircle, FiChevronDown, FiClock, FiDownload, FiSave, FiSearch, FiUser, FiUsers } from 'react-icons/fi';
+import { ErrorMessage, LoadingSpinner, SuccessMessage } from '../components/UI';
 import { workshopAPI } from '../utils/api';
 
 const PENDING_KEY = 'pending';
@@ -14,14 +14,20 @@ export const AdminProblemStatementSelectionsPage = () => {
   const [error, setError] = useState('');
   const [exporting, setExporting] = useState(false);
   const [expandedTeam, setExpandedTeam] = useState('');
+  const [success, setSuccess] = useState('');
+  const [teamSearch, setTeamSearch] = useState('');
+  const [assignmentChoices, setAssignmentChoices] = useState({});
+  const [assigningTeam, setAssigningTeam] = useState('');
+
+  const loadSelections = async ({ preserveActive = false } = {}) => {
+    const response = await workshopAPI.getProblemStatementSelections(workshopId);
+    setData(response.data);
+    setAssignmentChoices(Object.fromEntries((response.data.teams || []).map(team => [team.registrationId, team.selectedStatementId || ''])));
+    if (!preserveActive) setActiveKey(response.data.problemStatements?.[0]?._id || PENDING_KEY);
+  };
 
   useEffect(() => {
-    workshopAPI.getProblemStatementSelections(workshopId)
-      .then((response) => {
-        setData(response.data);
-        setActiveKey(response.data.problemStatements?.[0]?._id || PENDING_KEY);
-      })
-      .catch(err => setError(err.response?.data?.message || 'Unable to load selection overview'));
+    loadSelections().catch(err => setError(err.response?.data?.message || 'Unable to load selection overview'));
   }, [workshopId]);
 
   const activeGroup = useMemo(() => {
@@ -52,6 +58,36 @@ export const AdminProblemStatementSelectionsPage = () => {
     }
   };
 
+  const filteredTeams = useMemo(() => {
+    const query = teamSearch.trim().toLowerCase();
+    if (!query) return data?.teams || [];
+    return (data?.teams || []).filter(team => [team.teamName, team.leaderName, ...(team.memberNames || [])]
+      .filter(Boolean).join(' ').toLowerCase().includes(query));
+  }, [data, teamSearch]);
+
+  const assignStatement = async (team) => {
+    const statementId = assignmentChoices[team.registrationId];
+    if (!statementId) {
+      setError('Select a published problem statement');
+      return;
+    }
+    const statement = data.problemStatements.find(item => String(item._id) === String(statementId));
+    const replacing = Boolean(team.selectedStatementId) && String(team.selectedStatementId) !== String(statementId);
+    if (replacing && !window.confirm(`Replace ${team.teamName}'s current statement with “${statement?.title || 'the selected statement'}”?`)) return;
+
+    setAssigningTeam(String(team.registrationId));
+    setError('');
+    try {
+      const response = await workshopAPI.assignProblemStatementManually(workshopId, team.registrationId, statementId);
+      setSuccess(response.data.message);
+      await loadSelections({ preserveActive: true });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to assign problem statement');
+    } finally {
+      setAssigningTeam('');
+    }
+  };
+
   if (!data && !error) return <LoadingSpinner />;
 
   return (
@@ -76,6 +112,7 @@ export const AdminProblemStatementSelectionsPage = () => {
         </div>
 
         {error && <ErrorMessage message={error} onDismiss={() => setError('')} />}
+        {success && <SuccessMessage message={success} onDismiss={() => setSuccess('')} />}
         {data && (
           <>
             <section className="overflow-hidden rounded-3xl bg-slate-950 p-6 text-white shadow-xl sm:p-8">
@@ -97,6 +134,32 @@ export const AdminProblemStatementSelectionsPage = () => {
                 </div>
               ))}
             </section>
+
+            {data.workshop.assignmentMode === 'manual' && (
+              <section className="mt-7 rounded-3xl border border-blue-200 bg-white p-5 shadow-sm sm:p-7">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div><p className="text-xs font-black uppercase tracking-wide text-blue-700">Manual assignment</p><h2 className="mt-1 text-2xl font-black text-slate-950">Search and assign teams</h2><p className="mt-2 text-sm font-semibold text-slate-600">Choose one published statement. Reassigning changes only that team.</p></div>
+                  <p className="rounded-xl bg-blue-50 px-4 py-2 text-sm font-black text-blue-800">{filteredTeams.length} team{filteredTeams.length === 1 ? '' : 's'}</p>
+                </div>
+                <label className="mt-5 flex min-h-12 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 focus-within:border-blue-400 focus-within:bg-white">
+                  <FiSearch className="text-slate-500" />
+                  <input value={teamSearch} onChange={event => setTeamSearch(event.target.value)} placeholder="Search team, leader, or member name" className="min-w-0 flex-1 border-0 bg-transparent py-3 font-bold outline-none" />
+                </label>
+                <div className="mt-4 divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200">
+                  {filteredTeams.map(team => (
+                    <div key={team.registrationId} className="grid gap-3 bg-white p-4 lg:grid-cols-[minmax(180px,0.8fr)_minmax(240px,1.2fr)_auto] lg:items-center">
+                      <div className="min-w-0"><p className="break-words text-lg font-black text-slate-950">{team.teamName}</p><p className="mt-1 truncate text-sm font-semibold text-slate-500">Leader: {team.leaderName}</p>{team.selectedStatementTitle && <p className="mt-1 text-xs font-black text-emerald-700">Current: {team.selectedStatementTitle}</p>}</div>
+                      <select value={assignmentChoices[team.registrationId] || ''} onChange={event => setAssignmentChoices(previous => ({ ...previous, [team.registrationId]: event.target.value }))} className="min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3 font-bold outline-none focus:border-blue-400">
+                        <option value="">Select published statement</option>
+                        {data.problemStatements.filter(statement => statement.isPublished && !statement.isDeleted).map(statement => <option key={statement._id} value={statement._id}>{statement.title}</option>)}
+                      </select>
+                      <button type="button" onClick={() => assignStatement(team)} disabled={assigningTeam === String(team.registrationId) || !assignmentChoices[team.registrationId]} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 font-black text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"><FiSave /> {assigningTeam === String(team.registrationId) ? 'Assigning...' : team.selectedStatementId ? 'Update' : 'Assign'}</button>
+                    </div>
+                  ))}
+                  {filteredTeams.length === 0 && <p className="p-8 text-center font-bold text-slate-500">No confirmed teams match this search.</p>}
+                </div>
+              </section>
+            )}
 
             <div className="mt-7 grid gap-6 lg:grid-cols-[minmax(280px,0.85fr)_minmax(0,1.4fr)]">
               <section className="rounded-3xl border border-emerald-100 bg-white p-4 shadow-sm sm:p-5">

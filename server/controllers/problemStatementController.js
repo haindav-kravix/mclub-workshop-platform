@@ -61,6 +61,15 @@ export const getProblemStatementSelections = async (req, res) => {
       .sort({ createdAt: 1 })
       .lean();
 
+    const teams = registrations.map(registration => ({
+      registrationId: registration._id,
+      teamName: registration.teamCode || 'Confirmed team',
+      leaderName: registration.teamMembers?.[0]?.name || registration.userId?.name || registration.userId?.email || 'Leader',
+      memberNames: (registration.teamMembers || []).map(member => member.name).filter(Boolean),
+      selectedStatementId: registration.selectedProblemStatement?.statementId || null,
+      selectedStatementTitle: registration.selectedProblemStatement?.title || ''
+    }));
+
     const selectionsByStatement = new Map();
     const pendingTeams = [];
 
@@ -120,7 +129,8 @@ export const getProblemStatementSelections = async (req, res) => {
         pendingTeams: pendingTeams.length
       },
       problemStatements,
-      pendingTeams
+      pendingTeams,
+      teams
     });
   } catch (error) {
     res.status(500).json({ message: 'Unable to load problem statement selections', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
@@ -220,7 +230,7 @@ export const setProblemStatementAssignmentMode = async (req, res) => {
   try {
     const mode = String(req.body.mode || '');
     const reassign = Boolean(req.body.reassign);
-    if (!['self_select', 'random'].includes(mode)) {
+    if (!['self_select', 'random', 'manual'].includes(mode)) {
       return res.status(400).json({ message: 'Select a valid assignment mode' });
     }
 
@@ -230,7 +240,7 @@ export const setProblemStatementAssignmentMode = async (req, res) => {
 
     const previousMode = workshop.problemStatementAssignmentMode || 'self_select';
     const changingToRandom = previousMode !== 'random' && mode === 'random';
-    const changingToSelfSelect = previousMode === 'random' && mode === 'self_select';
+    const changingToSelfSelect = previousMode !== 'self_select' && mode === 'self_select';
     workshop.problemStatementAssignmentMode = mode;
     workshop.updatedAt = new Date();
     await workshop.save();
@@ -256,6 +266,53 @@ export const setProblemStatementAssignmentMode = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Unable to update assignment mode', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
+  }
+};
+
+export const assignProblemStatementManually = async (req, res) => {
+  try {
+    const { registrationId, statementId } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(registrationId) || !mongoose.Types.ObjectId.isValid(statementId)) {
+      return res.status(400).json({ message: 'Select a valid team and problem statement' });
+    }
+
+    const workshop = await getHackathon(req.params.id);
+    if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
+    if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Problem statements are available only for hackathons' });
+    if (workshop.problemStatementAssignmentMode !== 'manual') {
+      return res.status(409).json({ message: 'Switch the assignment method to Manual Assignment first' });
+    }
+
+    const statement = workshop.problemStatements.id(statementId);
+    if (!statement || !statement.isPublished) {
+      return res.status(404).json({ message: 'Select a published problem statement' });
+    }
+
+    const selectedProblemStatement = {
+      statementId: statement._id,
+      title: statement.title,
+      description: statement.description,
+      selectedAt: new Date()
+    };
+    const registration = await Registration.findOneAndUpdate(
+      { _id: registrationId, workshopId: workshop._id, status: 'confirmed' },
+      { $set: { selectedProblemStatement, updatedAt: new Date() } },
+      { new: true }
+    ).select('teamCode teamMembers selectedProblemStatement');
+
+    if (!registration) return res.status(404).json({ message: 'Confirmed team not found' });
+    res.json({
+      success: true,
+      message: `${statement.title} assigned to ${registration.teamCode || 'the selected team'}`,
+      registration: {
+        registrationId: registration._id,
+        teamName: registration.teamCode || 'Confirmed team',
+        selectedStatementId: registration.selectedProblemStatement.statementId,
+        selectedStatementTitle: registration.selectedProblemStatement.title
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to assign problem statement', error: process.env.NODE_ENV === 'development' ? error.message : undefined });
   }
 };
 
@@ -350,8 +407,8 @@ export const selectProblemStatement = async (req, res) => {
     const workshop = await getHackathon(workshopId, 'eventType problemStatements problemStatementAssignmentMode');
     if (!workshop) return res.status(404).json({ message: 'Hackathon not found' });
     if (workshop.eventType !== 'hackathon') return res.status(400).json({ message: 'Problem statements are available only for hackathons' });
-    if (workshop.problemStatementAssignmentMode === 'random') {
-      return res.status(409).json({ message: 'Problem statements are assigned automatically for this hackathon' });
+    if (workshop.problemStatementAssignmentMode !== 'self_select') {
+      return res.status(409).json({ message: 'Problem statements are assigned by the admin for this hackathon' });
     }
     const statement = workshop.problemStatements.id(statementId);
     if (!statement || !statement.isPublished) return res.status(404).json({ message: 'This problem statement is not available' });

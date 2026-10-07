@@ -26,6 +26,7 @@ router.get('/:id/problem-statements/selections', authenticateToken, adminOnly, p
 router.get('/:id/problem-statements/selections/export', authenticateToken, adminOnly, problemStatementController.exportProblemStatementSelections);
 router.post('/:id/problem-statements', authenticateToken, adminOnly, problemStatementController.createProblemStatement);
 router.patch('/:id/problem-statements/mode', authenticateToken, adminOnly, problemStatementController.setProblemStatementAssignmentMode);
+router.patch('/:id/problem-statements/assign', authenticateToken, adminOnly, problemStatementController.assignProblemStatementManually);
 router.patch('/:id/problem-statements/:statementId', authenticateToken, adminOnly, problemStatementController.setProblemStatementPublished);
 router.delete('/:id/problem-statements/:statementId', authenticateToken, adminOnly, problemStatementController.deleteProblemStatement);
 router.get('/:id/report', authenticateToken, adminOnly, workshopController.generateWorkshopReport);
